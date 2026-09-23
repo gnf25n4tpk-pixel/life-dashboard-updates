@@ -1,0 +1,1000 @@
+      gap: 6px;
+      max-height: 440px;
+      overflow: auto;
+      margin-top: 10px;
+    }
+
+    .global-search-result {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      background: #f7f7f8;
+      padding: 9px 10px;
+      display: grid;
+      grid-template-columns: 80px minmax(0,1fr);
+      gap: 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .global-search-result:hover { background: #efeff2; }
+
+    .global-search-result span {
+      color: #929298;
+      font-size: .62rem;
+      font-weight: 800;
+    }
+
+    .global-search-result strong {
+      min-width: 0;
+      color: #4a4a50;
+      font-size: .73rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .global-search-empty {
+      padding: 20px 5px;
+      color: #97979d;
+      font-size: .74rem;
+    }
+
+    /* Quick Add */
+    .quick-add-choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .quick-add-choice-grid button {
+      border: 1px solid rgba(30,30,40,.055);
+      border-radius: 16px;
+      background: #f6f6f7;
+      min-height: 105px;
+      padding: 14px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .quick-add-choice-grid button:hover {
+      background: #efeff2;
+    }
+
+    .quick-add-choice-grid button > span {
+      color: #607892;
+      font-size: 1.15rem;
+    }
+
+    .quick-add-choice-grid strong { color: #444449; }
+    .quick-add-choice-grid small { color: #97979d; }
+
+    /* Dark mode */
+    body.dark-mode {
+      background:
+        radial-gradient(circle at top left, rgba(57,57,62,.92), transparent 34%),
+        linear-gradient(180deg,#29292d 0%,#1f1f22 100%);
+      color: #ececf0;
+    }
+
+    body.dark-mode .topbar,
+    body.dark-mode .home-calendar-card,
+    body.dark-mode .home-summary-card,
+    body.dark-mode .home-organizer-card,
+    body.dark-mode .home-music-card,
+    body.dark-mode .finance-shell,
+    body.dark-mode .gym-shell,
+    body.dark-mode .nutrition-shell,
+    body.dark-mode .calendar-shell,
+    body.dark-mode .home-modal-card {
+      background: rgba(44,44,49,.88);
+      border-color: rgba(255,255,255,.07);
+      color: #ececf0;
+    }
+
+    body.dark-mode .home-day-card,
+    body.dark-mode .home-mini-row,
+    body.dark-mode .home-todo-item,
+    body.dark-mode .home-note,
+    body.dark-mode .home-todo-add input,
+    body.dark-mode .home-agenda-row,
+    body.dark-mode .settings-card,
+    body.dark-mode .backup-card,
+    body.dark-mode .global-search-input,
+    body.dark-mode .global-search-result,
+    body.dark-mode .quick-add-choice-grid button,
+    body.dark-mode .dashboard-stat-strip > div,
+    body.dark-mode .calendar-day-cell,
+    body.dark-mode .calendar-agenda-item,
+    body.dark-mode .calendar-apple-status,
+    body.dark-mode .music-controls button {
+      background: #35353a;
+      color: #ededf0;
+      border-color: rgba(255,255,255,.06);
+    }
+
+    body.dark-mode .home-day-card.selected,
+    body.dark-mode .calendar-day-cell.selected {
+      background: #364355;
+    }
+
+    body.dark-mode .home-card-kicker,
+    body.dark-mode .calendar-kicker,
+    body.dark-mode .dashboard-stat-strip span,
+    body.dark-mode .home-mini-row span,
+    body.dark-mode .home-agenda-time,
+    body.dark-mode .date-line,
+    body.dark-mode .calendar-heading p {
+      color: #a9a9b0;
+    }
+
+    body.dark-mode .home-mini-row strong,
+    body.dark-mode .home-summary-head h3,
+    body.dark-mode .home-organizer-head h3,
+    body.dark-mode .music-track-copy strong,
+    body.dark-mode .dashboard-stat-strip strong,
+    body.dark-mode .calendar-agenda-top strong,
+    body.dark-mode .calendar-heading h1 {
+      color: #eeeeF2;
+    }
+
+    body.dark-mode .tab,
+    body.dark-mode .brand,
+    body.dark-mode .compact-datetime {
+      color: #d8d8dd;
+    }
+
+    body.dark-mode .tab.active {
+      background: #e9e9ed;
+      color: #27272b;
+    }
+
+    body.dark-mode .topbar-action-button,
+    body.dark-mode .topbar-settings-button {
+      background: #39393e;
+      color: #dddde1;
+      border-color: rgba(255,255,255,.06);
+    }
+
+    body.dark-mode .music-controls .music-play-button {
+      background: #ececf0;
+      color: #27272b;
+    }
+
+    @media (max-width: 980px) {
+      .dashboard-stat-strip {
+        grid-template-columns: 1fr;
+      }
+    }
+
+
+    /* ===== Desktop V2: vollständiger Dark Mode ===== */
+    body.dark-mode {
+      --bg: #1d1d20;
+      --panel: rgba(42,42,47,.94);
+      --panel-strong: #45454c;
+      --text: #f1f1f3;
+      --muted: #aaaab2;
+      --line: rgba(255,255,255,.085);
+      --shadow: 0 18px 50px rgba(0,0,0,.22);
+      --shadow-soft: 0 8px 24px rgba(0,0,0,.18);
+      --red-line: rgba(216,115,115,.15);
+      background:
+        radial-gradient(circle at top left, rgba(62,62,68,.84), transparent 35%),
+        linear-gradient(180deg,#242428 0%,#1c1c1f 100%) !important;
+      color: #f1f1f3;
+    }
+
+    body.dark-mode.finance-active {
+      background:
+        radial-gradient(circle at top left, rgba(62,62,68,.84), transparent 35%),
+        linear-gradient(180deg,#242428 0%,#1c1c1f 100%) !important;
+    }
+
+    body.dark-mode .topbar,
+    body.dark-mode.finance-active .topbar {
+      background: rgba(37,37,42,.90) !important;
+      border-color: rgba(255,255,255,.075) !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+
+    body.dark-mode .tabs {
+      background: #2c2c31 !important;
+      border-color: rgba(255,255,255,.07) !important;
+    }
+
+    body.dark-mode .tab {
+      color: #b8b8c0 !important;
+      background: transparent !important;
+    }
+
+    body.dark-mode .tab:hover {
+      color: white !important;
+      background: #37373d !important;
+    }
+
+    body.dark-mode .tab.active,
+    body.dark-mode.finance-active .tab.active {
+      background: #505058 !important;
+      color: #fff !important;
+      box-shadow: 0 5px 16px rgba(0,0,0,.22) !important;
+    }
+
+    body.dark-mode .brand-dot {
+      background: #ececf0;
+      box-shadow: 0 0 0 6px rgba(255,255,255,.07);
+    }
+
+    body.dark-mode .compact-datetime,
+    body.dark-mode .brand {
+      color: #ececf0 !important;
+    }
+
+    body.dark-mode :is(
+      .finance-shell,.gym-shell,.nutrition-shell,.calendar-shell,
+      .home-calendar-card,.home-summary-card,.home-organizer-card,.home-music-card,
+      .content-card,.calendar-month-panel,.calendar-agenda-panel,
+      .gym-calendar-card,.gym-workout-card,.nutrition-today-card,.nutrition-week-section,
+      .nutrition-meal-card,.shopping-panel,.money-panel,.balance-card,
+      .dashboard-stat-strip > div,.calendar-apple-status,.exercise-history,
+      .home-modal-card,.modal-card,.gym-editor-card,.exercise-editor-card,
+      .meal-editor-card,.nutrition-generator-card,.settings-card,.backup-card
+    ) {
+      background: #2f2f34 !important;
+      border-color: rgba(255,255,255,.07) !important;
+      color: #ededf1 !important;
+      box-shadow: 0 12px 30px rgba(0,0,0,.16) !important;
+    }
+
+    body.dark-mode .main-balance {
+      background: linear-gradient(145deg,#3a3033,#332a2d) !important;
+    }
+
+    body.dark-mode .income-panel {
+      background: linear-gradient(145deg,#2d3831,#29342e) !important;
+    }
+
+    body.dark-mode :is(
+      .money-row,.home-day-card,.home-mini-row,.home-todo-item,.home-agenda-row,
+      .gym-day-card,.ingredient-editor-card,.exercise-set-row,
+      .global-search-result,.quick-add-choice-grid button,.shopping-item
+    ) {
+      background: #39393f !important;
+      border-color: rgba(255,255,255,.06) !important;
+      color: #eeeeF2 !important;
+    }
+
+    body.dark-mode .gym-day-card.selected,
+    body.dark-mode .gym-day-card.today {
+      background: #334256 !important;
+      color: white !important;
+      box-shadow: inset 0 0 0 2px rgba(121,157,200,.18) !important;
+    }
+
+    body.dark-mode .nutrition-day-button {
+      color: #b8b8c0 !important;
+    }
+
+    body.dark-mode .nutrition-day-button:hover,
+    body.dark-mode .nutrition-day-button.today:not(.selected) {
+      background: #39393f !important;
+    }
+
+    body.dark-mode .nutrition-day-button.selected {
+      background: #395744 !important;
+      color: white !important;
+    }
+
+    body.dark-mode .calendar-day-cell {
+      background: #35353a !important;
+      border-color: rgba(255,255,255,.055) !important;
+      color: #eeeeF2 !important;
+    }
+
+    body.dark-mode .calendar-day-cell:hover {
+      background: #3d3d43 !important;
+    }
+
+    body.dark-mode .calendar-day-cell.selected {
+      background: #354356 !important;
+    }
+
+    body.dark-mode .calendar-day-number {
+      color: #d8d8de !important;
+    }
+
+    body.dark-mode :is(
+      input:not([type="checkbox"]), select, textarea,
+      .modal-field,.global-search-input,.home-note
+    ) {
+      background: #25252a !important;
+      border-color: rgba(255,255,255,.09) !important;
+      color: #f0f0f3 !important;
+      box-shadow: none !important;
+    }
+
+    body.dark-mode input::placeholder,
+    body.dark-mode textarea::placeholder {
+      color: #777780 !important;
+    }
+
+    body.dark-mode :is(
+      .soft-button,.add-button,.edit-balance,.edit-entry,
+      .gym-secondary-button,.nutrition-secondary-button,
+      .calendar-secondary-button,.calendar-today-button,
+      .home-small-button,.home-modal-close,.meal-editor-close,
+      .gym-editor-close,.shopping-clear
+    ) {
+      background: #3b3b41 !important;
+      border-color: rgba(255,255,255,.08) !important;
+      color: #dcdce1 !important;
+    }
+
+    body.dark-mode :is(
+      .finance-heading p,.gym-heading p,.calendar-heading p,
+      .date-line,.subtle,.panel-kicker,.gym-kicker,.nutrition-kicker,
+      .calendar-kicker,.home-card-kicker,.meal-slot,.meal-ingredient-line,
+      .calendar-agenda-sub,.shopping-day-title span,.shopping-group-title,
+      .ingredient-library-hint,.ingredient-total-line,.generator-field small,
+      .music-note,.settings-card span,.backup-card span
+    ) {
+      color: #9e9ea7 !important;
+    }
+
+    body.dark-mode :is(
+      .finance-heading h1,.gym-heading h1,.nutrition-heading h1,.calendar-heading h1,
+      .panel-head h2,.gym-calendar-head h2,.gym-workout-head h2,
+      .nutrition-today-head h2,.nutrition-section-head h2,
+      .meal-name,.money-row .name,.main-balance strong,
+      .calendar-agenda-top strong,.home-summary-head h3,.home-organizer-head h3,
+      .music-track-copy strong
+    ) {
+      color: #f0f0f3 !important;
+    }
+
+    body.dark-mode .main-balance .card-label-row > span,
+    body.dark-mode .main-balance .subtle,
+    body.dark-mode .balance-card > span:first-child,
+    body.dark-mode .card-label-row > span {
+      color: #c3a7aa !important;
+    }
+
+    body.dark-mode .shopping-mode-toggle,
+    body.dark-mode .theme-toggle {
+      background: #27272c !important;
+    }
+
+    body.dark-mode .shopping-mode-toggle button,
+    body.dark-mode .theme-toggle button {
+      color: #aaaab2 !important;
+    }
+
+    body.dark-mode .shopping-mode-toggle button.active,
+    body.dark-mode .theme-toggle button.active {
+      background: #48484f !important;
+      color: white !important;
+      box-shadow: none !important;
+    }
+
+    body.dark-mode .music-artwork {
+      background: linear-gradient(145deg,#414148,#303036) !important;
+      color: #b8b8c0 !important;
+    }
+
+    body.dark-mode .music-controls .music-play-button {
+      background: #ededf1 !important;
+      color: #252529 !important;
+    }
+
+    body.dark-mode .modal-card p {
+      color: #aaaab2 !important;
+    }
+
+    body.dark-mode .modal-field input {
+      color: #f0f0f3 !important;
+    }
+
+    body.dark-mode .meal-editor-backdrop,
+    body.dark-mode .gym-editor-backdrop,
+    body.dark-mode .exercise-editor-backdrop,
+    body.dark-mode .nutrition-generator-backdrop,
+    body.dark-mode .home-modal-backdrop,
+    body.dark-mode .modal-backdrop {
+      background: rgba(10,10,12,.58) !important;
+    }
+
+
+    .modal-field.text-mode > span {
+      display: none;
+    }
+
+    .modal-field.text-mode {
+      border-color: rgba(30,30,40,.08);
+    }
+
+    .home-music-card .music-connect-button {
+      margin-top: 13px;
+    }
+
+
+    /* ===== Desktop V3: ruhiger Dark Mode außerhalb Finanzen ===== */
+    body.dark-mode {
+      background:
+        radial-gradient(circle at 12% -8%, rgba(63,65,72,.46), transparent 33%),
+        linear-gradient(180deg,#25262a 0%,#212226 100%) !important;
+    }
+
+    body.dark-mode .topbar {
+      background: rgba(39,40,44,.94) !important;
+      border-color: rgba(255,255,255,.05) !important;
+      box-shadow: 0 8px 28px rgba(0,0,0,.16) !important;
+    }
+
+    body.dark-mode .tabs {
+      background: #2e2f34 !important;
+      border-color: rgba(255,255,255,.045) !important;
+    }
+
+    body.dark-mode .tab {
+      color: #aeb0b7 !important;
+    }
+
+    body.dark-mode .tab:hover {
+      background: #35363b !important;
+      color: #d7d8dc !important;
+    }
+
+    body.dark-mode .tab.active {
+      background: #3c3d43 !important;
+      color: #e6e7ea !important;
+      box-shadow: none !important;
+    }
+
+    body.dark-mode :is(
+      .home-calendar-card,.home-summary-card,.home-organizer-card,.home-music-card,
+      .gym-shell,.nutrition-shell,.calendar-shell
+    ) {
+      background: #2d2e33 !important;
+      border-color: rgba(255,255,255,.04) !important;
+      box-shadow: 0 14px 36px rgba(0,0,0,.13) !important;
+    }
+
+    body.dark-mode :is(
+      .gym-calendar-card,.gym-workout-card,
+      .nutrition-today-card,.nutrition-week-section,.nutrition-meal-card,.shopping-panel,
+      .calendar-month-panel,.calendar-agenda-panel,
+      .dashboard-stat-strip > div
+    ) {
+      background: #323338 !important;
+      border-color: rgba(255,255,255,.035) !important;
+      box-shadow: none !important;
+    }
+
+    body.dark-mode :is(
+      .home-day-card,.home-mini-row,.home-todo-item,.home-agenda-row,
+      .gym-day-card,.gym-exercise-card,.exercise-set-row,.exercise-history,
+      .nutrition-week-card,.today-meal,.shopping-item,
+      .calendar-day-cell,.calendar-agenda-item,.calendar-apple-status,
+      .ingredient-editor-card
+    ) {
+      background: #37383d !important;
+      border-color: rgba(255,255,255,.035) !important;
+      color: #d6d7dc !important;
+      box-shadow: none !important;
+    }
+
+    body.dark-mode :is(
+      .home-summary-head h3,.home-organizer-head h3,.home-card-head h2,
+      .gym-heading h1,.gym-calendar-head h2,.gym-workout-head h2,
+      .nutrition-heading h1,.nutrition-today-head h2,.nutrition-section-head h2,
+      .calendar-heading h1,.calendar-agenda-head h2,
+      .music-track-copy strong
+    ) {
+      color: #dedfe3 !important;
+    }
+
+    body.dark-mode :is(
+      .home-card-kicker,.home-agenda-time,.date-line,
+      .gym-kicker,.gym-heading p,.dashboard-stat-strip span,
+      .nutrition-kicker,.nutrition-section-head .two-day-note,
+      .calendar-kicker,.calendar-heading p,.calendar-agenda-sub,
+      .meal-slot,.meal-ingredient-line,.shopping-group-title,.shopping-day-title span
+    ) {
+      color: #92949c !important;
+    }
+
+    body.dark-mode :is(
+      .dashboard-stat-strip strong,.home-mini-row strong,.home-agenda-row strong,
+      .gym-exercise-card strong,.meal-name,.calendar-agenda-top strong
+    ) {
+      color: #d2d3d8 !important;
+    }
+
+    body.dark-mode .gym-day-card.selected {
+      background: #3a424c !important;
+      color: #dce3ea !important;
+      box-shadow: inset 0 0 0 1px rgba(126,153,181,.16) !important;
+    }
+
+    body.dark-mode .gym-day-card.today:not(.selected) {
+      background: #363b3c !important;
+      color: #d8dfda !important;
+    }
+
+    body.dark-mode .nutrition-week-card.selected {
+      background: #37413a !important;
+      box-shadow: inset 0 0 0 1px rgba(116,153,126,.14) !important;
+    }
+
+    body.dark-mode .calendar-day-cell.selected {
+      background: #39414b !important;
+      box-shadow: inset 0 0 0 1px rgba(117,146,178,.13) !important;
+    }
+
+    body.dark-mode .calendar-day-cell.today .calendar-day-number,
+    body.dark-mode .home-today-badge {
+      background: #496456 !important;
+      color: #e7ece9 !important;
+    }
+
+    body.dark-mode :is(
+      .gym-primary-button,.nutrition-primary-button,.calendar-primary-button,
+      .home-save-button,.home-add-button
+    ) {
+      background: #4a5868 !important;
+      color: #e8eaed !important;
+      box-shadow: none !important;
+    }
+
+    body.dark-mode :is(
+      .gym-secondary-button,.nutrition-secondary-button,.calendar-secondary-button,
+      .calendar-today-button,.home-small-button,.shopping-clear
+    ) {
+      background: #393a40 !important;
+      color: #bfc0c6 !important;
+      border-color: rgba(255,255,255,.04) !important;
+    }
+
+    body.dark-mode :is(
+      .plan-picker select,.ingredient-field input,.ingredient-field select,
+      .exercise-name-field input,.exercise-set-row input,
+      .generator-field textarea,.generator-options input,
+      .home-todo-add input,.home-note,.global-search-input
+    ) {
+      background: #292a2f !important;
+      color: #d7d8dc !important;
+      border-color: rgba(255,255,255,.05) !important;
+    }
+
+    body.dark-mode :is(
+      .home-modal-card,.gym-editor-card,.exercise-editor-card,
+      .meal-editor-card,.nutrition-generator-card
+    ) {
+      background: #303136 !important;
+      border-color: rgba(255,255,255,.045) !important;
+      color: #d9dade !important;
+      box-shadow: 0 24px 70px rgba(0,0,0,.28) !important;
+    }
+
+    body.dark-mode .modal-card {
+      background: #303136 !important;
+      border-color: rgba(255,255,255,.045) !important;
+      color: #d9dade !important;
+    }
+
+    body.dark-mode .modal-field {
+      background: #292a2f !important;
+      border-color: rgba(255,255,255,.05) !important;
+      box-shadow: none !important;
+    }
+
+    body.dark-mode .modal-field span {
+      color: #9b9da5 !important;
+    }
+
+    body.dark-mode .modal-field input {
+      background: transparent !important;
+      color: #d9dade !important;
+    }
+
+    body.dark-mode .music-controls button {
+      background: #393a40 !important;
+      color: #c7c8cd !important;
+    }
+
+    body.dark-mode .music-controls .music-play-button {
+      background: #d9dade !important;
+      color: #2d2e33 !important;
+    }
+
+    body.dark-mode .music-connect-button {
+      background: #3b3437 !important;
+      color: #c6a9b0 !important;
+    }
+
+
+    /* ===== Update-System ===== */
+    .update-settings-card {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .update-settings-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .update-feed-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 100%;
+    }
+
+    .update-feed-field > span {
+      color: #85858b;
+      font-size: .64rem;
+      font-weight: 800;
+    }
+
+    .update-feed-field input {
+      width: 100%;
+      border: 1px solid rgba(30,30,40,.08);
+      border-radius: 11px;
+      background: white;
+      padding: 9px 10px;
+      color: #444449;
+      font: inherit;
+      font-size: .68rem;
+      outline: none;
+    }
+
+    .update-settings-actions {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .update-auto-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 9px;
+      border-radius: 10px;
+      background: #ececef;
+      color: #68686f;
+      font-size: .66rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .update-auto-toggle input {
+      margin: 0;
+      accent-color: #526b87;
+    }
+
+    body.dark-mode .update-feed-field input {
+      background: #292a2f !important;
+      color: #d7d8dc !important;
+      border-color: rgba(255,255,255,.05) !important;
+    }
+
+    body.dark-mode .update-auto-toggle {
+      background: #393a40 !important;
+      color: #bfc0c6 !important;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 980px) {
+      .topbar { grid-template-columns: 1fr; align-items: stretch; }
+      .brand, .compact-datetime, .tabs { justify-self: stretch; }
+      .compact-datetime { text-align: left; min-width: 0; }
+      .tabs { width: 100%; overflow-x: auto; justify-content: flex-start; }
+      .finance-summary { grid-template-columns: 1fr; }
+      .finance-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .app-shell { width: min(100% - 22px, 1180px); }
+      .week-grid {
+        grid-template-columns: repeat(7, minmax(72px,1fr));
+        overflow-x: auto;
+      }
+      .finance-shell { padding: 18px; }
+      .finance-heading { flex-direction: column; }
+      .quick-add { grid-template-columns: 1fr; }
+      .quick-add button { padding: 10px 13px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <button class="brand" id="homeButton" aria-label="Zur Startseite">
+        <span class="brand-dot"></span>
+        <span>Life Dashboard</span>
+      </button>
+
+      <div class="compact-datetime" id="compactDatetime"></div>
+
+      <nav class="tabs">
+        <button class="tab" data-tab="finanzen">Finanzen</button>
+        <button class="tab" data-tab="gym">Gym</button>
+        <button class="tab" data-tab="ernaehrung">Ernährung</button>
+        <button class="tab" data-tab="kalender">Kalender</button>
+        <button class="topbar-action-button" id="globalSearchButton" aria-label="Suchen">⌕</button>
+        <button class="topbar-action-button quick" id="quickAddButton" aria-label="Schnell hinzufügen">＋</button>
+        <button class="topbar-settings-button" id="homeSettingsButton" aria-label="Einstellungen">⚙︎</button>
+      </nav>
+    </header>
+
+    <section id="homeView">
+      <section class="home-hero">
+        <div>
+          <p class="eyebrow" id="greeting">Guten Tag</p>
+          <h1 id="clock">--:--</h1>
+          <p id="fullDate" class="date-line">Datum wird geladen …</p>
+        </div>
+
+
+      </section>
+
+      <section class="home-calendar-card" id="homeCalendarCard">
+        <div class="home-card-head">
+          <div>
+            <p class="eyebrow">Kalender</p>
+            <h2>Deine Tage</h2>
+          </div>
+
+          <div class="home-calendar-actions">
+            <button class="home-add-button" id="homeAddEvent" aria-label="Termin hinzufügen">＋</button>
+          </div>
+        </div>
+
+        <div class="home-calendar-viewport" id="homeCalendarViewport">
+          <div class="home-calendar-track" id="homeCalendarTrack"></div>
+        </div>
+      </section>
+
+      <section class="home-dashboard-grid">
+        <button class="home-summary-card agenda" id="homeAgendaCard">
+          <div class="home-summary-head">
+            <div>
+              <span class="home-card-kicker" id="homeAgendaKicker">Heute</span>
+              <h3>Agenda</h3>
+            </div>
+            <span class="home-arrow">→</span>
+          </div>
+          <div id="homeAgendaPreview"></div>
+        </button>
+
+        <button class="home-summary-card nutrition" data-home-open="ernaehrung">
+          <div class="home-summary-head">
+            <div>
+              <span class="home-card-kicker">Ernährung</span>
+              <h3>Heute</h3>
+            </div>
+            <span class="home-arrow">→</span>
+          </div>
+          <div id="homeNutritionPreview"></div>
+        </button>
+
+        <button class="home-summary-card gym" data-home-open="gym">
+          <div class="home-summary-head">
+            <div>
+              <span class="home-card-kicker">Gym</span>
+              <h3>Training</h3>
+            </div>
+            <span class="home-arrow">→</span>
+          </div>
+          <div id="homeGymPreview"></div>
+        </button>
+
+        <section class="home-music-card">
+          <div class="home-summary-head">
+            <div>
+              <span class="home-card-kicker">Apple Music</span>
+              <h3 id="musicCardTitle">Nicht verbunden</h3>
+            </div>
+            <span class="music-status-dot" id="musicStatusDot"></span>
+          </div>
+
+          <div class="music-now-playing">
+            <div class="music-artwork" id="musicArtwork">♪</div>
+            <div class="music-track-copy">
+              <strong id="musicTrackName">Apple Music verbinden</strong>
+              <span id="musicArtistName">MusicKit vorbereitet</span>
+            </div>
+          </div>
+
+          <div class="music-controls">
+            <button id="musicPrevious" aria-label="Zurück" disabled>‹‹</button>
+            <button class="music-play-button" id="musicPlayPause" aria-label="Play/Pause" disabled>▶</button>
+            <button id="musicNext" aria-label="Weiter" disabled>››</button>
+          </div>
+
+          <button class="music-connect-button" id="musicConnectButton">Verbinden</button>
+        </section>
+
+        <section class="home-organizer-card">
+          <div class="home-organizer-head">
+            <div>
+              <span class="home-card-kicker">Organizer</span>
+              <h3>To-Dos & Notizen</h3>
+            </div>
+          </div>
+
+          <div class="home-organizer-content">
+            <div class="home-todos">
+              <div class="home-todo-add">
+                <input id="homeTodoInput" type="text" placeholder="Neues To-Do …" />
+                <button id="homeTodoAdd">＋</button>
+              </div>
+              <div id="homeTodoList" class="home-todo-list"></div>
+            </div>
+
+            <textarea id="homeNote" class="home-note" placeholder="Kurze Notiz …"></textarea>
+          </div>
+        </section>
+      </section>
+    </section>
+
+    <section class="section-view hidden" id="financeView">
+      <div class="finance-shell">
+        <div class="finance-heading">
+          <div>
+            <p class="eyebrow finance-eyebrow">Finanzen</p>
+            <h1>Monatsübersicht</h1>
+            <p>Kontostand, Einnahmen und Ausgaben auf einen Blick.</p>
+          </div>
+          <button class="soft-button" id="resetFinance">Zurücksetzen</button>
+        </div>
+
+        <div class="finance-summary">
+          <article class="balance-card main-balance" id="balanceCard">
+            <div class="card-label-row">
+              <span>Kontostand</span>
+              <button class="edit-balance" id="editBalance">Bearbeiten</button>
+            </div>
+            <strong id="balanceValue">0,00 €</strong>
+            <span class="subtle">Aktueller Stand</span>
+          </article>
+
+          <article class="balance-card" id="incomeCard">
+            <span>Einnahmen</span>
+            <strong id="incomeTotal">0,00 €</strong>
+            <span class="positive-dot">● diesen Monat</span>
+          </article>
+
+          <article class="balance-card" id="expenseCard">
+            <span>Ausgaben</span>
+            <strong id="expenseTotal">0,00 €</strong>
+            <span class="negative-dot">● diesen Monat</span>
+          </article>
+        </div>
+
+        <div class="finance-grid">
+          <section class="money-panel">
+            <div class="panel-head">
+              <div><span class="panel-kicker">Fixkosten</span><h2>Abos</h2></div>
+              <button class="add-button" data-add="subscriptions">＋</button>
+            </div>
+            <div class="quick-add hidden" id="form-subscriptions">
+              <input type="text" placeholder="z. B. Spotify" data-name />
+              <input type="number" step="0.01" placeholder="Betrag" data-amount />
+              <button data-save="subscriptions">Hinzufügen</button>
+            </div>
+            <div class="money-list" id="list-subscriptions"></div>
+            <div class="panel-total"><span>Summe</span><strong id="total-subscriptions">0,00 €</strong></div>
+          </section>
+
+          <section class="money-panel">
+            <div class="panel-head">
+              <div><span class="panel-kicker">Variabel</span><h2>Einkäufe</h2></div>
+              <button class="add-button" data-add="shopping">＋</button>
+            </div>
+            <div class="quick-add hidden" id="form-shopping">
+              <input type="text" placeholder="z. B. Rewe" data-name />
+              <input type="number" step="0.01" placeholder="Betrag" data-amount />
+              <button data-save="shopping">Hinzufügen</button>
+            </div>
+            <div class="money-list" id="list-shopping"></div>
+            <div class="panel-total"><span>Summe</span><strong id="total-shopping">0,00 €</strong></div>
+          </section>
+
+          <section class="money-panel">
+            <div class="panel-head">
+              <div><span class="panel-kicker">Weitere Ausgaben</span><h2>Sonstiges</h2></div>
+              <button class="add-button" data-add="other">＋</button>
+            </div>
+            <div class="quick-add hidden" id="form-other">
+              <input type="text" placeholder="z. B. Tanken" data-name />
+              <input type="number" step="0.01" placeholder="Betrag" data-amount />
+              <button data-save="other">Hinzufügen</button>
+            </div>
+            <div class="money-list" id="list-other"></div>
+            <div class="panel-total"><span>Summe</span><strong id="total-other">0,00 €</strong></div>
+          </section>
+
+          <section class="money-panel income-panel">
+            <div class="panel-head">
+              <div><span class="panel-kicker">Geldeingang</span><h2>Einnahmen</h2></div>
+              <button class="add-button" data-add="income">＋</button>
+            </div>
+            <div class="quick-add hidden" id="form-income">
+              <input type="text" placeholder="z. B. Gehalt" data-name />
+              <input type="number" step="0.01" placeholder="Betrag" data-amount />
+              <button data-save="income">Hinzufügen</button>
+            </div>
+            <div class="money-list" id="list-income"></div>
+            <div class="panel-total"><span>Summe</span><strong id="total-income">0,00 €</strong></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="section-view hidden" id="gymView">
+      <div class="gym-shell">
+        <div class="gym-heading">
+          <div>
+            <p class="eyebrow gym-eyebrow">Gym</p>
+            <h1>Trainingsplan</h1>
+          </div>
+
+          <div class="plan-picker">
+            <select id="gymProfileSelect" aria-label="Trainingsplan auswählen"></select>
+            <button id="editGymProfile" class="gym-primary-button">Bearbeiten</button>
+          </div>
+        </div>
+
+        <section class="dashboard-stat-strip gym-stat-strip">
+          <div><span>Diese Woche</span><strong id="gymWeekSessions">0 Trainings</strong></div>
+          <div><span>Dokumentiert</span><strong id="gymWeekSets">0 Sätze</strong></div>
+          <div><span>Letzter Eintrag</span><strong id="gymLastLogged">–</strong></div>
+        </section>
+
+        <section class="gym-calendar-card">
+          <div class="gym-calendar-head">
+            <h2>Kalender</h2>
+            <button class="gym-secondary-button" id="gymTodayButton">Heute</button>
+          </div>
+
+          <div class="gym-days-viewport" id="gymDaysViewport">
+            <div class="gym-days-track" id="gymDaysTrack"></div>
+          </div>
+        </section>
+
+        <section class="gym-workout-card">
+          <div class="gym-workout-head">
+            <div>
+              <span class="gym-kicker" id="selectedGymDateLabel">Heute</span>
+              <h2 id="selectedGymDayTitle">Training</h2>
+            </div>
+            <div class="gym-session-badge" id="selectedSessionBadge">–</div>
+          </div>
+
+          <div class="gym-exercise-list" id="gymExerciseList"></div>
+          <button class="gym-add-exercise" id="gymAddExercise">＋ Übung hinzufügen</button>
+        </section>
+      </div>
+    </section>
+
+
+    <section class="section-view hidden" id="nutritionView">
+      <div class="nutrition-shell">
+        <div class="nutrition-heading">
+          <div>
+            <p class="eyebrow nutrition-eyebrow">Ernährung</p>
+            <h1>Meal Prep</h1>
+          </div>
+          <div class="nutrition-heading-actions">
+            <button class="nutrition-secondary-button nutrition-print-button" id="printNutritionPlan">Drucken</button>
+            <button class="nutrition-primary-button" id="generateNutritionPlan">Plan erstellen</button>
