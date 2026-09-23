@@ -832,18 +832,6 @@
       min-height: 82px;
     }
 
-    @media (prefers-color-scheme: dark) {
-      body:not(.light-mode) .home-hero,
-      body:not(.light-mode) .home-calendar-card,
-      body:not(.light-mode) .home-summary-card,
-      body:not(.light-mode) .home-music-card,
-      body:not(.light-mode) .home-organizer-card {
-        background: rgba(42,42,46,.80) !important;
-        border-color: rgba(255,255,255,.055) !important;
-        box-shadow: 0 10px 28px rgba(0,0,0,.16) !important;
-      }
-    }
-
 </style>
 </head>
 <body>
