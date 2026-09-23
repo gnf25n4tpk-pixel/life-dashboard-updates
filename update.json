@@ -1,7 +1,6 @@
 {
   "dashboardVersion": "0.15.1",
   "minimumNativeVersion": "0.11.0",
-  "dashboardGzipBase64URL": "dashboard.html.gz.b64",
   "sha256": "a3b2f34c2438dec72e85892e2dc2a33d0fe82810172a06ed65b4fce3b5d8d9fb",
   "resources": [
     {
@@ -11,6 +10,21 @@
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "V15 Apple Clean: ruhigere Flächen, weniger Verläufe, gezielte Bereichsfarben und klarere visuelle Hierarchie.",
-  "nativeDownloadURL": ""
+  "releaseNotes": "V15.1: Startseite bleibt im hellen Dashboard-Modus vollständig hell und übernimmt nicht mehr teilweise den macOS-Dark-Mode.",
+  "nativeDownloadURL": "",
+  "dashboardParts": [
+    "dashboard.part01",
+    "dashboard.part02",
+    "dashboard.part03",
+    "dashboard.part04",
+    "dashboard.part05",
+    "dashboard.part06",
+    "dashboard.part07",
+    "dashboard.part08",
+    "dashboard.part09",
+    "dashboard.part10",
+    "dashboard.part11",
+    "dashboard.part12",
+    "dashboard.part13"
+  ]
 }
