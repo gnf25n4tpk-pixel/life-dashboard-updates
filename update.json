@@ -1,6 +1,6 @@
 {
   "dashboardVersion": "0.9.0",
-  "minimumNativeVersion": "0.9.0",
+  "minimumNativeVersion": "0.11.0",
   "dashboardParts": [
     "dashboard.part01",
     "dashboard.part02",
@@ -16,6 +16,14 @@
     "dashboard.part12"
   ],
   "sha256": "bfd676b6aaa2794a6a74c42726be798aafc614964c7fadd0fd4173e72c8916b7",
-  "releaseNotes": "V9: feste GitHub-Updatequelle und automatische Dashboard-Updates.",
+  "resources": [
+    {
+      "kind": "appIconPNG",
+      "url": "AppIcon.png.b64",
+      "sha256": "6acfeb85260a2f96d879f826343124e5b368ee62aa2a7990931f69791844d1d2",
+      "encoding": "base64"
+    }
+  ],
+  "releaseNotes": "V11: App-Ressourcen wie das Icon können zusammen mit Dashboard-Updates verteilt und zurückgesetzt werden.",
   "nativeDownloadURL": ""
 }
