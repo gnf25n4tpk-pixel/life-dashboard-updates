@@ -1,1000 +1,1000 @@
 
-          return {
-            id: item.id || `day-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
-            name: item.name || "Training",
-            exercises: Array.isArray(item.exercises) ? item.exercises : []
-          };
-        });
+          <article class="balance-card" id="incomeCard">
+            <span>Einnahmen</span>
+            <strong id="incomeTotal">0,00 €</strong>
+            <span class="positive-dot">● diesen Monat</span>
+          </article>
 
-        ensureProfileWorkoutData(profile);
+          <article class="balance-card" id="expenseCard">
+            <span>Ausgaben</span>
+            <strong id="expenseTotal">0,00 €</strong>
+            <span class="negative-dot">● diesen Monat</span>
+          </article>
+        </div>
 
-        // Alte gespeicherte Logs auf das neue Format bringen.
-        Object.values(profile.logs).forEach(log => {
-          if (!log || typeof log !== "object") return;
-          if (!log.exercises || typeof log.exercises !== "object") log.exercises = {};
-
-          Object.values(log.exercises).forEach(ex => {
-            if (!Array.isArray(ex.sets)) ex.sets = [];
-            ex.sets = ex.sets.map(set => ({
-              weight: Number(set.weight || 0),
-              reps: Number(set.reps || 0)
-            }));
-          });
-        });
-      });
-
-      return data;
-    }
-
-    function loadGymData() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(GYM_STORAGE_KEY));
-        if (saved && Array.isArray(saved.profiles) && saved.profiles.length) {
-          const normalized = normalizeGymData(saved);
-          localStorage.setItem(GYM_STORAGE_KEY, JSON.stringify(normalized));
-          return normalized;
-        }
-      } catch {}
-      return gymClone(defaultGym);
-    }
-
-    function saveGymData() {
-      localStorage.setItem(GYM_STORAGE_KEY, JSON.stringify(gymData));
-    }
-
-    function activeGymProfile() {
-      return gymData.profiles.find(p => p.id === gymData.activeProfileId) || gymData.profiles[0];
-    }
-
-    function parseIsoLocal(value) {
-      const [y,m,d] = value.split("-").map(Number);
-      return new Date(y, m - 1, d);
-    }
-
-    function dayDifference(a, b) {
-      const one = new Date(a.getFullYear(), a.getMonth(), a.getDate());
-      const two = new Date(b.getFullYear(), b.getMonth(), b.getDate());
-      return Math.round((one - two) / 86400000);
-    }
-
-    function mod(n, m) {
-      return ((n % m) + m) % m;
-    }
-
-    function gymSessionForDate(date) {
-      const profile = activeGymProfile();
-      if (!profile || !profile.loop.length) {
-        return { name: "Kein Plan", index: -1, day: null };
-      }
-
-      const start = parseIsoLocal(profile.startDate);
-      const offset = dayDifference(date, start);
-      const index = mod(offset, profile.loop.length);
-      const day = profile.loop[index];
-
-      return {
-        name: day?.name || `Tag ${index + 1}`,
-        index,
-        day
-      };
-    }
-
-
-    function activeWorkoutTemplate(session = gymSessionForDate(selectedGymDate)) {
-      const profile = activeGymProfile();
-      if (!profile || !session?.day) return null;
-
-      ensureProfileWorkoutData(profile);
-      const key = workoutKey(session.name);
-
-      if (!profile.templates[key]) {
-        profile.templates[key] = { name: session.name, exercises: [] };
-      }
-
-      return profile.templates[key];
-    }
-
-    function workoutLogForDate(date, create = false) {
-      const profile = activeGymProfile();
-      if (!profile) return null;
-
-      ensureProfileWorkoutData(profile);
-      const iso = makeIsoDate(date);
-
-      if (!profile.logs[iso] && create) {
-        profile.logs[iso] = {
-          workoutKey: workoutKey(gymSessionForDate(date).name),
-          exercises: {}
-        };
-      }
-
-      return profile.logs[iso] || null;
-    }
-
-    function previousWorkoutOccurrence(date, sessionName) {
-      const profile = activeGymProfile();
-      if (!profile) return null;
-
-      const targetKey = workoutKey(sessionName);
-      const probe = new Date(date);
-      const maxLookback = Math.max(120, profile.loop.length * 20);
-
-      for (let i = 1; i <= maxLookback; i++) {
-        probe.setDate(probe.getDate() - 1);
-
-        if (workoutKey(gymSessionForDate(probe).name) !== targetKey) continue;
-
-        const log = workoutLogForDate(probe, false);
-        if (log && log.workoutKey === targetKey) {
-          return { date: new Date(probe), log };
-        }
-      }
-
-      return null;
-    }
-
-    function latestLoggedWorkoutDate(sessionName) {
-      const profile = activeGymProfile();
-      if (!profile) return null;
-
-      const targetKey = workoutKey(sessionName);
-      const dates = Object.keys(profile.logs || {})
-        .filter(iso => profile.logs[iso]?.workoutKey === targetKey)
-        .sort();
-
-      return dates.length ? parseIsoLocal(dates[dates.length - 1]) : null;
-    }
-
-    function nextOccurrenceAfter(date, sessionName) {
-      const profile = activeGymProfile();
-      if (!profile) return null;
-
-      const targetKey = workoutKey(sessionName);
-      const probe = new Date(date);
-
-      for (let i = 1; i <= Math.max(60, profile.loop.length * 4); i++) {
-        probe.setDate(probe.getDate() + 1);
-        if (workoutKey(gymSessionForDate(probe).name) === targetKey) {
-          return new Date(probe);
-        }
-      }
-
-      return null;
-    }
-
-    function shouldShowPreviousReference(date, sessionName) {
-      const latest = latestLoggedWorkoutDate(sessionName);
-      if (!latest) return false;
-
-      const next = nextOccurrenceAfter(latest, sessionName);
-      return next ? sameDate(next, date) : false;
-    }
-
-    const gymProfileSelect = document.getElementById("gymProfileSelect");
-    const gymDaysViewport = document.getElementById("gymDaysViewport");
-    const gymDaysTrack = document.getElementById("gymDaysTrack");
-    const selectedGymDateLabel = document.getElementById("selectedGymDateLabel");
-    const selectedGymDayTitle = document.getElementById("selectedGymDayTitle");
-    const selectedSessionBadge = document.getElementById("selectedSessionBadge");
-
-    const gymEditorModal = document.getElementById("gymEditorModal");
-    const gymEditorName = document.getElementById("gymEditorName");
-    const gymEditorStartDate = document.getElementById("gymEditorStartDate");
-    const gymEditorLoop = document.getElementById("gymEditorLoop");
-    const gymEditorLoopCount = document.getElementById("gymEditorLoopCount");
-
-    let gymEditorDraft = null;
-    let gymEditorIsNew = false;
-
-    function renderGymProfileSelect() {
-      gymProfileSelect.innerHTML = "";
-
-      gymData.profiles.forEach(profile => {
-        const option = document.createElement("option");
-        option.value = profile.id;
-        option.textContent = profile.name;
-        option.selected = profile.id === gymData.activeProfileId;
-        gymProfileSelect.appendChild(option);
-      });
-    }
-
-    function renderGymCalendar() {
-      const rangeBefore = 30;
-      const rangeAfter = 30;
-      gymDaysTrack.innerHTML = "";
-
-      for (let i = -rangeBefore; i <= rangeAfter; i++) {
-        const date = new Date(todayForGym);
-        date.setDate(todayForGym.getDate() + i);
-
-        const session = gymSessionForDate(date);
-        const card = document.createElement("button");
-        card.className = "gym-day-card";
-        card.type = "button";
-        card.dataset.gymDate = makeIsoDate(date);
-
-        if (sameDate(date, todayForGym)) card.classList.add("today");
-        if (sameDate(date, selectedGymDate)) card.classList.add("selected");
-
-        card.innerHTML = `
-          ${sameDate(date, todayForGym) ? `<span class="gym-today-badge">Heute</span>` : ""}
-          <div class="gym-day-top">
-            <div class="gym-day-date-stack">
-              <div class="gym-day-name">${date.toLocaleDateString("de-DE",{weekday:"short"})}</div>
-              <div class="gym-day-number">${date.getDate()}</div>
-              <div class="gym-day-index">${date.toLocaleDateString("de-DE",{month:"short"})}</div>
+        <div class="finance-grid">
+          <section class="money-panel">
+            <div class="panel-head">
+              <div><span class="panel-kicker">Fixkosten</span><h2>Abos</h2></div>
+              <button class="add-button" data-add="subscriptions">＋</button>
             </div>
-          </div>
+            <div class="quick-add hidden" id="form-subscriptions">
+              <input type="text" placeholder="z. B. Spotify" data-name />
+              <input type="number" step="0.01" placeholder="Betrag" data-amount />
+              <button data-save="subscriptions">Hinzufügen</button>
+            </div>
+            <div class="money-list" id="list-subscriptions"></div>
+            <div class="panel-total"><span>Summe</span><strong id="total-subscriptions">0,00 €</strong></div>
+          </section>
+
+          <section class="money-panel">
+            <div class="panel-head">
+              <div><span class="panel-kicker">Variabel</span><h2>Einkäufe</h2></div>
+              <button class="add-button" data-add="shopping">＋</button>
+            </div>
+            <div class="quick-add hidden" id="form-shopping">
+              <input type="text" placeholder="z. B. Rewe" data-name />
+              <input type="number" step="0.01" placeholder="Betrag" data-amount />
+              <button data-save="shopping">Hinzufügen</button>
+            </div>
+            <div class="money-list" id="list-shopping"></div>
+            <div class="panel-total"><span>Summe</span><strong id="total-shopping">0,00 €</strong></div>
+          </section>
+
+          <section class="money-panel">
+            <div class="panel-head">
+              <div><span class="panel-kicker">Weitere Ausgaben</span><h2>Sonstiges</h2></div>
+              <button class="add-button" data-add="other">＋</button>
+            </div>
+            <div class="quick-add hidden" id="form-other">
+              <input type="text" placeholder="z. B. Tanken" data-name />
+              <input type="number" step="0.01" placeholder="Betrag" data-amount />
+              <button data-save="other">Hinzufügen</button>
+            </div>
+            <div class="money-list" id="list-other"></div>
+            <div class="panel-total"><span>Summe</span><strong id="total-other">0,00 €</strong></div>
+          </section>
+
+          <section class="money-panel income-panel">
+            <div class="panel-head">
+              <div><span class="panel-kicker">Geldeingang</span><h2>Einnahmen</h2></div>
+              <button class="add-button" data-add="income">＋</button>
+            </div>
+            <div class="quick-add hidden" id="form-income">
+              <input type="text" placeholder="z. B. Gehalt" data-name />
+              <input type="number" step="0.01" placeholder="Betrag" data-amount />
+              <button data-save="income">Hinzufügen</button>
+            </div>
+            <div class="money-list" id="list-income"></div>
+            <div class="panel-total"><span>Summe</span><strong id="total-income">0,00 €</strong></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="section-view hidden" id="gymView">
+      <div class="gym-shell">
+        <div class="gym-heading">
           <div>
-            <div class="gym-session-name">${escapeHtml(session.name)}</div>
-            ${sameDate(date, selectedGymDate) ? `<div class="gym-selected-label">Ausgewählt</div>` : ""}
+            <p class="eyebrow gym-eyebrow">Gym</p>
+            <h1>Trainingsplan</h1>
           </div>
-        `;
 
-        gymDaysTrack.appendChild(card);
-      }
-    }
-
-    function renderSelectedGymDay() {
-      const session = gymSessionForDate(selectedGymDate);
-
-      selectedGymDateLabel.textContent = sameDate(selectedGymDate, todayForGym)
-        ? "Heute"
-        : selectedGymDate.toLocaleDateString("de-DE", {
-            weekday: "short", day: "2-digit", month: "short"
-          });
-
-      selectedGymDayTitle.textContent = session.name;
-      selectedSessionBadge.textContent = session.index >= 0
-        ? `Tag ${session.index + 1}`
-        : "–";
-
-      renderGymExercises(session);
-    }
-
-    function renderGymExercises(session) {
-      const list = document.getElementById("gymExerciseList");
-      list.innerHTML = "";
-
-      const template = activeWorkoutTemplate(session);
-      const exercises = template?.exercises || [];
-      const currentLog = workoutLogForDate(selectedGymDate, false);
-      const previous = previousWorkoutOccurrence(selectedGymDate, session.name);
-      const showReference = shouldShowPreviousReference(selectedGymDate, session.name);
-
-      if (!exercises.length) {
-        list.innerHTML = `<div class="gym-empty-workout">Noch keine Übungen hinterlegt.</div>`;
-        return;
-      }
-
-      exercises.forEach((exercise, index) => {
-        const card = document.createElement("button");
-        card.type = "button";
-        card.className = "gym-exercise-card";
-        card.dataset.exerciseIndex = index;
-
-        const currentSets = currentLog?.exercises?.[exercise.id]?.sets || null;
-        const previousSets = previous?.log?.exercises?.[exercise.id]?.sets || null;
-
-        let displaySets = null;
-        let chipClass = "";
-        let note = "";
-
-        if (currentSets?.length) {
-          displaySets = currentSets;
-          chipClass = "current";
-          note = "Aktuell eingetragen";
-        } else if (showReference && previousSets?.length) {
-          displaySets = previousSets;
-          chipClass = "reference";
-          note = `Letztes Mal · ${previous.date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}`;
-        }
-
-        const chips = displaySets?.length
-          ? displaySets.map(set => `
-              <span class="gym-weight-chip ${chipClass}">
-                <span class="chip-weight">${Number(set.weight || 0).toLocaleString("de-DE")} kg</span>
-                <span class="chip-separator">·</span>
-                <span class="chip-reps">${Number(set.reps || 0)} Wdh.</span>
-              </span>
-            `).join("")
-          : `<span class="gym-weight-chip">${exercise.setCount} ${exercise.setCount === 1 ? "Satz" : "Sätze"}</span>`;
-
-        card.innerHTML = `
-          <div>
-            <span class="gym-exercise-name">${escapeHtml(exercise.name)}</span>
-            <div class="gym-exercise-meta">${exercise.setCount} ${exercise.setCount === 1 ? "Satz" : "Sätze"}</div>
-            ${note ? `<div class="gym-last-time">${note}</div>` : ""}
-          </div>
-          <div class="gym-exercise-weights">${chips}</div>
-        `;
-
-        list.appendChild(card);
-      });
-    }
-
-
-    function renderGymStats() {
-      const profile = activeGymProfile();
-      if (!profile) return;
-
-      const monday = startOfWeek(todayForGym);
-      const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
-
-      let sessions = 0;
-      let sets = 0;
-
-      Object.entries(profile.logs || {}).forEach(([iso, log]) => {
-        const date = parseIsoLocal(iso);
-        if (date < monday || date > sunday) return;
-
-        const exerciseLogs = Object.values(log.exercises || {});
-        if (exerciseLogs.length) sessions++;
-        exerciseLogs.forEach(exercise => {
-          sets += (exercise.sets || []).filter(set =>
-            Number(set.weight || 0) > 0 || Number(set.reps || 0) > 0
-          ).length;
-        });
-      });
-
-      const lastIso = Object.entries(profile.logs || {})
-        .filter(([, log]) => Object.keys(log.exercises || {}).length)
-        .map(([iso]) => iso)
-        .sort()
-        .pop();
-
-      document.getElementById("gymWeekSessions").textContent =
-        `${sessions} ${sessions === 1 ? "Training" : "Trainings"}`;
-      document.getElementById("gymWeekSets").textContent = `${sets} Sätze`;
-      document.getElementById("gymLastLogged").textContent =
-        lastIso ? parseIsoLocal(lastIso).toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"}) : "–";
-    }
-
-    function renderGym() {
-      renderGymProfileSelect();
-      renderGymStats();
-      renderGymCalendar();
-      renderSelectedGymDay();
-    }
-
-    function centerGymCalendarOnToday(smooth = true) {
-      const todayCard = gymDaysTrack.querySelector(".gym-day-card.today");
-      if (!todayCard) return;
-
-      const targetLeft =
-        todayCard.offsetLeft -
-        gymDaysViewport.clientWidth / 2 +
-        todayCard.clientWidth / 2;
-
-      gymDaysViewport.scrollTo({
-        left: targetLeft,
-        behavior: smooth ? "smooth" : "auto"
-      });
-    }
-
-    function syncGymDayWidth() {
-      if (window.innerWidth <= 900) {
-        gymDaysTrack.style.removeProperty("--gym-day-width");
-        return;
-      }
-
-      const gap = 10;
-      const visibleCards = 5;
-      const width = Math.max(
-        150,
-        (gymDaysViewport.clientWidth - gap * (visibleCards - 1)) / visibleCards
-      );
-
-      gymDaysTrack.style.setProperty("--gym-day-width", `${width}px`);
-    }
-
-    function renderGymEditorLoop() {
-      gymEditorLoop.innerHTML = "";
-
-      gymEditorDraft.loop.forEach((day, index) => {
-        const row = document.createElement("div");
-        row.className = "gym-editor-row";
-        row.innerHTML = `
-          <span class="gym-editor-index">${index + 1}</span>
-          <input type="text" value="${escapeHtml(day.name)}" data-gym-editor-name="${index}" />
-          <button title="Nach oben" data-gym-editor-up="${index}">↑</button>
-          <button title="Nach unten" data-gym-editor-down="${index}">↓</button>
-          <button title="Löschen" data-gym-editor-delete="${index}">×</button>
-        `;
-        gymEditorLoop.appendChild(row);
-      });
-
-      if (!gymEditorDraft.loop.length) {
-        gymEditorLoop.innerHTML = `<div class="empty-state">Keine Tage im Loop.</div>`;
-      }
-
-      gymEditorLoopCount.textContent =
-        `${gymEditorDraft.loop.length} ${gymEditorDraft.loop.length === 1 ? "Tag" : "Tage"}`;
-    }
-
-    function openGymEditor(asNew = false) {
-      gymEditorIsNew = asNew;
-
-      if (asNew) {
-        gymEditorDraft = {
-          id: `gym-${Date.now()}`,
-          name: `Plan ${gymData.profiles.length + 1}`,
-          startDate: makeIsoDate(todayForGym),
-          loop: [makeGymDay("Push"), makeGymDay("Pull"), makeGymDay("Leg"), makeGymDay("Rest")]
-        };
-      } else {
-        gymEditorDraft = gymClone(activeGymProfile());
-      }
-
-      gymEditorName.value = gymEditorDraft.name;
-      gymEditorStartDate.value = gymEditorDraft.startDate;
-      renderGymEditorLoop();
-
-      gymEditorModal.classList.add("open");
-      gymEditorModal.setAttribute("aria-hidden", "false");
-    }
-
-    function closeGymEditor() {
-      gymEditorModal.classList.remove("open");
-      gymEditorModal.setAttribute("aria-hidden", "true");
-      gymEditorDraft = null;
-      gymEditorIsNew = false;
-    }
-
-    function saveGymEditor() {
-      const name = gymEditorName.value.trim();
-      const startDate = gymEditorStartDate.value;
-
-      if (!name || !startDate || !gymEditorDraft.loop.length) return;
-
-      gymEditorDraft.name = name;
-      gymEditorDraft.startDate = startDate;
-
-      if (gymEditorIsNew) {
-        gymData.profiles.push(gymClone(gymEditorDraft));
-        gymData.activeProfileId = gymEditorDraft.id;
-      } else {
-        const index = gymData.profiles.findIndex(p => p.id === gymEditorDraft.id);
-        if (index >= 0) gymData.profiles[index] = gymClone(gymEditorDraft);
-      }
-
-      ensureProfileWorkoutData(activeGymProfile());
-      saveGymData();
-      closeGymEditor();
-      renderGym();
-      syncGymDayWidth();
-      requestAnimationFrame(() => centerGymCalendarOnToday(false));
-    }
-
-
-    const exerciseEditorModal = document.getElementById("exerciseEditorModal");
-    const exerciseEditorName = document.getElementById("exerciseEditorName");
-    const exerciseSetList = document.getElementById("exerciseSetList");
-    const exerciseSetCount = document.getElementById("exerciseSetCount");
-    const exerciseDelete = document.getElementById("exerciseDelete");
-
-    let exerciseEditorDraft = null;
-    let exerciseEditorIndex = null;
-
-    function selectedGymSession() {
-      return gymSessionForDate(selectedGymDate);
-    }
-
-    function renderExerciseSetEditor() {
-      exerciseSetList.innerHTML = "";
-
-      exerciseEditorDraft.sets.forEach((set, index) => {
-        const row = document.createElement("div");
-        row.className = "exercise-set-row";
-        row.innerHTML = `
-          <span class="exercise-set-number">${index + 1}</span>
-          <label class="exercise-weight-input">
-            <input type="number" min="0" step="0.5" value="${Number(set.weight || 0)}" data-exercise-weight="${index}" />
-            <span>kg</span>
-          </label>
-          <label class="exercise-reps-input">
-            <input type="number" min="0" step="1" value="${Number(set.reps || 0)}" data-exercise-reps="${index}" />
-            <span>Wdh.</span>
-          </label>
-          <button class="exercise-set-delete" data-exercise-set-delete="${index}" title="Satz löschen">×</button>
-        `;
-        exerciseSetList.appendChild(row);
-      });
-
-      if (!exerciseEditorDraft.sets.length) {
-        exerciseSetList.innerHTML = `<div class="empty-state">Noch keine Sätze angelegt.</div>`;
-      }
-
-      exerciseSetCount.textContent =
-        `${exerciseEditorDraft.sets.length} ${exerciseEditorDraft.sets.length === 1 ? "Satz" : "Sätze"}`;
-    }
-
-    function valuesForExerciseOnSelectedDate(exercise) {
-      const session = selectedGymSession();
-      const currentLog = workoutLogForDate(selectedGymDate, false);
-      const current = currentLog?.exercises?.[exercise.id]?.sets;
-
-      if (current?.length) return gymClone(current);
-
-      const previous = previousWorkoutOccurrence(selectedGymDate, session.name);
-      const showReference = shouldShowPreviousReference(selectedGymDate, session.name);
-      const prior = previous?.log?.exercises?.[exercise.id]?.sets;
-
-      if (showReference && prior?.length) return gymClone(prior);
-
-      return Array.from({ length: exercise.setCount || 3 }, () => ({ weight: 0, reps: 0 }));
-    }
-
-
-    function exerciseHistoryEntries(exerciseId) {
-      const profile = activeGymProfile();
-      if (!profile) return [];
-
-      const selectedIso = makeIsoDate(selectedGymDate);
-
-      return Object.entries(profile.logs || {})
-        .filter(([iso, log]) =>
-          iso !== selectedIso &&
-          Array.isArray(log?.exercises?.[exerciseId]?.sets) &&
-          log.exercises[exerciseId].sets.length
-        )
-        .sort((a,b) => b[0].localeCompare(a[0]))
-        .slice(0,4)
-        .map(([iso, log]) => ({
-          date: parseIsoLocal(iso),
-          sets: log.exercises[exerciseId].sets
-        }));
-    }
-
-    function renderExerciseHistory(exerciseId = null) {
-      const box = document.getElementById("exerciseHistory");
-      const list = document.getElementById("exerciseHistoryList");
-      if (!box || !list || !exerciseId) {
-        box?.classList.add("hidden");
-        return;
-      }
-
-      const entries = exerciseHistoryEntries(exerciseId);
-
-      if (!entries.length) {
-        box.classList.add("hidden");
-        list.innerHTML = "";
-        return;
-      }
-
-      box.classList.remove("hidden");
-      list.innerHTML = entries.map(entry => `
-        <div class="exercise-history-row">
-          <span class="exercise-history-date">${entry.date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}</span>
-          <div class="exercise-history-sets">
-            ${entry.sets.map(set => `
-              <span class="exercise-history-chip">${Number(set.weight || 0).toLocaleString("de-DE")} kg × ${Number(set.reps || 0)}</span>
-            `).join("")}
+          <div class="plan-picker">
+            <select id="gymProfileSelect" aria-label="Trainingsplan auswählen"></select>
+            <button id="editGymProfile" class="gym-primary-button">Bearbeiten</button>
           </div>
         </div>
-      `).join("");
+
+        <section class="dashboard-stat-strip gym-stat-strip">
+          <div><span>Diese Woche</span><strong id="gymWeekSessions">0 Trainings</strong></div>
+          <div><span>Dokumentiert</span><strong id="gymWeekSets">0 Sätze</strong></div>
+          <div><span>Letzter Eintrag</span><strong id="gymLastLogged">–</strong></div>
+        </section>
+
+        <section class="gym-calendar-card">
+          <div class="gym-calendar-head">
+            <h2>Kalender</h2>
+            <button class="gym-secondary-button" id="gymTodayButton">Heute</button>
+          </div>
+
+          <div class="gym-days-viewport" id="gymDaysViewport">
+            <div class="gym-days-track" id="gymDaysTrack"></div>
+          </div>
+        </section>
+
+        <section class="gym-workout-card">
+          <div class="gym-workout-head">
+            <div>
+              <span class="gym-kicker" id="selectedGymDateLabel">Heute</span>
+              <h2 id="selectedGymDayTitle">Training</h2>
+            </div>
+            <div class="gym-session-badge" id="selectedSessionBadge">–</div>
+          </div>
+
+          <div class="gym-exercise-list" id="gymExerciseList"></div>
+          <button class="gym-add-exercise" id="gymAddExercise">＋ Übung hinzufügen</button>
+        </section>
+      </div>
+    </section>
+
+
+    <section class="section-view hidden" id="nutritionView">
+      <div class="nutrition-shell">
+        <div class="nutrition-heading">
+          <div>
+            <p class="eyebrow nutrition-eyebrow">Ernährung</p>
+            <h1>Meal Prep</h1>
+          </div>
+          <div class="nutrition-heading-actions">
+            <button class="nutrition-secondary-button nutrition-print-button" id="printNutritionPlan">Drucken</button>
+            <button class="nutrition-primary-button" id="generateNutritionPlan">Plan erstellen</button>
+          </div>
+        </div>
+
+        <section class="dashboard-stat-strip nutrition-stat-strip">
+          <div><span>Ø Kalorien</span><strong id="nutritionWeekAvgKcal">0 kcal</strong></div>
+          <div><span>Ø Protein</span><strong id="nutritionWeekAvgProtein">0 g</strong></div>
+          <div><span>Geplant</span><strong id="nutritionWeekMealsPlanned">0 Mahlzeiten</strong></div>
+        </section>
+
+        <section class="nutrition-today-card">
+          <div class="nutrition-today-head">
+            <div>
+              <span class="nutrition-kicker">Heute</span>
+              <h2 id="nutritionTodayTitle">Tagesplan</h2>
+            </div>
+
+            <div class="nutrition-today-total">
+              <strong id="nutritionTodayCalories">0</strong>
+              <span>kcal</span>
+            </div>
+          </div>
+
+          <div class="nutrition-today-body">
+            <div class="nutrition-today-meals" id="nutritionTodayMeals"></div>
+
+            <div class="nutrition-today-macros">
+              <div class="today-macro protein">
+                <span>Protein</span>
+                <strong id="nutritionTodayProtein">0 g</strong>
+              </div>
+              <div class="today-macro carbs">
+                <span>KH</span>
+                <strong id="nutritionTodayCarbs">0 g</strong>
+              </div>
+              <div class="today-macro fat">
+                <span>Fett</span>
+                <strong id="nutritionTodayFat">0 g</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="nutrition-week-section">
+          <div class="nutrition-section-head">
+            <div>
+              <span class="nutrition-kicker">Wochenübersicht</span>
+              <h2 id="nutritionWeekTitle">Diese Woche</h2>
+            </div>
+            <span class="two-day-note">Mo/Di · Mi/Do · Fr/Sa · So</span>
+          </div>
+
+          <div class="nutrition-week-grid" id="nutritionWeekGrid"></div>
+        </section>
+
+        <div class="nutrition-detail-layout">
+          <main class="nutrition-main">
+            <div class="nutrition-meals-toolbar">
+              <span id="nutritionSelectedDayMini">Ausgewählter Tag</span>
+              <button id="individualDayToggle">Nur diesen Tag bearbeiten</button>
+            </div>
+            <section class="nutrition-meals" id="nutritionMeals"></section>
+
+          </main>
+
+          <aside class="shopping-panel">
+            <div class="shopping-head">
+              <div>
+                <span class="nutrition-kicker">Diese Woche</span>
+                <h2>Einkaufsliste</h2>
+              </div>
+              <button class="shopping-clear" id="shoppingClearChecks" title="Haken zurücksetzen">↺</button>
+            </div>
+
+            <div class="shopping-mode-toggle">
+              <button data-shopping-mode="category" class="active">Kategorien</button>
+              <button data-shopping-mode="day">Wochentage</button>
+            </div>
+
+            <div class="shopping-list" id="shoppingList"></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="nutrition-print-view" id="nutritionPrintView">
+      <section class="nutrition-print-page">
+        <div class="nutrition-print-header">
+          <div>
+            <span>Life Dashboard</span>
+            <h1>Essensplan</h1>
+          </div>
+          <strong id="nutritionPrintRange"></strong>
+        </div>
+
+        <div class="nutrition-print-grid" id="nutritionPrintGrid"></div>
+
+        <div class="nutrition-print-footer">
+          Mengen und Nährwerte beziehen sich auf eine Person. Die Personenzahl der Mahlzeit ist separat angegeben.
+        </div>
+      </section>
+
+      <section class="nutrition-print-page nutrition-print-shopping-page">
+        <div class="nutrition-print-header">
+          <div>
+            <span>Life Dashboard</span>
+            <h1>Einkaufsliste</h1>
+          </div>
+          <strong id="nutritionPrintShoppingRange"></strong>
+        </div>
+
+        <div class="nutrition-print-shopping-grid" id="nutritionPrintShoppingGrid"></div>
+
+        <div class="nutrition-print-footer">
+          Mengen berücksichtigen automatisch die eingestellte Personenzahl der jeweiligen Mahlzeiten.
+        </div>
+      </section>
+    </section>
+
+
+    <section class="section-view hidden" id="calendarView">
+      <div class="calendar-shell">
+        <div class="calendar-heading">
+          <div>
+            <p class="eyebrow calendar-eyebrow">Kalender</p>
+            <h1>Alles an einem Ort</h1>
+            <p>Termine, Training und Ernährung in einer gemeinsamen Übersicht.</p>
+          </div>
+
+          <div class="calendar-heading-actions">
+            <button class="calendar-secondary-button" id="calendarAppleImport">Apple Kalender</button>
+            <button class="calendar-primary-button" id="calendarAddEvent">＋ Termin</button>
+            <input type="file" id="calendarAppleFileInput" accept=".ics,text/calendar" multiple hidden />
+          </div>
+        </div>
+
+        <div class="calendar-toolbar">
+          <div class="calendar-month-navigation">
+            <button id="calendarPrevMonth" aria-label="Vorheriger Monat">←</button>
+            <div>
+              <span class="calendar-kicker">Monatsansicht</span>
+              <h2 id="calendarMonthTitle">Monat</h2>
+            </div>
+            <button id="calendarNextMonth" aria-label="Nächster Monat">→</button>
+          </div>
+
+          <button class="calendar-today-button" id="calendarToday">Heute</button>
+        </div>
+
+        <div class="calendar-source-row">
+          <span class="calendar-source personal">Eigene Termine</span>
+          <span class="calendar-source apple">Apple Kalender</span>
+          <span class="calendar-source gym">Gym</span>
+          <span class="calendar-source nutrition">Ernährung</span>
+        </div>
+
+        <div class="calendar-layout">
+          <section class="calendar-month-panel">
+            <div class="calendar-weekdays">
+              <span>Mo</span>
+              <span>Di</span>
+              <span>Mi</span>
+              <span>Do</span>
+              <span>Fr</span>
+              <span>Sa</span>
+              <span>So</span>
+            </div>
+            <div class="calendar-month-grid" id="calendarMonthGrid"></div>
+          </section>
+
+          <aside class="calendar-agenda-panel">
+            <div class="calendar-agenda-head">
+              <span class="calendar-kicker" id="calendarAgendaKicker">Ausgewählt</span>
+              <h2 id="calendarAgendaTitle">Tag</h2>
+            </div>
+
+            <div class="calendar-agenda-list" id="calendarAgendaList"></div>
+
+            <div class="calendar-apple-status">
+              <div>
+                <span class="calendar-kicker">Apple Kalender</span>
+                <strong id="calendarAppleStatus">Noch nicht importiert</strong>
+                <small id="calendarAppleStatusDetail">Für V24 kannst du exportierte .ics-Kalender einlesen.</small>
+              </div>
+              <button class="calendar-clear-apple hidden" id="calendarClearApple">Import entfernen</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-card hidden" id="contentCard">
+      <p class="eyebrow">Aktiver Bereich</p>
+      <h2 id="sectionTitle">Gym</h2>
+      <p id="sectionText">Hier kommt später dein Bereich hin.</p>
+    </section>
+  </main>
+
+
+
+
+
+    <div class="home-modal-backdrop" id="homeEventModal" aria-hidden="true">
+      <div class="home-modal-card">
+        <div class="home-modal-header">
+          <div>
+            <p class="eyebrow">Kalender</p>
+            <h2 id="homeEventModalTitle">Termin hinzufügen</h2>
+          </div>
+          <button class="home-modal-close" id="homeEventClose">×</button>
+        </div>
+
+        <label class="home-modal-field">
+          <span>Titel</span>
+          <input id="homeEventTitle" type="text" placeholder="z. B. Zahnarzt" />
+        </label>
+
+        <div class="home-modal-grid">
+          <label class="home-modal-field">
+            <span>Datum</span>
+            <input id="homeEventDate" type="date" />
+          </label>
+          <label class="home-modal-field">
+            <span>Uhrzeit</span>
+            <input id="homeEventTime" type="time" />
+          </label>
+        </div>
+
+        <div class="home-modal-actions">
+          <button class="home-delete-button hidden" id="homeEventDelete">Löschen</button>
+          <div>
+            <button class="home-small-button" id="homeEventCancel">Abbrechen</button>
+            <button class="home-save-button" id="homeEventSave">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-modal-backdrop" id="homeSettingsModal" aria-hidden="true">
+      <div class="home-modal-card settings">
+        <div class="home-modal-header">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h2>Einstellungen</h2>
+          </div>
+          <button class="home-modal-close" id="homeSettingsClose">×</button>
+        </div>
+
+        <div class="settings-stack">
+          <div class="backup-card">
+            <div>
+              <strong>Backup</strong>
+              <span>Alle Dashboard-Daten sichern oder wiederherstellen.</span>
+            </div>
+            <div class="settings-inline-actions">
+              <button class="home-small-button" id="homeRestoreButton">Backup laden</button>
+              <button class="home-save-button" id="homeBackupButton">Backup erstellen</button>
+              <input type="file" id="homeRestoreFile" accept=".json,application/json" hidden />
+            </div>
+          </div>
+
+          <div class="settings-card update-settings-card">
+            <div class="update-settings-copy">
+              <strong>Updates</strong>
+              <span id="updateStatusText">Dashboard und App-Ressourcen aktuell</span>
+            </div>
+
+            <label class="update-feed-field">
+              <span>Update-Quelle</span>
+              <input id="updateFeedUrl" type="url" placeholder="https://…/update.json" autocomplete="off" />
+            </label>
+
+            <div class="update-settings-actions">
+              <label class="update-auto-toggle">
+                <input type="checkbox" id="autoUpdateToggle" checked />
+                <span>Automatisch</span>
+              </label>
+              <button class="home-small-button" id="saveUpdateFeed">Speichern</button>
+              <button class="home-save-button" id="checkForUpdates">Jetzt prüfen</button>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div>
+              <strong>Erscheinungsbild</strong>
+              <span>Hell oder dunkel – wird auf diesem Gerät gespeichert.</span>
+            </div>
+            <div class="theme-toggle">
+              <button data-theme-choice="light">Hell</button>
+              <button data-theme-choice="dark">Dunkel</button>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div>
+              <strong>Benachrichtigungen</strong>
+              <span>Hinweis ungefähr 30 Minuten vor einem Termin, sofern der Browser es erlaubt.</span>
+            </div>
+            <button class="home-small-button" id="notificationPermissionButton">Aktivieren</button>
+          </div>
+
+          <div class="settings-card music-settings-card">
+            <div>
+              <strong>Apple Music</strong>
+              <span>Desktop-Modus: Das Dashboard steuert direkt die Musik-App auf deinem Mac. Kein Developer Token nötig.</span>
+            </div>
+            <div class="settings-inline-actions">
+              <button class="home-small-button" id="desktopMusicOpenSettings">Music öffnen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-modal-backdrop" id="globalSearchModal" aria-hidden="true">
+      <div class="home-modal-card search-modal-card">
+        <div class="home-modal-header">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h2>Suchen</h2>
+          </div>
+          <button class="home-modal-close" id="globalSearchClose">×</button>
+        </div>
+
+        <input class="global-search-input" id="globalSearchInput" type="search" placeholder="Termin, Übung, Lebensmittel, Ausgabe …" />
+        <div class="global-search-results" id="globalSearchResults"></div>
+      </div>
+    </div>
+
+    <div class="home-modal-backdrop" id="quickAddModal" aria-hidden="true">
+      <div class="home-modal-card quick-add-modal-card">
+        <div class="home-modal-header">
+          <div>
+            <p class="eyebrow">Schnell hinzufügen</p>
+            <h2>Was möchtest du eintragen?</h2>
+          </div>
+          <button class="home-modal-close" id="quickAddClose">×</button>
+        </div>
+
+        <div class="quick-add-choice-grid">
+          <button data-quick-action="event"><span>＋</span><strong>Termin</strong><small>Kalender</small></button>
+          <button data-quick-action="todo"><span>✓</span><strong>To-Do</strong><small>Startseite</small></button>
+          <button data-quick-action="expense"><span>€</span><strong>Ausgabe</strong><small>Finanzen</small></button>
+          <button data-quick-action="gym"><span>⌁</span><strong>Gym</strong><small>Heute bearbeiten</small></button>
+        </div>
+      </div>
+    </div>
+
+    <datalist id="foodLibraryOptions"></datalist>
+
+    <div class="nutrition-generator-backdrop" id="nutritionGeneratorModal" aria-hidden="true">
+      <div class="nutrition-generator-card" role="dialog" aria-modal="true" aria-labelledby="nutritionGeneratorTitle">
+        <div class="meal-editor-header">
+          <div>
+            <p class="eyebrow nutrition-eyebrow">Meal Prep</p>
+            <h2 id="nutritionGeneratorTitle">Plan erstellen</h2>
+          </div>
+          <button class="meal-editor-close" id="nutritionGeneratorClose" aria-label="Schließen">×</button>
+        </div>
+
+        <div class="generator-intro">
+          Für Mo/Di, Mi/Do und Fr/Sa werden gemeinsame Meal-Prep-Pläne erstellt. Sonntag bekommt einen eigenen Plan. Pflicht-Lebensmittel werden automatisch eingebaut.
+        </div>
+
+        <div class="generator-food-grid">
+          <label class="generator-field">
+            <span>Pflicht-Lebensmittel</span>
+            <textarea id="generatorRequiredFoods" rows="5" placeholder="z. B.&#10;Hähnchen&#10;Reis&#10;Brokkoli&#10;Skyr"></textarea>
+            <small>Diese Lebensmittel sollen im Plan vorkommen.</small>
+          </label>
+
+          <label class="generator-field">
+            <span>Vermeiden</span>
+            <textarea id="generatorAvoidFoods" rows="5" placeholder="z. B.&#10;Pilze&#10;Thunfisch&#10;Spinat"></textarea>
+            <small>Diese Lebensmittel werden aus dem Generator ausgeschlossen.</small>
+          </label>
+        </div>
+
+        <div class="generator-options">
+          <label>
+            <span>Kalorien-Ziel pro Tag</span>
+            <input type="number" id="generatorCalories" min="1000" step="50" value="3000" />
+          </label>
+
+          <label>
+            <span>Protein-Ziel pro Tag</span>
+            <input type="number" id="generatorProtein" min="50" step="5" value="180" />
+          </label>
+        </div>
+
+        <div class="generator-actions">
+          <button class="nutrition-secondary-button" id="nutritionGeneratorCancel">Abbrechen</button>
+          <button class="nutrition-primary-button" id="nutritionGeneratorCreate">Plan generieren</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-editor-backdrop" id="mealEditorModal" aria-hidden="true">
+      <div class="meal-editor-card" role="dialog" aria-modal="true" aria-labelledby="mealEditorTitle">
+        <div class="meal-editor-header">
+          <div>
+            <p class="eyebrow nutrition-eyebrow" id="mealEditorSlot">Mahlzeit</p>
+            <h2 id="mealEditorTitle">Mahlzeit bearbeiten</h2>
+          </div>
+          <button class="meal-editor-close" id="mealEditorClose" aria-label="Schließen">×</button>
+        </div>
+
+        <div class="meal-editor-top-grid">
+          <label class="meal-name-field">
+            <span>Name der Mahlzeit</span>
+            <input type="text" id="mealEditorName" placeholder="z. B. Chicken Rice Bowl" />
+          </label>
+
+          <label class="meal-persons-field">
+            <span>Personen</span>
+            <div class="persons-stepper">
+              <button type="button" id="mealPersonsMinus">−</button>
+              <strong id="mealPersonsValue">1</strong>
+              <button type="button" id="mealPersonsPlus">＋</button>
+            </div>
+            <small>Nährwerte bleiben pro Person</small>
+          </label>
+        </div>
+
+        <div class="meal-editor-ingredients-head">
+          <div>
+            <span class="nutrition-kicker">Lebensmittel</span>
+            <strong id="mealIngredientCount">0 Zutaten</strong>
+          </div>
+          <button class="nutrition-secondary-button" id="mealAddIngredient">＋ Lebensmittel</button>
+        </div>
+
+        <div class="ingredient-editor-list" id="ingredientEditorList"></div>
+
+        <div class="meal-editor-actions">
+          <button class="meal-delete-button" id="mealDelete">Leeren</button>
+          <div>
+            <button class="nutrition-secondary-button" id="mealEditorCancel">Abbrechen</button>
+            <button class="nutrition-primary-button" id="mealEditorSave">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gym-editor-backdrop" id="gymEditorModal" aria-hidden="true">
+      <div class="gym-editor-card" role="dialog" aria-modal="true" aria-labelledby="gymEditorTitle">
+        <div class="gym-editor-header">
+          <div>
+            <p class="eyebrow gym-eyebrow">Trainingsplan</p>
+            <h2 id="gymEditorTitle">Plan bearbeiten</h2>
+          </div>
+          <button class="gym-editor-close" id="gymEditorClose" aria-label="Schließen">×</button>
+        </div>
+
+        <div class="gym-editor-fields">
+          <label>
+            <span>Name</span>
+            <input type="text" id="gymEditorName" />
+          </label>
+
+          <label>
+            <span>Startdatum · Tag 1</span>
+            <input type="date" id="gymEditorStartDate" />
+          </label>
+        </div>
+
+        <div class="gym-editor-loop-head">
+          <div>
+            <span class="gym-kicker">Reihenfolge</span>
+            <strong id="gymEditorLoopCount">0 Tage</strong>
+          </div>
+          <button class="gym-secondary-button" id="gymEditorNewPlan">＋ Neuer Plan</button>
+        </div>
+
+        <div class="gym-editor-loop" id="gymEditorLoop"></div>
+
+        <button class="gym-editor-add" id="gymEditorAddDay">＋ Tag hinzufügen</button>
+
+        <div class="gym-editor-actions">
+          <button class="gym-secondary-button" id="gymEditorCancel">Abbrechen</button>
+          <button class="gym-primary-button" id="gymEditorSave">Speichern</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="exercise-editor-backdrop" id="exerciseEditorModal" aria-hidden="true">
+      <div class="exercise-editor-card" role="dialog" aria-modal="true" aria-labelledby="exerciseEditorTitle">
+        <div class="exercise-editor-header">
+          <div>
+            <p class="eyebrow gym-eyebrow">Übung</p>
+            <h2 id="exerciseEditorTitle">Übung bearbeiten</h2>
+          </div>
+          <button class="gym-editor-close" id="exerciseEditorClose" aria-label="Schließen">×</button>
+        </div>
+
+        <label class="exercise-name-field">
+          <span>Name der Übung</span>
+          <input type="text" id="exerciseEditorName" placeholder="z. B. Bankdrücken" />
+        </label>
+
+        <div class="exercise-sets-head">
+          <div>
+            <span class="gym-kicker">Sätze</span>
+            <strong id="exerciseSetCount">0 Sätze</strong>
+          </div>
+          <button class="gym-secondary-button" id="exerciseAddSet">＋ Satz</button>
+        </div>
+
+        <div class="exercise-set-list" id="exerciseSetList"></div>
+
+        <div class="exercise-history hidden" id="exerciseHistory">
+          <div class="exercise-history-head">
+            <span class="gym-kicker">Verlauf</span>
+            <strong>Letzte Trainings</strong>
+          </div>
+          <div class="exercise-history-list" id="exerciseHistoryList"></div>
+        </div>
+
+        <div class="exercise-editor-actions">
+          <button class="exercise-delete-button hidden" id="exerciseDelete">Übung löschen</button>
+          <div class="exercise-editor-actions-right">
+            <button class="gym-secondary-button" id="exerciseEditorCancel">Abbrechen</button>
+            <button class="gym-primary-button" id="exerciseEditorSave">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="editModal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <h3 id="modalTitle">Betrag bearbeiten</h3>
+        <p id="modalText">Neuen Betrag eingeben.</p>
+        <label class="modal-field">
+          <span>€</span>
+          <input id="modalInput" type="text" inputmode="decimal" autocomplete="off" />
+        </label>
+        <div class="modal-actions">
+          <button class="modal-cancel" id="modalCancel">Abbrechen</button>
+          <button class="modal-save" id="modalSave">Speichern</button>
+        </div>
+      </div>
+    </div>
+
+  <script>
+    const tabs = document.querySelectorAll(".tab[data-tab]");
+    const clock = document.getElementById("clock");
+    const fullDate = document.getElementById("fullDate");
+    const compactDatetime = document.getElementById("compactDatetime");
+    const homeView = document.getElementById("homeView");
+    const contentCard = document.getElementById("contentCard");
+    const financeView = document.getElementById("financeView");
+    const gymView = document.getElementById("gymView");
+    const nutritionView = document.getElementById("nutritionView");
+    const calendarView = document.getElementById("calendarView");
+    const homeButton = document.getElementById("homeButton");
+    const sectionTitle = document.getElementById("sectionTitle");
+    const sectionText = document.getElementById("sectionText");
+
+    const sectionCopy = {
+      ernaehrung: ["Ernährung", "Hier kommt später dein Wochen-Essensplan mit Mahlzeiten und Lebensmitteln hin."]
+    };
+
+    const STORAGE_KEY = "lifeDashboardFinanceV5";
+    const LEGACY_STORAGE_KEY = "lifeDashboardFinanceV3";
+    const defaultFinance = { baseBalance: 0, subscriptions: [], shopping: [], other: [], income: [] };
+    let finance = loadFinance();
+
+    function cloneDefault() {
+      return JSON.parse(JSON.stringify(defaultFinance));
     }
 
-    function openExerciseEditor(index = null) {
-      const session = selectedGymSession();
-      const template = activeWorkoutTemplate(session);
-      if (!session.day || !template) return;
-
-      exerciseEditorIndex = index;
-
-      if (index === null) {
-        exerciseEditorDraft = {
-          id: `ex-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
-          name: "",
-          sets: [
-            { weight: 0, reps: 0 },
-            { weight: 0, reps: 0 },
-            { weight: 0, reps: 0 }
-          ]
-        };
-        exerciseDelete.classList.add("hidden");
-        renderExerciseHistory(null);
-      } else {
-        const exercise = template.exercises[index];
-        exerciseEditorDraft = {
-          id: exercise.id,
-          name: exercise.name,
-          sets: valuesForExerciseOnSelectedDate(exercise)
-        };
-        exerciseDelete.classList.remove("hidden");
-        renderExerciseHistory(exercise.id);
-      }
-
-      exerciseEditorName.value = exerciseEditorDraft.name;
-      renderExerciseSetEditor();
-
-      exerciseEditorModal.classList.add("open");
-      exerciseEditorModal.setAttribute("aria-hidden", "false");
-      setTimeout(() => exerciseEditorName.focus(), 30);
-    }
-
-    function closeExerciseEditor() {
-      exerciseEditorModal.classList.remove("open");
-      exerciseEditorModal.setAttribute("aria-hidden", "true");
-      exerciseEditorDraft = null;
-      exerciseEditorIndex = null;
-    }
-
-    function saveExerciseEditor() {
-      if (!exerciseEditorDraft) return;
-
-      const name = exerciseEditorName.value.trim();
-      const session = selectedGymSession();
-      const template = activeWorkoutTemplate(session);
-      if (!name || !session.day || !template) return;
-
-      exerciseEditorDraft.name = name;
-
-      let exerciseId;
-
-      if (exerciseEditorIndex === null) {
-        const definition = {
-          id: exerciseEditorDraft.id,
-          name,
-          setCount: exerciseEditorDraft.sets.length
-        };
-        template.exercises.push(definition);
-        exerciseId = definition.id;
-      } else {
-        const definition = template.exercises[exerciseEditorIndex];
-        definition.name = name;
-        definition.setCount = exerciseEditorDraft.sets.length;
-        exerciseId = definition.id;
-      }
-
-      const log = workoutLogForDate(selectedGymDate, true);
-      log.workoutKey = workoutKey(session.name);
-      log.exercises[exerciseId] = {
-        sets: exerciseEditorDraft.sets.map(set => ({
-          weight: Number(set.weight || 0),
-          reps: Number(set.reps || 0)
-        }))
-      };
-
-      saveGymData();
-      closeExerciseEditor();
-      renderSelectedGymDay();
-    }
-
-    document.getElementById("gymAddExercise").addEventListener("click", () => openExerciseEditor(null));
-
-    document.getElementById("gymExerciseList").addEventListener("click", event => {
-      const card = event.target.closest("[data-exercise-index]");
-      if (!card) return;
-      openExerciseEditor(Number(card.dataset.exerciseIndex));
-    });
-
-    document.getElementById("exerciseAddSet").addEventListener("click", () => {
-      if (!exerciseEditorDraft) return;
-
-      const last = exerciseEditorDraft.sets.length
-        ? exerciseEditorDraft.sets[exerciseEditorDraft.sets.length - 1]
-        : { weight: 0, reps: 0 };
-
-      exerciseEditorDraft.sets.push({
-        weight: Number(last.weight || 0),
-        reps: Number(last.reps || 0)
-      });
-
-      renderExerciseSetEditor();
-    });
-
-    exerciseSetList.addEventListener("input", event => {
-      if (!exerciseEditorDraft) return;
-
-      const weightInput = event.target.closest("[data-exercise-weight]");
-      if (weightInput) {
-        const index = Number(weightInput.dataset.exerciseWeight);
-        const value = Number(weightInput.value);
-        exerciseEditorDraft.sets[index].weight = Number.isFinite(value) ? value : 0;
-        return;
-      }
-
-      const repsInput = event.target.closest("[data-exercise-reps]");
-      if (repsInput) {
-        const index = Number(repsInput.dataset.exerciseReps);
-        const value = Number(repsInput.value);
-        exerciseEditorDraft.sets[index].reps = Number.isFinite(value) ? value : 0;
-      }
-    });
-
-    exerciseSetList.addEventListener("click", event => {
-      const button = event.target.closest("[data-exercise-set-delete]");
-      if (!button || !exerciseEditorDraft) return;
-
-      const index = Number(button.dataset.exerciseSetDelete);
-      exerciseEditorDraft.sets.splice(index, 1);
-      renderExerciseSetEditor();
-    });
-
-    document.getElementById("exerciseEditorSave").addEventListener("click", saveExerciseEditor);
-    document.getElementById("exerciseEditorCancel").addEventListener("click", closeExerciseEditor);
-    document.getElementById("exerciseEditorClose").addEventListener("click", closeExerciseEditor);
-
-    exerciseDelete.addEventListener("click", () => {
-      if (exerciseEditorIndex === null) return;
-
-      const session = selectedGymSession();
-      const template = activeWorkoutTemplate(session);
-      if (!template) return;
-
-      const exercise = template.exercises[exerciseEditorIndex];
-      template.exercises.splice(exerciseEditorIndex, 1);
-
-      // Die Übungsdefinition wird für alle gleichnamigen Trainingstage entfernt.
-      // Historische Tageswerte bleiben intern bestehen, werden aber nicht mehr angezeigt.
-      saveGymData();
-      closeExerciseEditor();
-      renderSelectedGymDay();
-    });
-
-    exerciseEditorModal.addEventListener("click", event => {
-      if (event.target === exerciseEditorModal) closeExerciseEditor();
-    });
-
-    window.addEventListener("resize", () => {
-      syncGymDayWidth();
-      if (!gymView.classList.contains("hidden")) {
-        requestAnimationFrame(() => centerGymCalendarOnToday(false));
-      }
-    });
-
-    gymProfileSelect.addEventListener("change", () => {
-      gymData.activeProfileId = gymProfileSelect.value;
-      saveGymData();
-      selectedGymDate = new Date(todayForGym);
-      renderGym();
-      syncGymDayWidth();
-      requestAnimationFrame(() => centerGymCalendarOnToday(false));
-    });
-
-    document.getElementById("gymTodayButton").addEventListener("click", () => {
-      selectedGymDate = new Date(todayForGym);
-      renderGymCalendar();
-      renderSelectedGymDay();
-      requestAnimationFrame(() => centerGymCalendarOnToday(true));
-    });
-
-    document.getElementById("editGymProfile").addEventListener("click", () => openGymEditor(false));
-    document.getElementById("gymEditorNewPlan").addEventListener("click", () => openGymEditor(true));
-    document.getElementById("gymEditorClose").addEventListener("click", closeGymEditor);
-    document.getElementById("gymEditorCancel").addEventListener("click", closeGymEditor);
-    document.getElementById("gymEditorSave").addEventListener("click", saveGymEditor);
-
-    document.getElementById("gymEditorAddDay").addEventListener("click", () => {
-      if (!gymEditorDraft) return;
-      gymEditorDraft.loop.push(makeGymDay(`Tag ${gymEditorDraft.loop.length + 1}`));
-      renderGymEditorLoop();
-    });
-
-    gymEditorModal.addEventListener("click", event => {
-      if (event.target === gymEditorModal) closeGymEditor();
-    });
-
-    gymEditorLoop.addEventListener("input", event => {
-      const input = event.target.closest("[data-gym-editor-name]");
-      if (!input || !gymEditorDraft) return;
-      const index = Number(input.dataset.gymEditorName);
-      gymEditorDraft.loop[index].name = input.value;
-    });
-
-    gymEditorLoop.addEventListener("click", event => {
-      if (!gymEditorDraft) return;
-
-      const up = event.target.closest("[data-gym-editor-up]");
-      if (up) {
-        const index = Number(up.dataset.gymEditorUp);
-        if (index > 0) {
-          [gymEditorDraft.loop[index - 1], gymEditorDraft.loop[index]] =
-            [gymEditorDraft.loop[index], gymEditorDraft.loop[index - 1]];
-          renderGymEditorLoop();
-        }
-        return;
-      }
-
-      const down = event.target.closest("[data-gym-editor-down]");
-      if (down) {
-        const index = Number(down.dataset.gymEditorDown);
-        if (index < gymEditorDraft.loop.length - 1) {
-          [gymEditorDraft.loop[index + 1], gymEditorDraft.loop[index]] =
-            [gymEditorDraft.loop[index], gymEditorDraft.loop[index + 1]];
-          renderGymEditorLoop();
-        }
-        return;
-      }
-
-      const del = event.target.closest("[data-gym-editor-delete]");
-      if (del) {
-        const index = Number(del.dataset.gymEditorDelete);
-        gymEditorDraft.loop.splice(index, 1);
-        renderGymEditorLoop();
-      }
-    });
-
-    gymDaysTrack.addEventListener("click", event => {
-      const card = event.target.closest("[data-gym-date]");
-      if (!card) return;
-
-      selectedGymDate = parseIsoLocal(card.dataset.gymDate);
-      renderGymCalendar();
-      renderSelectedGymDay();
-    });
-
-
-    const NUTRITION_STORAGE_KEY = "lifeDashboardNutritionV2";
-
-    const nutritionMealSlots = [
-      { key: "breakfast", label: "Frühstück" },
-      { key: "lunch", label: "Mittagessen" },
-      { key: "snack", label: "Snack / Shake" },
-      { key: "dinner", label: "Abendessen" }
-    ];
-
-    const nutritionToday = new Date();
-    nutritionToday.setHours(0,0,0,0);
-    let selectedNutritionDate = new Date(nutritionToday);
-
-    function nutritionClone(value) {
-      return JSON.parse(JSON.stringify(value));
-    }
-
-    function emptyNutritionMeal() {
-      return { name: "", ingredients: [], persons: 1 };
-    }
-
-    function defaultNutritionCycleStart() {
-      const monday = startOfWeek(nutritionToday);
-      return makeIsoDate(monday);
-    }
-
-    function loadNutritionData() {
+    function loadFinance() {
       try {
-        const savedV2 = JSON.parse(localStorage.getItem(NUTRITION_STORAGE_KEY));
-        if (savedV2 && typeof savedV2 === "object") {
-          if (!savedV2.days) savedV2.days = {};
-          if (!savedV2.checkedShopping) savedV2.checkedShopping = {};
-          if (!savedV2.cycleStart) savedV2.cycleStart = defaultNutritionCycleStart();
-          if (!savedV2.completedMeals) savedV2.completedMeals = {};
-          if (!savedV2.individualDays) savedV2.individualDays = {};
-          if (!savedV2.foodLibrary) savedV2.foodLibrary = {};
-          if (!savedV2.shoppingMode) savedV2.shoppingMode = "category";
-          return savedV2;
-        }
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved) return { ...cloneDefault(), ...saved };
 
-        const legacy = JSON.parse(localStorage.getItem("lifeDashboardNutritionV1"));
-        if (legacy && typeof legacy === "object") {
-          return {
-            days: legacy.days || {},
-            checkedShopping: legacy.checkedShopping || {},
-            cycleStart: defaultNutritionCycleStart(),
-            completedMeals: {},
-            individualDays: {},
-            foodLibrary: {},
-            shoppingMode: "category"
+        // Alte V4-Daten übernehmen, falls vorhanden.
+        const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY));
+        if (legacy) {
+          const migrated = {
+            ...cloneDefault(),
+            subscriptions: legacy.subscriptions || [],
+            shopping: legacy.shopping || [],
+            other: legacy.other || [],
+            income: legacy.income || []
           };
+
+          const oldExpenses =
+            migrated.subscriptions.reduce((s, i) => s + Number(i.amount || 0), 0) +
+            migrated.shopping.reduce((s, i) => s + Number(i.amount || 0), 0) +
+            migrated.other.reduce((s, i) => s + Number(i.amount || 0), 0);
+
+          const oldIncome =
+            migrated.income.reduce((s, i) => s + Number(i.amount || 0), 0);
+
+          migrated.baseBalance = Number(legacy.balance || 0) - oldIncome + oldExpenses;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+          return migrated;
         }
-      } catch {}
 
-      return {
-        days: {},
-        checkedShopping: {},
-        cycleStart: defaultNutritionCycleStart(),
-        completedMeals: {},
-        individualDays: {},
-        foodLibrary: {},
-        shoppingMode: "category"
+        return cloneDefault();
+      } catch {
+        return cloneDefault();
+      }
+    }
+
+    function saveFinance() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(finance));
+    }
+
+    function euro(value) {
+      return Number(value || 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+    }
+
+    function getGreeting(hour) {
+      if (hour < 11) return "Guten Morgen";
+      if (hour < 18) return "Guten Tag";
+      return "Guten Abend";
+    }
+
+    function updateClock() {
+      const now = new Date();
+      clock.textContent = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+      fullDate.textContent = now.toLocaleDateString("de-DE", {
+        weekday: "long", day: "2-digit", month: "long", year: "numeric"
+      });
+
+      const time = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+      const weekday = now.toLocaleDateString("de-DE", { weekday: "short" });
+      const date = now.toLocaleDateString("de-DE", { day: "numeric", month: "short" });
+      compactDatetime.textContent = `${time} · ${weekday} ${date}`;
+      document.getElementById("greeting").textContent = getGreeting(now.getHours());
+    }
+
+    function startOfWeek(date) {
+      const copy = new Date(date);
+      const day = copy.getDay() || 7;
+      copy.setHours(0,0,0,0);
+      copy.setDate(copy.getDate() - day + 1);
+      return copy;
+    }
+
+    function sameDate(a,b) {
+      return a.getFullYear() === b.getFullYear() &&
+             a.getMonth() === b.getMonth() &&
+             a.getDate() === b.getDate();
+    }
+
+    function renderWeek() { renderHomeDashboard(); }
+
+    function hideMainViews() {
+      homeView.classList.add("hidden");
+      contentCard.classList.add("hidden");
+      financeView.classList.add("hidden");
+      gymView.classList.add("hidden");
+      nutritionView.classList.add("hidden");
+      calendarView.classList.add("hidden");
+    }
+
+    const sectionScrollPositions = {
+      home: 0,
+      finanzen: 0,
+      gym: 0,
+      ernaehrung: 0,
+      kalender: 0
+    };
+
+    let currentMainSection = "home";
+
+    function saveCurrentScrollPosition() {
+      sectionScrollPositions[currentMainSection] = window.scrollY;
+    }
+
+    function restoreSectionScroll(tabKey, mode = "preserve") {
+      const target =
+        mode === "top"
+          ? 0
+          : Number(sectionScrollPositions[tabKey] || 0);
+
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: target,
+          behavior: "auto"
+        });
+      });
+    }
+
+    function openSection(tabKey, tabElement, options = {}) {
+      const scrollMode = options.scrollMode || "preserve";
+
+      saveCurrentScrollPosition();
+
+      tabs.forEach(t => t.classList.remove("active"));
+      if (tabElement) tabElement.classList.add("active");
+      hideMainViews();
+      compactDatetime.classList.add("visible");
+
+      if (tabKey === "finanzen") {
+        financeView.classList.remove("hidden");
+        document.body.classList.add("finance-active");
+        renderFinance();
+      } else if (tabKey === "gym") {
+        document.body.classList.remove("finance-active");
+        gymView.classList.remove("hidden");
+        renderGym();
+        syncGymDayWidth();
+        requestAnimationFrame(() => centerGymCalendarOnToday(false));
+      } else if (tabKey === "ernaehrung") {
+        document.body.classList.remove("finance-active");
+        nutritionView.classList.remove("hidden");
+        renderNutrition();
+      } else if (tabKey === "kalender") {
+        document.body.classList.remove("finance-active");
+        calendarView.classList.remove("hidden");
+        renderFullCalendar();
+      } else {
+        document.body.classList.remove("finance-active");
+        const [title,text] = sectionCopy[tabKey];
+        sectionTitle.textContent = title;
+        sectionText.textContent = text;
+        contentCard.classList.remove("hidden");
+      }
+
+      currentMainSection = tabKey;
+
+      if (scrollMode === "top") {
+        sectionScrollPositions[tabKey] = 0;
+      }
+
+      restoreSectionScroll(tabKey, scrollMode);
+    }
+
+    function goHome(options = {}) {
+      const scrollMode = options.scrollMode || "preserve";
+
+      saveCurrentScrollPosition();
+
+      tabs.forEach(t => t.classList.remove("active"));
+      hideMainViews();
+      homeView.classList.remove("hidden");
+      compactDatetime.classList.remove("visible");
+      document.body.classList.remove("finance-active");
+
+      currentMainSection = "home";
+      renderHomeDashboard();
+      requestAnimationFrame(() => centerHomeCalendarOnToday(false));
+
+      restoreSectionScroll("home", scrollMode);
+    }
+
+    function totalFor(key) {
+      return finance[key].reduce((sum,item) => sum + Number(item.amount || 0), 0);
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+
+    const editModal = document.getElementById("editModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalText = document.getElementById("modalText");
+    const modalInput = document.getElementById("modalInput");
+    const modalCancel = document.getElementById("modalCancel");
+    const modalSave = document.getElementById("modalSave");
+
+    let modalSaveHandler = null;
+
+    function parseMoney(value) {
+      const cleaned = String(value)
+        .trim()
+        .replace(/\s/g, "")
+        .replace(/\./g, "")
+        .replace(",", ".");
+      const parsed = Number(cleaned);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function openTextModal({ title, text, value = "", onSave }) {
+      modalInput.closest(".modal-field")?.classList.add("text-mode");
+      modalTitle.textContent = title;
+      modalText.textContent = text;
+      modalInput.value = value;
+      modalInput.inputMode = "text";
+
+      modalSaveHandler = () => {
+        const parsed = modalInput.value.trim();
+        if (!parsed) {
+          modalInput.focus();
+          modalInput.select();
+          return;
+        }
+        onSave(parsed);
+        closeAmountModal();
       };
+
+      editModal.classList.add("open");
+      editModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => {
+        modalInput.focus();
+        modalInput.select();
+      }, 30);
     }
 
-
-    function normalizeNutritionMeals(data) {
-      if (!data) return data;
-
-      Object.values(data.days || {}).forEach(day => {
-        nutritionMealSlots.forEach(slot => {
-          if (day?.[slot.key]) {
-            day[slot.key].persons = Math.max(1, Number(day[slot.key].persons || 1));
-          }
-        });
+    function openAmountModal({ title, text, value, allowNegative = false, onSave }) {
+      modalInput.closest(".modal-field")?.classList.remove("text-mode");
+      modalTitle.textContent = title;
+      modalText.textContent = text;
+      modalInput.inputMode = "decimal";
+      modalInput.value = Number(value || 0).toLocaleString("de-DE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
       });
 
-      Object.values(data.individualDays || {}).forEach(day => {
-        nutritionMealSlots.forEach(slot => {
-          if (day?.[slot.key]) {
-            day[slot.key].persons = Math.max(1, Number(day[slot.key].persons || 1));
-          }
-        });
-      });
+      modalSaveHandler = () => {
+        const parsed = parseMoney(modalInput.value);
+        if (parsed === null || (!allowNegative && parsed < 0)) {
+          modalInput.focus();
+          modalInput.select();
+          return;
+        }
+        onSave(parsed);
+        closeAmountModal();
+      };
 
-      return data;
+      editModal.classList.add("open");
+      editModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => {
+        modalInput.focus();
+        modalInput.select();
+      }, 30);
     }
 
-    let nutritionData = normalizeNutritionMeals(loadNutritionData());
-
-    function saveNutritionData() {
-      localStorage.setItem(NUTRITION_STORAGE_KEY, JSON.stringify(nutritionData));
+    function closeAmountModal() {
+      editModal.classList.remove("open");
+      editModal.setAttribute("aria-hidden", "true");
+      modalSaveHandler = null;
     }
 
-    function nutritionDay(date, create = false) {
-      const iso = makeIsoDate(date);
+    modalCancel.addEventListener("click", closeAmountModal);
+    modalSave.addEventListener("click", () => modalSaveHandler?.());
 
-      if (!nutritionData.days[iso] && create) {
-        nutritionData.days[iso] = {};
-        nutritionMealSlots.forEach(slot => {
-          nutritionData.days[iso][slot.key] = emptyNutritionMeal();
-        });
-      }
+    modalInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") modalSaveHandler?.();
+      if (event.key === "Escape") closeAmountModal();
+    });
 
-      return nutritionData.days[iso] || null;
-    }
+    editModal.addEventListener("click", event => {
+      if (event.target === editModal) closeAmountModal();
+    });
 
-    function nutritionMeal(date, slotKey, create = false) {
-      const day = nutritionDay(date, create);
-      if (!day) return null;
+    function renderList(key) {
+      const list = document.getElementById(`list-${key}`);
+      const entries = finance[key];
+      list.innerHTML = "";
 
-      if (!day[slotKey] && create) day[slotKey] = emptyNutritionMeal();
-      return day[slotKey] || null;
-    }
-
-    function nutritionWeekdayIndex(date) {
-      return (date.getDay() + 6) % 7; // Montag = 0 ... Sonntag = 6
-    }
-
-    function nutritionPairForDate(date) {
-      const weekday = nutritionWeekdayIndex(date);
-
-      // Mo/Di, Mi/Do, Fr/Sa; Sonntag steht alleine.
-      if (weekday === 6) {
-        const sunday = new Date(date);
-        sunday.setHours(0,0,0,0);
-        return { start: sunday, end: new Date(sunday), single: true };
-      }
-
-      const start = new Date(date);
-      start.setDate(date.getDate() - (weekday % 2));
-      start.setHours(0,0,0,0);
-
-      const end = new Date(start);
-      end.setDate(start.getDate() + 1);
-
-      return { start, end, single: false };
-    }
-
-    function pairIndexForDate(date) {
-      return Math.floor(nutritionWeekdayIndex(date) / 2);
-    }
-
-    function pairColorIndex(date) {
-      return Math.min(3, pairIndexForDate(date));
-    }
-
-    function hasIndividualNutritionDay(date) {
-      return !!nutritionData.individualDays?.[makeIsoDate(date)];
-    }
-
-    function canonicalMealForPair(date, slotKey) {
-      const iso = makeIsoDate(date);
-
-      if (nutritionData.individualDays?.[iso]?.[slotKey]) {
-        return nutritionData.individualDays[iso][slotKey];
-      }
-
-      const pair = nutritionPairForDate(date);
-      const first = nutritionMeal(pair.start, slotKey, false);
-      const second = nutritionMeal(pair.end, slotKey, false);
-
-      if (first && (first.name.trim() || first.ingredients.length)) return first;
-      if (second && (second.name.trim() || second.ingredients.length)) return second;
-      return emptyNutritionMeal();
-    }
-
-    function syncPairMeal(date, slotKey, meal) {
-      const pair = nutritionPairForDate(date);
-      const dates = pair.single ? [pair.start] : [pair.start, pair.end];
-
+      if (!entries.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "Noch keine Einträge";
+        list.appendChild(empty);
+      } else {
