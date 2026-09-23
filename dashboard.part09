@@ -1,1000 +1,1000 @@
-      dates.forEach(pairDate => {
-        const day = nutritionDay(pairDate, true);
-        day[slotKey] = nutritionClone(meal);
+        entries.forEach((entry,index) => {
+          const row = document.createElement("div");
+          row.className = "money-row";
+          row.innerHTML = `
+            <span class="name">${escapeHtml(entry.name)}</span>
+            <span class="amount">${euro(entry.amount)}</span>
+            <button class="edit-entry" data-edit="${key}" data-index="${index}" title="Betrag ändern">✎</button>
+            <button class="delete-entry" data-delete="${key}" data-index="${index}" title="Eintrag löschen">×</button>
+          `;
+          list.appendChild(row);
+        });
+      }
+
+      document.getElementById(`total-${key}`).textContent = euro(totalFor(key));
+    }
+
+    function currentBalance() {
+      const expenses = totalFor("subscriptions") + totalFor("shopping") + totalFor("other");
+      return Number(finance.baseBalance || 0) + totalFor("income") - expenses;
+    }
+
+    function renderFinance() {
+      renderList("subscriptions");
+      renderList("shopping");
+      renderList("other");
+      renderList("income");
+
+      const income = totalFor("income");
+      const expenses = totalFor("subscriptions") + totalFor("shopping") + totalFor("other");
+      const balance = currentBalance();
+
+      document.getElementById("balanceValue").textContent = euro(balance);
+      document.getElementById("incomeTotal").textContent = euro(income);
+      document.getElementById("expenseTotal").textContent = euro(expenses);
+
+      const balanceCard = document.getElementById("balanceCard");
+      const incomeCard = document.getElementById("incomeCard");
+      const expenseCard = document.getElementById("expenseCard");
+
+      balanceCard.classList.toggle("positive-balance", balance >= 0);
+      balanceCard.classList.toggle("negative-balance", balance < 0);
+
+      incomeCard.classList.toggle("income-leading", income > expenses);
+      expenseCard.classList.toggle("expense-leading", expenses > income);
+    }
+
+
+    const GYM_STORAGE_KEY = "lifeDashboardGymV1";
+
+    function gymClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function makeIsoDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    const todayForGym = new Date();
+    todayForGym.setHours(0,0,0,0);
+
+    function makeGymDay(name) {
+      return {
+        id: `day-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+        name,
+        exercises: []
+      };
+    }
+
+    const defaultGym = {
+      activeProfileId: "default",
+      profiles: [
+        {
+          id: "default",
+          name: "Mein Plan",
+          startDate: makeIsoDate(todayForGym),
+          loop: [
+            makeGymDay("Push"),
+            makeGymDay("Pull"),
+            makeGymDay("Leg"),
+            makeGymDay("Rest"),
+            makeGymDay("Push"),
+            makeGymDay("Pull"),
+            makeGymDay("Rest")
+          ]
+        }
+      ]
+    };
+
+    let gymData = loadGymData();
+    let selectedGymDate = new Date(todayForGym);
+
+    function workoutKey(name) {
+      return String(name || "Training").trim().toLocaleLowerCase("de-DE");
+    }
+
+    function ensureProfileWorkoutData(profile) {
+      if (!profile.templates || typeof profile.templates !== "object") profile.templates = {};
+      if (!profile.logs || typeof profile.logs !== "object") profile.logs = {};
+
+      profile.loop.forEach(day => {
+        const key = workoutKey(day.name);
+
+        if (!profile.templates[key]) {
+          const migratedExercises = Array.isArray(day.exercises)
+            ? day.exercises.map(exercise => ({
+                id: exercise.id || `ex-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+                name: exercise.name || "Übung",
+                setCount: Array.isArray(exercise.sets) && exercise.sets.length ? exercise.sets.length : 3
+              }))
+            : [];
+
+          profile.templates[key] = {
+            name: day.name,
+            exercises: migratedExercises
+          };
+        }
+      });
+
+      return profile;
+    }
+
+    function normalizeGymData(data) {
+      if (!data || !Array.isArray(data.profiles)) return gymClone(defaultGym);
+
+      data.profiles.forEach(profile => {
+        if (!Array.isArray(profile.loop)) profile.loop = [];
+
+        profile.loop = profile.loop.map(item => {
+          if (typeof item === "string") return makeGymDay(item);
+
+          return {
+            id: item.id || `day-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+            name: item.name || "Training",
+            exercises: Array.isArray(item.exercises) ? item.exercises : []
+          };
+        });
+
+        ensureProfileWorkoutData(profile);
+
+        // Alte gespeicherte Logs auf das neue Format bringen.
+        Object.values(profile.logs).forEach(log => {
+          if (!log || typeof log !== "object") return;
+          if (!log.exercises || typeof log.exercises !== "object") log.exercises = {};
+
+          Object.values(log.exercises).forEach(ex => {
+            if (!Array.isArray(ex.sets)) ex.sets = [];
+            ex.sets = ex.sets.map(set => ({
+              weight: Number(set.weight || 0),
+              reps: Number(set.reps || 0)
+            }));
+          });
+        });
+      });
+
+      return data;
+    }
+
+    function loadGymData() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(GYM_STORAGE_KEY));
+        if (saved && Array.isArray(saved.profiles) && saved.profiles.length) {
+          const normalized = normalizeGymData(saved);
+          localStorage.setItem(GYM_STORAGE_KEY, JSON.stringify(normalized));
+          return normalized;
+        }
+      } catch {}
+      return gymClone(defaultGym);
+    }
+
+    function saveGymData() {
+      localStorage.setItem(GYM_STORAGE_KEY, JSON.stringify(gymData));
+    }
+
+    function activeGymProfile() {
+      return gymData.profiles.find(p => p.id === gymData.activeProfileId) || gymData.profiles[0];
+    }
+
+    function parseIsoLocal(value) {
+      const [y,m,d] = value.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function dayDifference(a, b) {
+      const one = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+      const two = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+      return Math.round((one - two) / 86400000);
+    }
+
+    function mod(n, m) {
+      return ((n % m) + m) % m;
+    }
+
+    function gymSessionForDate(date) {
+      const profile = activeGymProfile();
+      if (!profile || !profile.loop.length) {
+        return { name: "Kein Plan", index: -1, day: null };
+      }
+
+      const start = parseIsoLocal(profile.startDate);
+      const offset = dayDifference(date, start);
+      const index = mod(offset, profile.loop.length);
+      const day = profile.loop[index];
+
+      return {
+        name: day?.name || `Tag ${index + 1}`,
+        index,
+        day
+      };
+    }
+
+
+    function activeWorkoutTemplate(session = gymSessionForDate(selectedGymDate)) {
+      const profile = activeGymProfile();
+      if (!profile || !session?.day) return null;
+
+      ensureProfileWorkoutData(profile);
+      const key = workoutKey(session.name);
+
+      if (!profile.templates[key]) {
+        profile.templates[key] = { name: session.name, exercises: [] };
+      }
+
+      return profile.templates[key];
+    }
+
+    function workoutLogForDate(date, create = false) {
+      const profile = activeGymProfile();
+      if (!profile) return null;
+
+      ensureProfileWorkoutData(profile);
+      const iso = makeIsoDate(date);
+
+      if (!profile.logs[iso] && create) {
+        profile.logs[iso] = {
+          workoutKey: workoutKey(gymSessionForDate(date).name),
+          exercises: {}
+        };
+      }
+
+      return profile.logs[iso] || null;
+    }
+
+    function previousWorkoutOccurrence(date, sessionName) {
+      const profile = activeGymProfile();
+      if (!profile) return null;
+
+      const targetKey = workoutKey(sessionName);
+      const probe = new Date(date);
+      const maxLookback = Math.max(120, profile.loop.length * 20);
+
+      for (let i = 1; i <= maxLookback; i++) {
+        probe.setDate(probe.getDate() - 1);
+
+        if (workoutKey(gymSessionForDate(probe).name) !== targetKey) continue;
+
+        const log = workoutLogForDate(probe, false);
+        if (log && log.workoutKey === targetKey) {
+          return { date: new Date(probe), log };
+        }
+      }
+
+      return null;
+    }
+
+    function latestLoggedWorkoutDate(sessionName) {
+      const profile = activeGymProfile();
+      if (!profile) return null;
+
+      const targetKey = workoutKey(sessionName);
+      const dates = Object.keys(profile.logs || {})
+        .filter(iso => profile.logs[iso]?.workoutKey === targetKey)
+        .sort();
+
+      return dates.length ? parseIsoLocal(dates[dates.length - 1]) : null;
+    }
+
+    function nextOccurrenceAfter(date, sessionName) {
+      const profile = activeGymProfile();
+      if (!profile) return null;
+
+      const targetKey = workoutKey(sessionName);
+      const probe = new Date(date);
+
+      for (let i = 1; i <= Math.max(60, profile.loop.length * 4); i++) {
+        probe.setDate(probe.getDate() + 1);
+        if (workoutKey(gymSessionForDate(probe).name) === targetKey) {
+          return new Date(probe);
+        }
+      }
+
+      return null;
+    }
+
+    function shouldShowPreviousReference(date, sessionName) {
+      const latest = latestLoggedWorkoutDate(sessionName);
+      if (!latest) return false;
+
+      const next = nextOccurrenceAfter(latest, sessionName);
+      return next ? sameDate(next, date) : false;
+    }
+
+    const gymProfileSelect = document.getElementById("gymProfileSelect");
+    const gymDaysViewport = document.getElementById("gymDaysViewport");
+    const gymDaysTrack = document.getElementById("gymDaysTrack");
+    const selectedGymDateLabel = document.getElementById("selectedGymDateLabel");
+    const selectedGymDayTitle = document.getElementById("selectedGymDayTitle");
+    const selectedSessionBadge = document.getElementById("selectedSessionBadge");
+
+    const gymEditorModal = document.getElementById("gymEditorModal");
+    const gymEditorName = document.getElementById("gymEditorName");
+    const gymEditorStartDate = document.getElementById("gymEditorStartDate");
+    const gymEditorLoop = document.getElementById("gymEditorLoop");
+    const gymEditorLoopCount = document.getElementById("gymEditorLoopCount");
+
+    let gymEditorDraft = null;
+    let gymEditorIsNew = false;
+
+    function renderGymProfileSelect() {
+      gymProfileSelect.innerHTML = "";
+
+      gymData.profiles.forEach(profile => {
+        const option = document.createElement("option");
+        option.value = profile.id;
+        option.textContent = profile.name;
+        option.selected = profile.id === gymData.activeProfileId;
+        gymProfileSelect.appendChild(option);
       });
     }
 
-    function saveMealForSelectedContext(date, slotKey, meal) {
-      const iso = makeIsoDate(date);
+    function renderGymCalendar() {
+      const rangeBefore = 30;
+      const rangeAfter = 30;
+      gymDaysTrack.innerHTML = "";
 
-      if (hasIndividualNutritionDay(date)) {
-        if (!nutritionData.individualDays[iso]) nutritionData.individualDays[iso] = {};
-        nutritionData.individualDays[iso][slotKey] = nutritionClone(meal);
-      } else {
-        syncPairMeal(date, slotKey, meal);
+      for (let i = -rangeBefore; i <= rangeAfter; i++) {
+        const date = new Date(todayForGym);
+        date.setDate(todayForGym.getDate() + i);
+
+        const session = gymSessionForDate(date);
+        const card = document.createElement("button");
+        card.className = "gym-day-card";
+        card.type = "button";
+        card.dataset.gymDate = makeIsoDate(date);
+
+        if (sameDate(date, todayForGym)) card.classList.add("today");
+        if (sameDate(date, selectedGymDate)) card.classList.add("selected");
+
+        card.innerHTML = `
+          ${sameDate(date, todayForGym) ? `<span class="gym-today-badge">Heute</span>` : ""}
+          <div class="gym-day-top">
+            <div class="gym-day-date-stack">
+              <div class="gym-day-name">${date.toLocaleDateString("de-DE",{weekday:"short"})}</div>
+              <div class="gym-day-number">${date.getDate()}</div>
+              <div class="gym-day-index">${date.toLocaleDateString("de-DE",{month:"short"})}</div>
+            </div>
+          </div>
+          <div>
+            <div class="gym-session-name">${escapeHtml(session.name)}</div>
+            ${sameDate(date, selectedGymDate) ? `<div class="gym-selected-label">Ausgewählt</div>` : ""}
+          </div>
+        `;
+
+        gymDaysTrack.appendChild(card);
       }
     }
 
-    function ensureIndividualDay(date) {
-      const iso = makeIsoDate(date);
-      if (nutritionData.individualDays[iso]) return;
+    function renderSelectedGymDay() {
+      const session = gymSessionForDate(selectedGymDate);
 
-      nutritionData.individualDays[iso] = {};
-      nutritionMealSlots.forEach(slot => {
-        nutritionData.individualDays[iso][slot.key] =
-          nutritionClone(canonicalMealForPair(date, slot.key));
-      });
+      selectedGymDateLabel.textContent = sameDate(selectedGymDate, todayForGym)
+        ? "Heute"
+        : selectedGymDate.toLocaleDateString("de-DE", {
+            weekday: "short", day: "2-digit", month: "short"
+          });
+
+      selectedGymDayTitle.textContent = session.name;
+      selectedSessionBadge.textContent = session.index >= 0
+        ? `Tag ${session.index + 1}`
+        : "–";
+
+      renderGymExercises(session);
     }
 
-    function removeIndividualDay(date) {
-      delete nutritionData.individualDays[makeIsoDate(date)];
-    }
+    function renderGymExercises(session) {
+      const list = document.getElementById("gymExerciseList");
+      list.innerHTML = "";
 
-    function ingredientValue(ingredient, key) {
-      return Number(ingredient?.[key] || 0);
-    }
+      const template = activeWorkoutTemplate(session);
+      const exercises = template?.exercises || [];
+      const currentLog = workoutLogForDate(selectedGymDate, false);
+      const previous = previousWorkoutOccurrence(selectedGymDate, session.name);
+      const showReference = shouldShowPreviousReference(selectedGymDate, session.name);
 
-    function mealTotals(meal) {
-      return (meal?.ingredients || []).reduce((sum, item) => {
-        sum.kcal += ingredientValue(item, "kcal");
-        sum.protein += ingredientValue(item, "protein");
-        sum.carbs += ingredientValue(item, "carbs");
-        sum.fat += ingredientValue(item, "fat");
-        return sum;
-      }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
-    }
+      if (!exercises.length) {
+        list.innerHTML = `<div class="gym-empty-workout">Noch keine Übungen hinterlegt.</div>`;
+        return;
+      }
 
-    function dayTotals(date) {
-      return nutritionMealSlots.reduce((sum, slot) => {
-        const totals = mealTotals(canonicalMealForPair(date, slot.key));
-        sum.kcal += totals.kcal;
-        sum.protein += totals.protein;
-        sum.carbs += totals.carbs;
-        sum.fat += totals.fat;
-        return sum;
-      }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
-    }
-
-    function startOfNutritionWeek(date) {
-      return startOfWeek(date);
-    }
-
-    function formatNutritionNumber(value, digits = 0) {
-      return Number(value || 0).toLocaleString("de-DE", {
-        maximumFractionDigits: digits
-      });
-    }
-
-    function nutritionWeekDates() {
-      const monday = startOfNutritionWeek(selectedNutritionDate);
-
-      return Array.from({length: 7}, (_, i) => {
-        const date = new Date(monday);
-        date.setDate(monday.getDate() + i);
-        return date;
-      });
-    }
-
-    function renderNutritionToday() {
-      const totals = dayTotals(nutritionToday);
-
-      document.getElementById("nutritionTodayTitle").textContent =
-        nutritionToday.toLocaleDateString("de-DE", {
-          weekday: "long",
-          day: "2-digit",
-          month: "long"
-        });
-
-      document.getElementById("nutritionTodayCalories").textContent =
-        formatNutritionNumber(totals.kcal);
-
-      document.getElementById("nutritionTodayProtein").textContent =
-        `${formatNutritionNumber(totals.protein,1)} g`;
-
-      document.getElementById("nutritionTodayCarbs").textContent =
-        `${formatNutritionNumber(totals.carbs,1)} g`;
-
-      document.getElementById("nutritionTodayFat").textContent =
-        `${formatNutritionNumber(totals.fat,1)} g`;
-
-      const host = document.getElementById("nutritionTodayMeals");
-      host.innerHTML = "";
-
-      nutritionMealSlots.forEach(slot => {
-        const meal = canonicalMealForPair(nutritionToday, slot.key);
-        const completionKey = `${makeIsoDate(nutritionToday)}|||${slot.key}`;
-        const done = !!nutritionData.completedMeals?.[completionKey];
-
-        const item = document.createElement("button");
-        item.type = "button";
-        item.className = `today-meal${done ? " done" : ""}`;
-        item.dataset.todayMealSlot = slot.key;
-
-        item.innerHTML = `
-          <span>${slot.label}</span>
-          <strong>${escapeHtml(meal.name || "Noch offen")}</strong>
-          <small class="today-meal-persons">${Math.max(1, Number(meal.persons || 1))} ${Number(meal.persons || 1) === 1 ? "Person" : "Personen"}</small>
-          <div class="today-meal-check">${done ? "✓ Erledigt" : "Antippen zum Abhaken"}</div>
-        `;
-
-        host.appendChild(item);
-      });
-    }
-
-    function renderNutritionWeek() {
-      const host = document.getElementById("nutritionWeekGrid");
-      host.innerHTML = "";
-
-      const weekDates = nutritionWeekDates();
-      const monday = weekDates[0];
-      const sunday = weekDates[6];
-
-      document.getElementById("nutritionWeekTitle").textContent =
-        `${monday.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})} – ${sunday.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}`;
-
-      weekDates.forEach(date => {
-        const pair = nutritionPairForDate(date);
+      exercises.forEach((exercise, index) => {
         const card = document.createElement("button");
         card.type = "button";
-        card.className = `week-food-day pair-${pairColorIndex(date)}`;
-        card.dataset.nutritionDate = makeIsoDate(date);
+        card.className = "gym-exercise-card";
+        card.dataset.exerciseIndex = index;
 
-        if (sameDate(date, nutritionToday)) card.classList.add("today");
+        const currentSets = currentLog?.exercises?.[exercise.id]?.sets || null;
+        const previousSets = previous?.log?.exercises?.[exercise.id]?.sets || null;
 
-        const selectedPair = nutritionPairForDate(selectedNutritionDate);
-        if (sameDate(pair.start, selectedPair.start)) card.classList.add("selected");
+        let displaySets = null;
+        let chipClass = "";
+        let note = "";
 
-        const meals = nutritionMealSlots.map(slot => {
-          const meal = canonicalMealForPair(date, slot.key);
-          return `
-            <div class="week-food-meal">
-              <span>${slot.label}</span>
-              <strong>${escapeHtml(meal.name || "–")}</strong>
-              ${meal.name ? `<small class="today-meal-persons">${Math.max(1, Number(meal.persons || 1))} Pers.</small>` : ""}
-            </div>
-          `;
-        }).join("");
+        if (currentSets?.length) {
+          displaySets = currentSets;
+          chipClass = "current";
+          note = "Aktuell eingetragen";
+        } else if (showReference && previousSets?.length) {
+          displaySets = previousSets;
+          chipClass = "reference";
+          note = `Letztes Mal · ${previous.date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}`;
+        }
+
+        const chips = displaySets?.length
+          ? displaySets.map(set => `
+              <span class="gym-weight-chip ${chipClass}">
+                <span class="chip-weight">${Number(set.weight || 0).toLocaleString("de-DE")} kg</span>
+                <span class="chip-separator">·</span>
+                <span class="chip-reps">${Number(set.reps || 0)} Wdh.</span>
+              </span>
+            `).join("")
+          : `<span class="gym-weight-chip">${exercise.setCount} ${exercise.setCount === 1 ? "Satz" : "Sätze"}</span>`;
 
         card.innerHTML = `
-          <div class="week-food-day-head">
-            <span class="week-food-weekday">${date.toLocaleDateString("de-DE",{weekday:"short"})}</span>
-            <span class="week-food-date">${date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}</span>
-            ${hasIndividualNutritionDay(date) ? `<span class="individual-badge">Individuell</span>` : ""}
+          <div>
+            <span class="gym-exercise-name">${escapeHtml(exercise.name)}</span>
+            <div class="gym-exercise-meta">${exercise.setCount} ${exercise.setCount === 1 ? "Satz" : "Sätze"}</div>
+            ${note ? `<div class="gym-last-time">${note}</div>` : ""}
           </div>
-          <div class="week-food-meals">${meals}</div>
+          <div class="gym-exercise-weights">${chips}</div>
         `;
 
-        host.appendChild(card);
+        list.appendChild(card);
       });
     }
 
-    function renderNutritionBlockSummary() {}
 
+    function renderGymStats() {
+      const profile = activeGymProfile();
+      if (!profile) return;
 
-    function renderNutritionMeals() {
-      const host = document.getElementById("nutritionMeals");
-      host.innerHTML = "";
+      const monday = startOfWeek(todayForGym);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
 
-      const individual = hasIndividualNutritionDay(selectedNutritionDate);
-      document.getElementById("nutritionSelectedDayMini").textContent =
-        selectedNutritionDate.toLocaleDateString("de-DE", {
-          weekday: "long", day: "2-digit", month: "long"
-        });
+      let sessions = 0;
+      let sets = 0;
 
-      const individualToggle = document.getElementById("individualDayToggle");
-      individualToggle.textContent =
-        individual ? "Zurück zum Meal-Prep-Block" : "Nur diesen Tag bearbeiten";
-      individualToggle.classList.toggle("active", individual);
+      Object.entries(profile.logs || {}).forEach(([iso, log]) => {
+        const date = parseIsoLocal(iso);
+        if (date < monday || date > sunday) return;
 
-      nutritionMealSlots.forEach(slot => {
-        const meal = canonicalMealForPair(selectedNutritionDate, slot.key);
-        const totals = mealTotals(meal);
-
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "nutrition-meal-card";
-        button.dataset.mealSlot = slot.key;
-
-        const preview = meal.ingredients.slice(0, 3).map(item => `
-          <div class="meal-ingredient-line">
-            <span>${escapeHtml(item.name || "Lebensmittel")}</span>
-            <strong>${formatNutritionNumber(item.amount,1)} ${escapeHtml(item.unit || "g")}</strong>
-          </div>
-        `).join("");
-
-        button.innerHTML = `
-          <div class="meal-card-head">
-            <div>
-              <span class="meal-slot">${slot.label}</span>
-              <span class="meal-name">${escapeHtml(meal.name || "Noch nicht geplant")}</span>
-              ${meal.name ? `<span class="meal-person-badge">${Math.max(1, Number(meal.persons || 1))} ${Number(meal.persons || 1) === 1 ? "Person" : "Personen"}</span>` : ""}
-            </div>
-            <span class="meal-kcal">${formatNutritionNumber(totals.kcal)} kcal</span>
-          </div>
-
-          <div class="meal-ingredient-preview">
-            ${preview || `<div class="meal-empty">Mahlzeit hinzufügen</div>`}
-            ${meal.ingredients.length > 3 ? `<div class="meal-ingredient-line"><span>+ ${meal.ingredients.length - 3} weitere</span></div>` : ""}
-          </div>
-
-          <div class="meal-macro-row">
-            <span class="meal-mini-macro protein">P ${formatNutritionNumber(totals.protein,1)} g</span>
-            <span class="meal-mini-macro carbs">KH ${formatNutritionNumber(totals.carbs,1)} g</span>
-            <span class="meal-mini-macro fat">F ${formatNutritionNumber(totals.fat,1)} g</span>
-          </div>
-        `;
-
-        host.appendChild(button);
-      });
-    }
-
-    function shoppingKey(name, unit) {
-      return `${String(name || "").trim().toLocaleLowerCase("de-DE")}|||${String(unit || "").trim().toLocaleLowerCase("de-DE")}`;
-    }
-
-    function buildShoppingList() {
-      const grouped = new Map();
-
-      nutritionWeekDates().forEach(date => {
-        nutritionMealSlots.forEach(slot => {
-          const meal = canonicalMealForPair(date, slot.key);
-
-          (meal?.ingredients || []).forEach(item => {
-            const name = String(item.name || "").trim();
-            const unit = String(item.unit || "g").trim();
-            if (!name) return;
-
-            const key = shoppingKey(name, unit);
-
-            if (!grouped.has(key)) {
-              grouped.set(key, { name, unit, amount: 0 });
-            }
-
-            grouped.get(key).amount += Number(item.amount || 0) * Math.max(1, Number(meal.persons || 1));
-          });
+        const exerciseLogs = Object.values(log.exercises || {});
+        if (exerciseLogs.length) sessions++;
+        exerciseLogs.forEach(exercise => {
+          sets += (exercise.sets || []).filter(set =>
+            Number(set.weight || 0) > 0 || Number(set.reps || 0) > 0
+          ).length;
         });
       });
 
-      return Array.from(grouped.values()).sort((a,b) =>
-        a.name.localeCompare(b.name, "de")
+      const lastIso = Object.entries(profile.logs || {})
+        .filter(([, log]) => Object.keys(log.exercises || {}).length)
+        .map(([iso]) => iso)
+        .sort()
+        .pop();
+
+      document.getElementById("gymWeekSessions").textContent =
+        `${sessions} ${sessions === 1 ? "Training" : "Trainings"}`;
+      document.getElementById("gymWeekSets").textContent = `${sets} Sätze`;
+      document.getElementById("gymLastLogged").textContent =
+        lastIso ? parseIsoLocal(lastIso).toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"}) : "–";
+    }
+
+    function renderGym() {
+      renderGymProfileSelect();
+      renderGymStats();
+      renderGymCalendar();
+      renderSelectedGymDay();
+    }
+
+    function centerGymCalendarOnToday(smooth = true) {
+      const todayCard = gymDaysTrack.querySelector(".gym-day-card.today");
+      if (!todayCard) return;
+
+      const targetLeft =
+        todayCard.offsetLeft -
+        gymDaysViewport.clientWidth / 2 +
+        todayCard.clientWidth / 2;
+
+      gymDaysViewport.scrollTo({
+        left: targetLeft,
+        behavior: smooth ? "smooth" : "auto"
+      });
+    }
+
+    function syncGymDayWidth() {
+      if (window.innerWidth <= 900) {
+        gymDaysTrack.style.removeProperty("--gym-day-width");
+        return;
+      }
+
+      const gap = 10;
+      const visibleCards = 5;
+      const width = Math.max(
+        150,
+        (gymDaysViewport.clientWidth - gap * (visibleCards - 1)) / visibleCards
       );
+
+      gymDaysTrack.style.setProperty("--gym-day-width", `${width}px`);
     }
 
-    function foodCategory(name) {
-      const n = String(name || "").toLocaleLowerCase("de-DE");
+    function renderGymEditorLoop() {
+      gymEditorLoop.innerHTML = "";
 
-      if (/(hähn|pute|rind|hack|lachs|fisch|thun|schwein)/.test(n)) return "Fleisch & Fisch";
-      if (/(skyr|joghurt|milch|käse|frischkäse|quark)/.test(n)) return "Milchprodukte";
-      if (/(whey|isoclear|protein)/.test(n)) return "Protein & Supplements";
-      if (/(reis|penne|nudel|pasta|kartoff|couscous|brot|hafer|müsli|reiswaffel)/.test(n)) return "Reis, Nudeln & Co.";
-      if (/(brokk|paprika|möhre|möhren|erbse|mais|bohne|beere|banane|apfel|obst|gemüse)/.test(n)) return "Obst & Gemüse";
-      return "Sonstiges";
+      gymEditorDraft.loop.forEach((day, index) => {
+        const row = document.createElement("div");
+        row.className = "gym-editor-row";
+        row.innerHTML = `
+          <span class="gym-editor-index">${index + 1}</span>
+          <input type="text" value="${escapeHtml(day.name)}" data-gym-editor-name="${index}" />
+          <button title="Nach oben" data-gym-editor-up="${index}">↑</button>
+          <button title="Nach unten" data-gym-editor-down="${index}">↓</button>
+          <button title="Löschen" data-gym-editor-delete="${index}">×</button>
+        `;
+        gymEditorLoop.appendChild(row);
+      });
+
+      if (!gymEditorDraft.loop.length) {
+        gymEditorLoop.innerHTML = `<div class="empty-state">Keine Tage im Loop.</div>`;
+      }
+
+      gymEditorLoopCount.textContent =
+        `${gymEditorDraft.loop.length} ${gymEditorDraft.loop.length === 1 ? "Tag" : "Tage"}`;
     }
 
-    function buildShoppingByDay() {
-      return nutritionWeekDates().map(date => {
-        const grouped = new Map();
+    function openGymEditor(asNew = false) {
+      gymEditorIsNew = asNew;
 
-        nutritionMealSlots.forEach(slot => {
-          const meal = canonicalMealForPair(date, slot.key);
-
-          (meal?.ingredients || []).forEach(item => {
-            const name = String(item.name || "").trim();
-            const unit = String(item.unit || "g").trim();
-            if (!name) return;
-
-            const key = shoppingKey(name, unit);
-            if (!grouped.has(key)) grouped.set(key, { name, unit, amount: 0 });
-
-            grouped.get(key).amount +=
-              Number(item.amount || 0) * Math.max(1, Number(meal.persons || 1));
-          });
-        });
-
-        return {
-          date,
-          items: Array.from(grouped.values()).sort((a,b) => a.name.localeCompare(b.name, "de"))
+      if (asNew) {
+        gymEditorDraft = {
+          id: `gym-${Date.now()}`,
+          name: `Plan ${gymData.profiles.length + 1}`,
+          startDate: makeIsoDate(todayForGym),
+          loop: [makeGymDay("Push"), makeGymDay("Pull"), makeGymDay("Leg"), makeGymDay("Rest")]
         };
-      });
-    }
-
-    function shoppingItemHtml(item, checkKey) {
-      const checked = !!nutritionData.checkedShopping[checkKey];
-
-      return `
-        <label class="shopping-item${checked ? " checked" : ""}">
-          <input type="checkbox" data-shopping-key="${escapeHtml(checkKey)}" ${checked ? "checked" : ""} />
-          <span class="shopping-name">${escapeHtml(item.name)}</span>
-          <span class="shopping-amount">${formatNutritionNumber(item.amount,1)} ${escapeHtml(item.unit)}</span>
-        </label>
-      `;
-    }
-
-    function renderShoppingList() {
-      const host = document.getElementById("shoppingList");
-      host.innerHTML = "";
-
-      document.querySelectorAll("[data-shopping-mode]").forEach(button => {
-        button.classList.toggle("active", button.dataset.shoppingMode === nutritionData.shoppingMode);
-      });
-
-      if (nutritionData.shoppingMode === "day") {
-        const days = buildShoppingByDay();
-
-        if (!days.some(day => day.items.length)) {
-          host.innerHTML = `<div class="shopping-empty">Sobald du Mahlzeiten planst,<br>wird die Einkaufsliste automatisch erstellt.</div>`;
-          return;
-        }
-
-        days.forEach(({date, items}) => {
-          if (!items.length) return;
-
-          const iso = makeIsoDate(date);
-          host.insertAdjacentHTML("beforeend", `
-            <div class="shopping-day-title">
-              <strong>${date.toLocaleDateString("de-DE",{weekday:"long"})}</strong>
-              <span>${date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}</span>
-            </div>
-          `);
-
-          items.forEach(item => {
-            const checkKey = `day|||${iso}|||${shoppingKey(item.name, item.unit)}`;
-            host.insertAdjacentHTML("beforeend", shoppingItemHtml(item, checkKey));
-          });
-        });
-
-        return;
-      }
-
-      const items = buildShoppingList();
-
-      if (!items.length) {
-        host.innerHTML = `<div class="shopping-empty">Sobald du Mahlzeiten planst,<br>wird die Einkaufsliste automatisch erstellt.</div>`;
-        return;
-      }
-
-      const categories = new Map();
-      items.forEach(item => {
-        const category = foodCategory(item.name);
-        if (!categories.has(category)) categories.set(category, []);
-        categories.get(category).push(item);
-      });
-
-      const categoryOrder = [
-        "Fleisch & Fisch",
-        "Milchprodukte",
-        "Protein & Supplements",
-        "Reis, Nudeln & Co.",
-        "Obst & Gemüse",
-        "Sonstiges"
-      ];
-
-      categoryOrder.forEach(category => {
-        const categoryItems = categories.get(category);
-        if (!categoryItems?.length) return;
-
-        host.insertAdjacentHTML("beforeend", `<div class="shopping-group-title">${category}</div>`);
-
-        categoryItems.forEach(item => {
-          const checkKey = `cat|||${shoppingKey(item.name, item.unit)}`;
-          host.insertAdjacentHTML("beforeend", shoppingItemHtml(item, checkKey));
-        });
-      });
-    }
-
-
-    function renderNutritionStats() {
-      const dates = nutritionWeekDates();
-      let kcal = 0;
-      let protein = 0;
-      let daysWithPlan = 0;
-      let plannedMeals = 0;
-
-      dates.forEach(date => {
-        const totals = dayTotals(date);
-        const meals = nutritionMealSlots
-          .map(slot => canonicalMealForPair(date, slot.key))
-          .filter(meal => meal?.name);
-
-        if (meals.length) {
-          daysWithPlan++;
-          kcal += Number(totals.kcal || 0);
-          protein += Number(totals.protein || 0);
-          plannedMeals += meals.length;
-        }
-      });
-
-      const divisor = Math.max(1, daysWithPlan);
-      document.getElementById("nutritionWeekAvgKcal").textContent =
-        `${formatNutritionNumber(kcal / divisor,0)} kcal`;
-      document.getElementById("nutritionWeekAvgProtein").textContent =
-        `${formatNutritionNumber(protein / divisor,0)} g`;
-      document.getElementById("nutritionWeekMealsPlanned").textContent =
-        `${plannedMeals} Mahlzeiten`;
-    }
-
-    function renderNutrition() {
-      renderNutritionStats();
-      renderNutritionToday();
-      renderNutritionWeek();
-      renderNutritionMeals();
-      renderShoppingList();
-    }
-
-    const mealEditorModal = document.getElementById("mealEditorModal");
-    const mealEditorName = document.getElementById("mealEditorName");
-    const mealPersonsValue = document.getElementById("mealPersonsValue");
-    const ingredientEditorList = document.getElementById("ingredientEditorList");
-    const mealIngredientCount = document.getElementById("mealIngredientCount");
-    const mealEditorSlot = document.getElementById("mealEditorSlot");
-
-    let mealEditorSlotKey = null;
-    let mealEditorDraft = null;
-
-    function emptyIngredient() {
-      return {
-        id: `food-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-        name: "",
-        amount: 0,
-        unit: "g",
-        kcal: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0
-      };
-    }
-
-
-    function foodLibraryKey(name, unit = "") {
-      return `${String(name || "").trim().toLocaleLowerCase("de-DE")}|||${String(unit || "").trim().toLocaleLowerCase("de-DE")}`;
-    }
-
-    function rememberFood(item) {
-      const amount = Number(item.amount || 0);
-      const name = String(item.name || "").trim();
-      const unit = String(item.unit || "g").trim();
-      if (!name || amount <= 0) return;
-
-      const key = foodLibraryKey(name, unit);
-      nutritionData.foodLibrary[key] = {
-        name,
-        unit,
-        defaultAmount: amount,
-        kcalPerAmount: Number(item.kcal || 0) / amount,
-        proteinPerAmount: Number(item.protein || 0) / amount,
-        carbsPerAmount: Number(item.carbs || 0) / amount,
-        fatPerAmount: Number(item.fat || 0) / amount
-      };
-    }
-
-
-    function bootstrapFoodLibraryFromSavedMeals() {
-      const collectDay = day => {
-        nutritionMealSlots.forEach(slot => {
-          const meal = day?.[slot.key];
-          (meal?.ingredients || []).forEach(rememberFood);
-        });
-      };
-
-      Object.values(nutritionData.days || {}).forEach(collectDay);
-      Object.values(nutritionData.individualDays || {}).forEach(collectDay);
-      saveNutritionData();
-    }
-
-    function renderFoodLibraryOptions() {
-      const host = document.getElementById("foodLibraryOptions");
-      if (!host) return;
-
-      const seen = new Set();
-      host.innerHTML = Object.values(nutritionData.foodLibrary || {})
-        .filter(food => {
-          const key = food.name.toLocaleLowerCase("de-DE");
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        })
-        .sort((a,b) => a.name.localeCompare(b.name, "de"))
-        .map(food => `<option value="${escapeHtml(food.name)}"></option>`)
-        .join("");
-    }
-
-    function findLibraryFood(name, unit = null) {
-      const target = String(name || "").trim().toLocaleLowerCase("de-DE");
-      const foods = Object.values(nutritionData.foodLibrary || {});
-
-      return foods.find(food =>
-        food.name.toLocaleLowerCase("de-DE") === target &&
-        (!unit || food.unit === unit)
-      ) || foods.find(food => food.name.toLocaleLowerCase("de-DE") === target);
-    }
-
-    function applyLibraryFood(index, name) {
-      if (!mealEditorDraft?.ingredients?.[index]) return false;
-
-      const food = findLibraryFood(name);
-      if (!food) return false;
-
-      const item = mealEditorDraft.ingredients[index];
-      item.name = food.name;
-      item.unit = food.unit;
-      item.amount = Number(item.amount || 0) > 0 ? Number(item.amount) : Number(food.defaultAmount || 100);
-      item.libraryKey = foodLibraryKey(food.name, food.unit);
-
-      const amount = Number(item.amount || 0);
-      item.kcal = Math.round(food.kcalPerAmount * amount);
-      item.protein = +(food.proteinPerAmount * amount).toFixed(1);
-      item.carbs = +(food.carbsPerAmount * amount).toFixed(1);
-      item.fat = +(food.fatPerAmount * amount).toFixed(1);
-      return true;
-    }
-
-
-    function refreshIngredientNutrientFields(index) {
-      const item = mealEditorDraft?.ingredients?.[index];
-      if (!item) return;
-
-      const card = ingredientEditorList.querySelector(`[data-ing-index="${index}"]`)?.closest(".ingredient-editor-card");
-      if (!card) return;
-
-      ["kcal","protein","carbs","fat"].forEach(field => {
-        const input = card.querySelector(`[data-ing-field="${field}"]`);
-        if (input) input.value = Number(item[field] || 0);
-      });
-
-      const summary = card.querySelector(".ingredient-nutrition-toggle strong");
-      if (summary) summary.textContent = `${Math.round(Number(item.kcal || 0))} kcal`;
-    }
-
-    function scaleIngredientFromLibrary(index) {
-      const item = mealEditorDraft?.ingredients?.[index];
-      if (!item) return;
-
-      const food = item.libraryKey
-        ? nutritionData.foodLibrary[item.libraryKey]
-        : findLibraryFood(item.name, item.unit);
-
-      if (!food) return;
-
-      item.libraryKey = foodLibraryKey(food.name, food.unit);
-      const amount = Number(item.amount || 0);
-      item.kcal = Math.round(food.kcalPerAmount * amount);
-      item.protein = +(food.proteinPerAmount * amount).toFixed(1);
-      item.carbs = +(food.carbsPerAmount * amount).toFixed(1);
-      item.fat = +(food.fatPerAmount * amount).toFixed(1);
-    }
-
-    function renderIngredientEditor() {
-      ingredientEditorList.innerHTML = "";
-
-      mealEditorDraft.ingredients.forEach((item, index) => {
-        const card = document.createElement("div");
-        card.className = "ingredient-editor-card";
-
-        card.innerHTML = `
-          <div class="ingredient-main-fields">
-            <label class="ingredient-field">
-              <span>Lebensmittel</span>
-              <input type="text" list="foodLibraryOptions" value="${escapeHtml(item.name)}" data-ing-field="name" data-ing-index="${index}" placeholder="z. B. Reis" />
-              <small class="ingredient-library-hint">Gespeicherte Lebensmittel werden vorgeschlagen.</small>
-            </label>
-
-            <label class="ingredient-field">
-              <span>Menge</span>
-              <input type="number" min="0" step="0.1" value="${Number(item.amount || 0)}" data-ing-field="amount" data-ing-index="${index}" />
-            </label>
-
-            <label class="ingredient-field">
-              <span>Einheit</span>
-              <select data-ing-field="unit" data-ing-index="${index}">
-                ${["g","ml","Stk.","Port.","EL","TL"].map(unit =>
-                  `<option value="${unit}" ${item.unit === unit ? "selected" : ""}>${unit}</option>`
-                ).join("")}
-              </select>
-            </label>
-
-            <button class="ingredient-delete" data-ing-delete="${index}" title="Lebensmittel löschen">×</button>
-          </div>
-
-          ${Number(mealEditorDraft.persons || 1) > 1
-            ? `<div class="ingredient-total-line">Pro Person: ${formatNutritionNumber(item.amount,1)} ${escapeHtml(item.unit || "g")} · Gesamt für ${mealEditorDraft.persons} Pers.: ${formatNutritionNumber(Number(item.amount || 0) * mealEditorDraft.persons,1)} ${escapeHtml(item.unit || "g")}</div>`
-            : ""}
-
-          <button class="ingredient-nutrition-toggle" type="button" data-nutrition-toggle="${index}">
-            <span>Nährwerte</span>
-            <strong>${Math.round(Number(item.kcal || 0))} kcal</strong>
-            <span class="nutrition-toggle-arrow">⌄</span>
-          </button>
-
-          <div class="ingredient-nutrition-panel" data-nutrition-panel="${index}">
-            <div class="ingredient-macro-fields">
-              <label class="ingredient-field kcal">
-                <span>Kalorien</span>
-                <input type="number" min="0" step="1" value="${Number(item.kcal || 0)}" data-ing-field="kcal" data-ing-index="${index}" />
-              </label>
-              <label class="ingredient-field protein">
-                <span>Protein</span>
-                <div class="nutrient-input-wrap">
-                  <input type="number" min="0" step="0.1" value="${Number(item.protein || 0)}" data-ing-field="protein" data-ing-index="${index}" />
-                  <b>g</b>
-                </div>
-              </label>
-              <label class="ingredient-field carbs">
-                <span>Kohlenhydrate</span>
-                <div class="nutrient-input-wrap">
-                  <input type="number" min="0" step="0.1" value="${Number(item.carbs || 0)}" data-ing-field="carbs" data-ing-index="${index}" />
-                  <b>g</b>
-                </div>
-              </label>
-              <label class="ingredient-field fat">
-                <span>Fett</span>
-                <div class="nutrient-input-wrap">
-                  <input type="number" min="0" step="0.1" value="${Number(item.fat || 0)}" data-ing-field="fat" data-ing-index="${index}" />
-                  <b>g</b>
-                </div>
-              </label>
-            </div>
-          </div>
-        `;
-
-        ingredientEditorList.appendChild(card);
-      });
-
-      if (!mealEditorDraft.ingredients.length) {
-        ingredientEditorList.innerHTML =
-          `<div class="empty-state">Noch keine Lebensmittel hinzugefügt.</div>`;
-      }
-
-      mealIngredientCount.textContent =
-        `${mealEditorDraft.ingredients.length} ${mealEditorDraft.ingredients.length === 1 ? "Zutat" : "Zutaten"}`;
-    }
-
-    function openMealEditor(slotKey) {
-      const slot = nutritionMealSlots.find(s => s.key === slotKey);
-
-      mealEditorSlotKey = slotKey;
-      mealEditorDraft = nutritionClone(
-        canonicalMealForPair(selectedNutritionDate, slotKey)
-      );
-
-      mealEditorSlot.textContent = `${slot?.label || "Mahlzeit"} · 2 Tage`;
-      mealEditorName.value = mealEditorDraft.name;
-      mealEditorDraft.persons = Math.max(1, Number(mealEditorDraft.persons || 1));
-      mealPersonsValue.textContent = mealEditorDraft.persons;
-      renderFoodLibraryOptions();
-      renderIngredientEditor();
-
-      mealEditorModal.classList.add("open");
-      mealEditorModal.setAttribute("aria-hidden", "false");
-      setTimeout(() => mealEditorName.focus(), 30);
-    }
-
-    function closeMealEditor() {
-      mealEditorModal.classList.remove("open");
-      mealEditorModal.setAttribute("aria-hidden", "true");
-      mealEditorSlotKey = null;
-      mealEditorDraft = null;
-    }
-
-    function saveMealEditor() {
-      if (!mealEditorDraft || !mealEditorSlotKey) return;
-
-      mealEditorDraft.name = mealEditorName.value.trim();
-      mealEditorDraft.persons = Math.max(1, Number(mealEditorDraft.persons || 1));
-      mealEditorDraft.ingredients.forEach(rememberFood);
-
-      saveMealForSelectedContext(
-        selectedNutritionDate,
-        mealEditorSlotKey,
-        mealEditorDraft
-      );
-
-      saveNutritionData();
-      closeMealEditor();
-      renderNutrition();
-    }
-
-    document.getElementById("nutritionWeekGrid").addEventListener("click", event => {
-      const card = event.target.closest("[data-nutrition-date]");
-      if (!card) return;
-
-      selectedNutritionDate = parseIsoLocal(card.dataset.nutritionDate);
-      renderNutrition();
-    });
-
-
-    document.getElementById("nutritionMeals").addEventListener("click", event => {
-      const card = event.target.closest("[data-meal-slot]");
-      if (!card) return;
-      openMealEditor(card.dataset.mealSlot);
-    });
-
-
-    document.getElementById("mealPersonsMinus").addEventListener("click", () => {
-      if (!mealEditorDraft) return;
-      mealEditorDraft.persons = Math.max(1, Number(mealEditorDraft.persons || 1) - 1);
-      mealPersonsValue.textContent = mealEditorDraft.persons;
-      renderIngredientEditor();
-    });
-
-    document.getElementById("mealPersonsPlus").addEventListener("click", () => {
-      if (!mealEditorDraft) return;
-      mealEditorDraft.persons = Math.min(20, Number(mealEditorDraft.persons || 1) + 1);
-      mealPersonsValue.textContent = mealEditorDraft.persons;
-      renderIngredientEditor();
-    });
-
-    document.getElementById("mealAddIngredient").addEventListener("click", () => {
-      if (!mealEditorDraft) return;
-      mealEditorDraft.ingredients.push(emptyIngredient());
-      renderIngredientEditor();
-    });
-
-    ingredientEditorList.addEventListener("input", event => {
-      const input = event.target.closest("[data-ing-field]");
-      if (!input || !mealEditorDraft) return;
-
-      const index = Number(input.dataset.ingIndex);
-      const field = input.dataset.ingField;
-      const numericFields = ["amount","kcal","protein","carbs","fat"];
-
-      mealEditorDraft.ingredients[index][field] =
-        numericFields.includes(field)
-          ? Number(input.value || 0)
-          : input.value;
-
-      if (field === "amount") {
-        scaleIngredientFromLibrary(index);
-        refreshIngredientNutrientFields(index);
-      }
-
-      if (["kcal","protein","carbs","fat"].includes(field)) {
-        mealEditorDraft.ingredients[index].libraryKey = null;
-      }
-    });
-
-    ingredientEditorList.addEventListener("change", event => {
-      const input = event.target.closest("[data-ing-field]");
-      if (!input || !mealEditorDraft) return;
-
-      const index = Number(input.dataset.ingIndex);
-      const field = input.dataset.ingField;
-      mealEditorDraft.ingredients[index][field] = input.value;
-
-      if (field === "name" && applyLibraryFood(index, input.value)) {
-        renderIngredientEditor();
-        return;
-      }
-
-      if (field === "unit") {
-        const food = findLibraryFood(mealEditorDraft.ingredients[index].name, input.value);
-        if (food) {
-          mealEditorDraft.ingredients[index].libraryKey = foodLibraryKey(food.name, food.unit);
-          scaleIngredientFromLibrary(index);
-          renderIngredientEditor();
-        }
-      }
-    });
-
-    ingredientEditorList.addEventListener("click", event => {
-      const toggle = event.target.closest("[data-nutrition-toggle]");
-      if (toggle) {
-        const index = toggle.dataset.nutritionToggle;
-        const panel = ingredientEditorList.querySelector(`[data-nutrition-panel="${index}"]`);
-        toggle.classList.toggle("open");
-        panel?.classList.toggle("open");
-        return;
-      }
-
-      const button = event.target.closest("[data-ing-delete]");
-      if (!button || !mealEditorDraft) return;
-
-      mealEditorDraft.ingredients.splice(
-        Number(button.dataset.ingDelete),
-        1
-      );
-
-      renderIngredientEditor();
-    });
-
-    document.getElementById("mealEditorSave").addEventListener("click", saveMealEditor);
-    document.getElementById("mealEditorCancel").addEventListener("click", closeMealEditor);
-    document.getElementById("mealEditorClose").addEventListener("click", closeMealEditor);
-
-    document.getElementById("mealDelete").addEventListener("click", () => {
-      if (!mealEditorSlotKey) return;
-
-      saveMealForSelectedContext(
-        selectedNutritionDate,
-        mealEditorSlotKey,
-        emptyNutritionMeal()
-      );
-
-      saveNutritionData();
-      closeMealEditor();
-      renderNutrition();
-    });
-
-    mealEditorModal.addEventListener("click", event => {
-      if (event.target === mealEditorModal) closeMealEditor();
-    });
-
-
-    document.getElementById("individualDayToggle").addEventListener("click", () => {
-      if (hasIndividualNutritionDay(selectedNutritionDate)) {
-        removeIndividualDay(selectedNutritionDate);
       } else {
-        ensureIndividualDay(selectedNutritionDate);
+        gymEditorDraft = gymClone(activeGymProfile());
       }
 
-      saveNutritionData();
-      renderNutrition();
-    });
+      gymEditorName.value = gymEditorDraft.name;
+      gymEditorStartDate.value = gymEditorDraft.startDate;
+      renderGymEditorLoop();
 
-    document.getElementById("nutritionTodayMeals").addEventListener("click", event => {
-      const meal = event.target.closest("[data-today-meal-slot]");
-      if (!meal) return;
+      gymEditorModal.classList.add("open");
+      gymEditorModal.setAttribute("aria-hidden", "false");
+    }
 
-      const key = `${makeIsoDate(nutritionToday)}|||${meal.dataset.todayMealSlot}`;
-      nutritionData.completedMeals[key] = !nutritionData.completedMeals[key];
-      saveNutritionData();
-      renderNutritionToday();
-    });
+    function closeGymEditor() {
+      gymEditorModal.classList.remove("open");
+      gymEditorModal.setAttribute("aria-hidden", "true");
+      gymEditorDraft = null;
+      gymEditorIsNew = false;
+    }
+
+    function saveGymEditor() {
+      const name = gymEditorName.value.trim();
+      const startDate = gymEditorStartDate.value;
+
+      if (!name || !startDate || !gymEditorDraft.loop.length) return;
+
+      gymEditorDraft.name = name;
+      gymEditorDraft.startDate = startDate;
+
+      if (gymEditorIsNew) {
+        gymData.profiles.push(gymClone(gymEditorDraft));
+        gymData.activeProfileId = gymEditorDraft.id;
+      } else {
+        const index = gymData.profiles.findIndex(p => p.id === gymEditorDraft.id);
+        if (index >= 0) gymData.profiles[index] = gymClone(gymEditorDraft);
+      }
+
+      ensureProfileWorkoutData(activeGymProfile());
+      saveGymData();
+      closeGymEditor();
+      renderGym();
+      syncGymDayWidth();
+      requestAnimationFrame(() => centerGymCalendarOnToday(false));
+    }
 
 
+    const exerciseEditorModal = document.getElementById("exerciseEditorModal");
+    const exerciseEditorName = document.getElementById("exerciseEditorName");
+    const exerciseSetList = document.getElementById("exerciseSetList");
+    const exerciseSetCount = document.getElementById("exerciseSetCount");
+    const exerciseDelete = document.getElementById("exerciseDelete");
 
-    document.querySelector(".shopping-mode-toggle").addEventListener("click", event => {
-      const button = event.target.closest("[data-shopping-mode]");
-      if (!button) return;
+    let exerciseEditorDraft = null;
+    let exerciseEditorIndex = null;
 
-      nutritionData.shoppingMode = button.dataset.shoppingMode;
-      saveNutritionData();
-      renderShoppingList();
-    });
+    function selectedGymSession() {
+      return gymSessionForDate(selectedGymDate);
+    }
 
-    document.getElementById("shoppingList").addEventListener("change", event => {
-      const checkbox = event.target.closest("[data-shopping-key]");
-      if (!checkbox) return;
+    function renderExerciseSetEditor() {
+      exerciseSetList.innerHTML = "";
 
-      const key = checkbox.dataset.shoppingKey;
-      nutritionData.checkedShopping[key] = checkbox.checked;
-      saveNutritionData();
-      renderShoppingList();
-    });
+      exerciseEditorDraft.sets.forEach((set, index) => {
+        const row = document.createElement("div");
+        row.className = "exercise-set-row";
+        row.innerHTML = `
+          <span class="exercise-set-number">${index + 1}</span>
+          <label class="exercise-weight-input">
+            <input type="number" min="0" step="0.5" value="${Number(set.weight || 0)}" data-exercise-weight="${index}" />
+            <span>kg</span>
+          </label>
+          <label class="exercise-reps-input">
+            <input type="number" min="0" step="1" value="${Number(set.reps || 0)}" data-exercise-reps="${index}" />
+            <span>Wdh.</span>
+          </label>
+          <button class="exercise-set-delete" data-exercise-set-delete="${index}" title="Satz löschen">×</button>
+        `;
+        exerciseSetList.appendChild(row);
+      });
 
-    document.getElementById("shoppingClearChecks").addEventListener("click", () => {
-      nutritionData.checkedShopping = {};
-      saveNutritionData();
-      renderShoppingList();
-    });
+      if (!exerciseEditorDraft.sets.length) {
+        exerciseSetList.innerHTML = `<div class="empty-state">Noch keine Sätze angelegt.</div>`;
+      }
+
+      exerciseSetCount.textContent =
+        `${exerciseEditorDraft.sets.length} ${exerciseEditorDraft.sets.length === 1 ? "Satz" : "Sätze"}`;
+    }
+
+    function valuesForExerciseOnSelectedDate(exercise) {
+      const session = selectedGymSession();
+      const currentLog = workoutLogForDate(selectedGymDate, false);
+      const current = currentLog?.exercises?.[exercise.id]?.sets;
+
+      if (current?.length) return gymClone(current);
+
+      const previous = previousWorkoutOccurrence(selectedGymDate, session.name);
+      const showReference = shouldShowPreviousReference(selectedGymDate, session.name);
+      const prior = previous?.log?.exercises?.[exercise.id]?.sets;
+
+      if (showReference && prior?.length) return gymClone(prior);
+
+      return Array.from({ length: exercise.setCount || 3 }, () => ({ weight: 0, reps: 0 }));
+    }
 
 
-    const nutritionGeneratorModal = document.getElementById("nutritionGeneratorModal");
+    function exerciseHistoryEntries(exerciseId) {
+      const profile = activeGymProfile();
+      if (!profile) return [];
 
-    const generatorRecipes = {
-      breakfast: [
-        {
-          name: "Skyr Bowl",
-          foods: [
-            ["Skyr", 300, "g", 190, 33, 12, 1],
-            ["Haferflocken", 75, "g", 280, 10, 45, 5],
-            ["Banane", 125, "g", 110, 1, 28, 0],
-            ["Whey", 25, "g", 95, 20, 2, 1]
+      const selectedIso = makeIsoDate(selectedGymDate);
+
+      return Object.entries(profile.logs || {})
+        .filter(([iso, log]) =>
+          iso !== selectedIso &&
+          Array.isArray(log?.exercises?.[exerciseId]?.sets) &&
+          log.exercises[exerciseId].sets.length
+        )
+        .sort((a,b) => b[0].localeCompare(a[0]))
+        .slice(0,4)
+        .map(([iso, log]) => ({
+          date: parseIsoLocal(iso),
+          sets: log.exercises[exerciseId].sets
+        }));
+    }
+
+    function renderExerciseHistory(exerciseId = null) {
+      const box = document.getElementById("exerciseHistory");
+      const list = document.getElementById("exerciseHistoryList");
+      if (!box || !list || !exerciseId) {
+        box?.classList.add("hidden");
+        return;
+      }
+
+      const entries = exerciseHistoryEntries(exerciseId);
+
+      if (!entries.length) {
+        box.classList.add("hidden");
+        list.innerHTML = "";
+        return;
+      }
+
+      box.classList.remove("hidden");
+      list.innerHTML = entries.map(entry => `
+        <div class="exercise-history-row">
+          <span class="exercise-history-date">${entry.date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}</span>
+          <div class="exercise-history-sets">
+            ${entry.sets.map(set => `
+              <span class="exercise-history-chip">${Number(set.weight || 0).toLocaleString("de-DE")} kg × ${Number(set.reps || 0)}</span>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function openExerciseEditor(index = null) {
+      const session = selectedGymSession();
+      const template = activeWorkoutTemplate(session);
+      if (!session.day || !template) return;
+
+      exerciseEditorIndex = index;
+
+      if (index === null) {
+        exerciseEditorDraft = {
+          id: `ex-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+          name: "",
+          sets: [
+            { weight: 0, reps: 0 },
+            { weight: 0, reps: 0 },
+            { weight: 0, reps: 0 }
           ]
-        },
-        {
-          name: "Protein Oats",
-          foods: [
-            ["Haferflocken", 100, "g", 375, 13, 60, 7],
-            ["Milch", 300, "ml", 150, 10, 15, 5],
-            ["Whey", 25, "g", 95, 20, 2, 1],
-            ["Beeren", 100, "g", 45, 1, 9, 0]
-          ]
-        },
-        {
-          name: "Ei & Brot Frühstück",
-          foods: [
-            ["Eier", 3, "Stk.", 240, 21, 2, 16],
-            ["Vollkornbrot", 150, "g", 340, 13, 62, 4],
-            ["Putenbrust-Aufschnitt", 100, "g", 110, 23, 2, 2],
-            ["Paprika", 100, "g", 30, 1, 6, 0]
-          ]
-        },
-        {
-          name: "Joghurt Crunch Bowl",
-          foods: [
-            ["Joghurt", 300, "g", 200, 20, 16, 5],
-            ["Müsli", 100, "g", 380, 10, 65, 8],
-            ["Apfel", 150, "g", 80, 0, 21, 0],
-            ["Whey", 25, "g", 95, 20, 2, 1]
-          ]
+        };
+        exerciseDelete.classList.add("hidden");
+        renderExerciseHistory(null);
+      } else {
+        const exercise = template.exercises[index];
+        exerciseEditorDraft = {
+          id: exercise.id,
+          name: exercise.name,
+          sets: valuesForExerciseOnSelectedDate(exercise)
+        };
+        exerciseDelete.classList.remove("hidden");
+        renderExerciseHistory(exercise.id);
+      }
+
+      exerciseEditorName.value = exerciseEditorDraft.name;
+      renderExerciseSetEditor();
+
+      exerciseEditorModal.classList.add("open");
+      exerciseEditorModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => exerciseEditorName.focus(), 30);
+    }
+
+    function closeExerciseEditor() {
+      exerciseEditorModal.classList.remove("open");
+      exerciseEditorModal.setAttribute("aria-hidden", "true");
+      exerciseEditorDraft = null;
+      exerciseEditorIndex = null;
+    }
+
+    function saveExerciseEditor() {
+      if (!exerciseEditorDraft) return;
+
+      const name = exerciseEditorName.value.trim();
+      const session = selectedGymSession();
+      const template = activeWorkoutTemplate(session);
+      if (!name || !session.day || !template) return;
+
+      exerciseEditorDraft.name = name;
+
+      let exerciseId;
+
+      if (exerciseEditorIndex === null) {
+        const definition = {
+          id: exerciseEditorDraft.id,
+          name,
+          setCount: exerciseEditorDraft.sets.length
+        };
+        template.exercises.push(definition);
+        exerciseId = definition.id;
+      } else {
+        const definition = template.exercises[exerciseEditorIndex];
+        definition.name = name;
+        definition.setCount = exerciseEditorDraft.sets.length;
+        exerciseId = definition.id;
+      }
+
+      const log = workoutLogForDate(selectedGymDate, true);
+      log.workoutKey = workoutKey(session.name);
+      log.exercises[exerciseId] = {
+        sets: exerciseEditorDraft.sets.map(set => ({
+          weight: Number(set.weight || 0),
+          reps: Number(set.reps || 0)
+        }))
+      };
+
+      saveGymData();
+      closeExerciseEditor();
+      renderSelectedGymDay();
+    }
+
+    document.getElementById("gymAddExercise").addEventListener("click", () => openExerciseEditor(null));
+
+    document.getElementById("gymExerciseList").addEventListener("click", event => {
+      const card = event.target.closest("[data-exercise-index]");
+      if (!card) return;
+      openExerciseEditor(Number(card.dataset.exerciseIndex));
+    });
+
+    document.getElementById("exerciseAddSet").addEventListener("click", () => {
+      if (!exerciseEditorDraft) return;
+
+      const last = exerciseEditorDraft.sets.length
+        ? exerciseEditorDraft.sets[exerciseEditorDraft.sets.length - 1]
+        : { weight: 0, reps: 0 };
+
+      exerciseEditorDraft.sets.push({
+        weight: Number(last.weight || 0),
+        reps: Number(last.reps || 0)
+      });
+
+      renderExerciseSetEditor();
+    });
+
+    exerciseSetList.addEventListener("input", event => {
+      if (!exerciseEditorDraft) return;
+
+      const weightInput = event.target.closest("[data-exercise-weight]");
+      if (weightInput) {
+        const index = Number(weightInput.dataset.exerciseWeight);
+        const value = Number(weightInput.value);
+        exerciseEditorDraft.sets[index].weight = Number.isFinite(value) ? value : 0;
+        return;
+      }
+
+      const repsInput = event.target.closest("[data-exercise-reps]");
+      if (repsInput) {
+        const index = Number(repsInput.dataset.exerciseReps);
+        const value = Number(repsInput.value);
+        exerciseEditorDraft.sets[index].reps = Number.isFinite(value) ? value : 0;
+      }
+    });
+
+    exerciseSetList.addEventListener("click", event => {
+      const button = event.target.closest("[data-exercise-set-delete]");
+      if (!button || !exerciseEditorDraft) return;
+
+      const index = Number(button.dataset.exerciseSetDelete);
+      exerciseEditorDraft.sets.splice(index, 1);
+      renderExerciseSetEditor();
+    });
+
+    document.getElementById("exerciseEditorSave").addEventListener("click", saveExerciseEditor);
+    document.getElementById("exerciseEditorCancel").addEventListener("click", closeExerciseEditor);
+    document.getElementById("exerciseEditorClose").addEventListener("click", closeExerciseEditor);
+
+    exerciseDelete.addEventListener("click", () => {
+      if (exerciseEditorIndex === null) return;
+
+      const session = selectedGymSession();
+      const template = activeWorkoutTemplate(session);
+      if (!template) return;
+
+      const exercise = template.exercises[exerciseEditorIndex];
+      template.exercises.splice(exerciseEditorIndex, 1);
+
+      // Die Übungsdefinition wird für alle gleichnamigen Trainingstage entfernt.
+      // Historische Tageswerte bleiben intern bestehen, werden aber nicht mehr angezeigt.
+      saveGymData();
+      closeExerciseEditor();
+      renderSelectedGymDay();
+    });
+
+    exerciseEditorModal.addEventListener("click", event => {
+      if (event.target === exerciseEditorModal) closeExerciseEditor();
+    });
+
+    window.addEventListener("resize", () => {
+      syncGymDayWidth();
+      if (!gymView.classList.contains("hidden")) {
+        requestAnimationFrame(() => centerGymCalendarOnToday(false));
+      }
+    });
+
+    gymProfileSelect.addEventListener("change", () => {
+      gymData.activeProfileId = gymProfileSelect.value;
+      saveGymData();
+      selectedGymDate = new Date(todayForGym);
+      renderGym();
+      syncGymDayWidth();
+      requestAnimationFrame(() => centerGymCalendarOnToday(false));
+    });
+
+    document.getElementById("gymTodayButton").addEventListener("click", () => {
+      selectedGymDate = new Date(todayForGym);
+      renderGymCalendar();
+      renderSelectedGymDay();
+      requestAnimationFrame(() => centerGymCalendarOnToday(true));
+    });
+
+    document.getElementById("editGymProfile").addEventListener("click", () => openGymEditor(false));
+    document.getElementById("gymEditorNewPlan").addEventListener("click", () => openGymEditor(true));
+    document.getElementById("gymEditorClose").addEventListener("click", closeGymEditor);
+    document.getElementById("gymEditorCancel").addEventListener("click", closeGymEditor);
+    document.getElementById("gymEditorSave").addEventListener("click", saveGymEditor);
+
+    document.getElementById("gymEditorAddDay").addEventListener("click", () => {
+      if (!gymEditorDraft) return;
+      gymEditorDraft.loop.push(makeGymDay(`Tag ${gymEditorDraft.loop.length + 1}`));
+      renderGymEditorLoop();
+    });
+
+    gymEditorModal.addEventListener("click", event => {
+      if (event.target === gymEditorModal) closeGymEditor();
+    });
+
+    gymEditorLoop.addEventListener("input", event => {
+      const input = event.target.closest("[data-gym-editor-name]");
+      if (!input || !gymEditorDraft) return;
+      const index = Number(input.dataset.gymEditorName);
+      gymEditorDraft.loop[index].name = input.value;
+    });
+
+    gymEditorLoop.addEventListener("click", event => {
+      if (!gymEditorDraft) return;
+
+      const up = event.target.closest("[data-gym-editor-up]");
+      if (up) {
+        const index = Number(up.dataset.gymEditorUp);
+        if (index > 0) {
+          [gymEditorDraft.loop[index - 1], gymEditorDraft.loop[index]] =
+            [gymEditorDraft.loop[index], gymEditorDraft.loop[index - 1]];
+          renderGymEditorLoop();
         }
-      ],
-      lunch: [
-        {
-          name: "Chicken Rice Bowl",
-          foods: [
-            ["Hähnchen", 250, "g", 410, 77, 0, 9],
-            ["Reis", 150, "g", 540, 10, 120, 2],
-            ["Brokkoli", 200, "g", 70, 6, 10, 1]
-          ]
-        },
-        {
-          name: "Puten-Pasta",
-          foods: [
-            ["Pute", 250, "g", 375, 74, 0, 7],
-            ["Penne", 150, "g", 525, 19, 103, 4],
-            ["Paprika", 150, "g", 45, 2, 9, 0]
-          ]
-        },
-        {
-          name: "Beef Burrito Bowl",
-          foods: [
-            ["Rinderhack", 250, "g", 570, 51, 0, 39],
-            ["Reis", 125, "g", 450, 8, 100, 2],
-            ["Kidneybohnen", 150, "g", 180, 12, 30, 1],
-            ["Mais", 100, "g", 90, 3, 16, 1]
-          ]
-        },
-        {
-          name: "Chicken Couscous",
-          foods: [
-            ["Hähnchen", 250, "g", 410, 77, 0, 9],
-            ["Couscous", 150, "g", 540, 18, 105, 3],
-            ["Möhren", 150, "g", 60, 1, 13, 0],
-            ["Erbsen", 100, "g", 80, 5, 13, 1]
-          ]
+        return;
+      }
+
+      const down = event.target.closest("[data-gym-editor-down]");
+      if (down) {
+        const index = Number(down.dataset.gymEditorDown);
+        if (index < gymEditorDraft.loop.length - 1) {
+          [gymEditorDraft.loop[index + 1], gymEditorDraft.loop[index]] =
+            [gymEditorDraft.loop[index], gymEditorDraft.loop[index + 1]];
+          renderGymEditorLoop();
         }
-      ],
-      snack: [
-        {
-          name: "Protein Shake",
-          foods: [
-            ["Whey", 40, "g", 150, 32, 3, 2],
-            ["Banane", 125, "g", 110, 1, 28, 0],
-            ["Haferflocken", 50, "g", 190, 7, 30, 4],
-            ["Milch", 300, "ml", 150, 10, 15, 5]
-          ]
-        },
-        {
-          name: "Skyr Snack",
-          foods: [
-            ["Skyr", 300, "g", 190, 33, 12, 1],
-            ["Beeren", 100, "g", 45, 1, 9, 0],
-            ["Honig", 25, "g", 75, 0, 20, 0]
-          ]
-        },
-        {
-          name: "Isoclear & Banane",
-          foods: [
-            ["Isoclear", 30, "g", 105, 25, 1, 0],
-            ["Banane", 125, "g", 110, 1, 28, 0],
-            ["Reiswaffeln", 50, "g", 190, 4, 40, 1]
-          ]
-        },
-        {
-          name: "Protein Sandwich",
-          foods: [
-            ["Vollkornbrot", 100, "g", 225, 9, 41, 3],
-            ["Putenbrust-Aufschnitt", 100, "g", 110, 23, 2, 2],
-            ["Frischkäse", 50, "g", 110, 4, 3, 9]
-          ]
+        return;
+      }
+
+      const del = event.target.closest("[data-gym-editor-delete]");
+      if (del) {
+        const index = Number(del.dataset.gymEditorDelete);
+        gymEditorDraft.loop.splice(index, 1);
+        renderGymEditorLoop();
+      }
+    });
+
+    gymDaysTrack.addEventListener("click", event => {
+      const card = event.target.closest("[data-gym-date]");
+      if (!card) return;
+
+      selectedGymDate = parseIsoLocal(card.dataset.gymDate);
+      renderGymCalendar();
+      renderSelectedGymDay();
+    });
+
+
+    const NUTRITION_STORAGE_KEY = "lifeDashboardNutritionV2";
+
+    const nutritionMealSlots = [
+      { key: "breakfast", label: "Frühstück" },
+      { key: "lunch", label: "Mittagessen" },
+      { key: "snack", label: "Snack / Shake" },
+      { key: "dinner", label: "Abendessen" }
+    ];
+
+    const nutritionToday = new Date();
+    nutritionToday.setHours(0,0,0,0);
+    let selectedNutritionDate = new Date(nutritionToday);
+
+    function nutritionClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function emptyNutritionMeal() {
+      return { name: "", ingredients: [], persons: 1 };
+    }
+
+    function defaultNutritionCycleStart() {
+      const monday = startOfWeek(nutritionToday);
+      return makeIsoDate(monday);
+    }
+
+    function loadNutritionData() {
+      try {
+        const savedV2 = JSON.parse(localStorage.getItem(NUTRITION_STORAGE_KEY));
+        if (savedV2 && typeof savedV2 === "object") {
+          if (!savedV2.days) savedV2.days = {};
+          if (!savedV2.checkedShopping) savedV2.checkedShopping = {};
+          if (!savedV2.cycleStart) savedV2.cycleStart = defaultNutritionCycleStart();
+          if (!savedV2.completedMeals) savedV2.completedMeals = {};
+          if (!savedV2.individualDays) savedV2.individualDays = {};
+          if (!savedV2.foodLibrary) savedV2.foodLibrary = {};
+          if (!savedV2.shoppingMode) savedV2.shoppingMode = "category";
+          return savedV2;
         }
-      ],
-      dinner: [
-        {
-          name: "Beef Rice Bowl",
-          foods: [
-            ["Rinderhack", 250, "g", 570, 51, 0, 39],
-            ["Reis", 125, "g", 450, 8, 100, 2],
-            ["Möhren", 150, "g", 60, 1, 13, 0]
-          ]
-        },
-        {
-          name: "Chicken Potatoes",
-          foods: [
-            ["Hähnchen", 250, "g", 410, 77, 0, 9],
-            ["Kartoffeln", 400, "g", 300, 8, 68, 0],
-            ["Erbsen", 150, "g", 120, 8, 20, 1]
-          ]
-        },
-        {
