@@ -1,0 +1,208 @@
+      openHomeEventModal(null, calendarSelectedDate);
+    });
+
+    document.getElementById("calendarAppleImport").addEventListener("click", () => {
+      if (hasNativeCalendarBridge()) {
+        const action =
+          nativeCalendarStatus === "denied" || nativeCalendarStatus === "restricted"
+            ? "settings"
+            : "sync";
+        window.webkit.messageHandlers.calendar.postMessage({ action });
+      } else {
+        document.getElementById("calendarAppleFileInput").click();
+      }
+    });
+
+    document.getElementById("calendarAppleFileInput").addEventListener("change", async event => {
+      await importAppleCalendarFiles(event.target.files);
+      event.target.value = "";
+    });
+
+    document.getElementById("calendarClearApple").addEventListener("click", () => {
+      homeData.appleEvents = [];
+      homeData.appleImports = [];
+      saveHomeData();
+      renderHomeDashboard();
+      renderFullCalendar();
+    });
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () =>
+        openSection(tab.dataset.tab, tab, { scrollMode: "preserve" })
+      );
+    });
+
+    homeButton.addEventListener("click", () =>
+      goHome({ scrollMode: "preserve" })
+    );
+
+
+    document.addEventListener("click", event => {
+      if (!event.target.closest(".more-wrap")) {
+        }
+
+      const addButton = event.target.closest("[data-add]");
+      if (addButton) {
+        document.getElementById(`form-${addButton.dataset.add}`).classList.toggle("hidden");
+      }
+
+      const saveButton = event.target.closest("[data-save]");
+      if (saveButton) {
+        const key = saveButton.dataset.save;
+        const form = document.getElementById(`form-${key}`);
+        const nameInput = form.querySelector("[data-name]");
+        const amountInput = form.querySelector("[data-amount]");
+        const name = nameInput.value.trim();
+        const amount = Number(amountInput.value);
+
+        if (!name || !Number.isFinite(amount) || amount <= 0) return;
+
+        finance[key].push({ name, amount });
+        saveFinance();
+        renderFinance();
+        nameInput.value = "";
+        amountInput.value = "";
+        form.classList.add("hidden");
+      }
+
+      const editButton = event.target.closest("[data-edit]");
+      if (editButton) {
+        const key = editButton.dataset.edit;
+        const index = Number(editButton.dataset.index);
+        const entry = finance[key][index];
+
+        openAmountModal({
+          title: "Betrag bearbeiten",
+          text: `${entry.name} – neuen Betrag eingeben.`,
+          value: entry.amount,
+          onSave: parsed => {
+            finance[key][index].amount = parsed;
+            saveFinance();
+            renderFinance();
+          }
+        });
+      }
+
+      const deleteButton = event.target.closest("[data-delete]");
+      if (deleteButton) {
+        const key = deleteButton.dataset.delete;
+        const index = Number(deleteButton.dataset.index);
+        finance[key].splice(index,1);
+        saveFinance();
+        renderFinance();
+      }
+    });
+
+    document.getElementById("editBalance").addEventListener("click", () => {
+      openAmountModal({
+        title: "Kontostand festlegen",
+        text: "Trage deinen aktuellen Kontostand ein. Neue Einnahmen und Ausgaben verändern ihn danach automatisch.",
+        value: currentBalance(),
+        allowNegative: true,
+        onSave: parsed => {
+          const expenses = totalFor("subscriptions") + totalFor("shopping") + totalFor("other");
+          const income = totalFor("income");
+          finance.baseBalance = parsed - income + expenses;
+          saveFinance();
+          renderFinance();
+        }
+      });
+    });
+
+    document.getElementById("resetFinance").addEventListener("click", () => {
+      if (!confirm("Alle Finanzdaten in diesem Dashboard zurücksetzen?")) return;
+      finance = cloneDefault();
+      saveFinance();
+      renderFinance();
+    });
+
+    updateClock();
+    applyDashboardTheme(dashboardTheme);
+    renderFinance();
+    bootstrapFoodLibraryFromSavedMeals();
+    renderFoodLibraryOptions();
+    renderHomeDashboard();
+
+    function desktopNavigate(target) {
+      const mapping = {
+        home: () => goHome({ scrollMode: "top" }),
+        finanzen: () => openSection("finanzen", document.querySelector('.tab[data-tab="finanzen"]'), { scrollMode: "top" }),
+        gym: () => openSection("gym", document.querySelector('.tab[data-tab="gym"]'), { scrollMode: "top" }),
+        ernaehrung: () => openSection("ernaehrung", document.querySelector('.tab[data-tab="ernaehrung"]'), { scrollMode: "top" }),
+        kalender: () => openSection("kalender", document.querySelector('.tab[data-tab="kalender"]'), { scrollMode: "top" })
+      };
+
+      mapping[target]?.();
+    }
+
+    function desktopCreateBackup() {
+      exportLifeDashboardBackup();
+    }
+
+    function desktopLoadBackup() {
+      if (hasNativeFileBridge()) {
+        window.webkit.messageHandlers.files.postMessage({ action: "openBackup" });
+      } else {
+        document.getElementById("homeRestoreFile").click();
+      }
+    }
+
+    function desktopPrintNutritionPlan() {
+      selectedNutritionDate = new Date(nutritionToday);
+      openSection("ernaehrung", document.querySelector('.tab[data-tab="ernaehrung"]'), { scrollMode: "top" });
+      buildNutritionPrintView();
+
+      if (window.webkit?.messageHandlers?.print) {
+        setTimeout(() => {
+          window.webkit.messageHandlers.print.postMessage({ action: "nutrition" });
+        }, 80);
+      } else {
+        window.print();
+      }
+    }
+
+    function desktopToggleDarkMode() {
+      applyDashboardTheme(dashboardTheme === "dark" ? "light" : "dark");
+    }
+
+    function desktopCheckForUpdates() {
+      if (hasNativeUpdateBridge()) {
+        window.webkit.messageHandlers.updates.postMessage({ action: "check" });
+      }
+    }
+
+    function desktopRollbackUpdate() {
+      if (hasNativeUpdateBridge()) {
+        window.webkit.messageHandlers.updates.postMessage({ action: "rollback" });
+      }
+    }
+
+
+    window.desktopNavigate = desktopNavigate;
+    window.desktopCreateBackup = desktopCreateBackup;
+    window.desktopLoadBackup = desktopLoadBackup;
+    window.desktopPrintNutritionPlan = desktopPrintNutritionPlan;
+    window.desktopToggleDarkMode = desktopToggleDarkMode;
+    window.desktopCheckForUpdates = desktopCheckForUpdates;
+    window.desktopRollbackUpdate = desktopRollbackUpdate;
+
+    renderAppleMusicCard();
+    updateNotificationButton();
+    checkUpcomingNotifications();
+    if (hasNativeMusicBridge()) {
+      sendNativeMusic("state");
+      setInterval(() => sendNativeMusic("state"), 2500);
+    }
+    if (hasNativeCalendarBridge()) {
+      window.webkit.messageHandlers.calendar.postMessage({ action: "state" });
+    }
+    if (hasNativeNotificationBridge()) {
+      window.webkit.messageHandlers.notifications.postMessage({ action: "state" });
+    }
+    requestNativeUpdateState();
+    requestAnimationFrame(() => centerHomeCalendarOnToday(false));
+    setInterval(updateClock,1000);
+    setInterval(checkUpcomingNotifications,60000);
+  </script>
+</body>
+</html>
