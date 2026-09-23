@@ -1,0 +1,1000 @@
+        flex-basis: var(--gym-day-width, 180px);
+        width: var(--gym-day-width, 180px);
+        min-width: var(--gym-day-width, 180px);
+        max-width: var(--gym-day-width, 180px);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .gym-heading {
+        flex-direction: column;
+      }
+
+      .gym-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .gym-shell {
+        padding: 18px;
+      }
+
+      .gym-day-card {
+        flex-basis: 138px;
+      }
+
+      .gym-loop-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+
+
+    .gym-primary-button {
+      border: 0;
+      background: #1d1d1f;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 13px;
+      cursor: pointer;
+      font-weight: 650;
+    }
+
+    .gym-primary-button:hover {
+      background: #333336;
+    }
+
+    .gym-calendar-head h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: -.035em;
+    }
+
+    .gym-workout-card {
+      margin-top: 16px;
+      padding: 22px;
+      border-radius: 26px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid rgba(30,30,40,.06);
+    }
+
+    .gym-workout-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .gym-workout-head h2 {
+      margin: 3px 0 0;
+      font-size: 1.55rem;
+      letter-spacing: -.04em;
+    }
+
+    .gym-exercise-list {
+      min-height: 180px;
+      border-radius: 20px;
+      background: rgba(247,247,249,.9);
+      padding: 16px;
+    }
+
+    .gym-empty-workout {
+      height: 148px;
+      display: grid;
+      place-items: center;
+      color: #9a9aa0;
+      font-size: .9rem;
+    }
+
+    .gym-editor-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(24,24,28,.28);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease;
+    }
+
+    .gym-editor-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .gym-editor-card {
+      width: min(620px, 100%);
+      max-height: min(820px, calc(100vh - 48px));
+      overflow: auto;
+      border-radius: 28px;
+      padding: 24px;
+      background: rgba(252,252,253,.98);
+      border: 1px solid rgba(30,30,40,.08);
+      box-shadow: 0 28px 80px rgba(20,20,24,.20);
+      transform: translateY(10px) scale(.985);
+      transition: transform .18s ease;
+      scrollbar-width: thin;
+    }
+
+    .gym-editor-backdrop.open .gym-editor-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .gym-editor-header,
+    .gym-editor-loop-head,
+    .gym-editor-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .gym-editor-header h2 {
+      margin: 0;
+      font-size: 1.6rem;
+      letter-spacing: -.04em;
+    }
+
+    .gym-editor-close {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 12px;
+      background: #ededf0;
+      color: #66666c;
+      font-size: 1.15rem;
+      cursor: pointer;
+    }
+
+    .gym-editor-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .gym-editor-fields label {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      color: #77777d;
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .gym-editor-fields input {
+      width: 100%;
+      border: 1px solid rgba(30,30,40,.10);
+      background: white;
+      border-radius: 14px;
+      padding: 11px 12px;
+      color: #2f2f33;
+      outline: none;
+    }
+
+    .gym-editor-fields input:focus {
+      border-color: rgba(30,30,40,.24);
+      box-shadow: 0 0 0 3px rgba(30,30,40,.05);
+    }
+
+    .gym-editor-loop-head {
+      margin-bottom: 10px;
+    }
+
+    .gym-editor-loop-head > div {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .gym-editor-loop-head strong {
+      font-size: 1rem;
+      color: #3b3b40;
+    }
+
+    .gym-editor-loop {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .gym-editor-row {
+      display: grid;
+      grid-template-columns: 34px 1fr 32px 32px 32px;
+      gap: 8px;
+      align-items: center;
+      padding: 9px;
+      border-radius: 15px;
+      background: #f4f4f6;
+    }
+
+    .gym-editor-index {
+      height: 32px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: #e7e7ea;
+      color: #6c6c72;
+      font-size: .78rem;
+      font-weight: 700;
+    }
+
+    .gym-editor-row input {
+      min-width: 0;
+      border: 0;
+      outline: none;
+      background: transparent;
+      font-weight: 650;
+      color: #353539;
+    }
+
+    .gym-editor-row button {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 10px;
+      background: rgba(255,255,255,.78);
+      color: #77777d;
+      cursor: pointer;
+    }
+
+    .gym-editor-row button:hover {
+      background: white;
+    }
+
+    .gym-editor-add {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px dashed rgba(30,30,40,.16);
+      background: transparent;
+      color: #66666c;
+      padding: 11px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
+    .gym-editor-actions {
+      justify-content: flex-end;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(30,30,40,.07);
+    }
+
+    @media (max-width: 620px) {
+      .gym-editor-fields {
+        grid-template-columns: 1fr;
+      }
+
+      .gym-editor-row {
+        grid-template-columns: 32px minmax(0,1fr) 30px 30px 30px;
+        gap: 5px;
+      }
+    }
+
+
+    .gym-add-exercise {
+      width: 100%;
+      margin-top: 12px;
+      border: 1px dashed rgba(30,30,40,.16);
+      background: transparent;
+      color: #66666c;
+      padding: 12px 14px;
+      border-radius: 15px;
+      cursor: pointer;
+    }
+
+    .gym-exercise-card {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 15px;
+      border-radius: 17px;
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(30,30,40,.06);
+      cursor: pointer;
+      text-align: left;
+      color: inherit;
+      transition: .16s ease;
+    }
+
+    .gym-exercise-card + .gym-exercise-card { margin-top: 8px; }
+
+    .gym-exercise-card:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 8px 20px rgba(30,30,40,.05);
+    }
+
+    .gym-exercise-name {
+      display: block;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #303034;
+      margin-bottom: 5px;
+    }
+
+    .gym-exercise-meta {
+      color: #89898f;
+      font-size: .78rem;
+    }
+
+    .gym-exercise-weights {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      max-width: 380px;
+    }
+
+    .gym-weight-chip {
+      padding: 6px 9px;
+      border-radius: 10px;
+      background: #efeff2;
+      color: #5f5f65;
+      font-size: .78rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .gym-empty-workout {
+      min-height: 150px;
+      display: grid;
+      place-items: center;
+      color: #9a9aa0;
+      font-size: .9rem;
+    }
+
+    .exercise-editor-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 130;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(24,24,28,.30);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease;
+    }
+
+    .exercise-editor-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .exercise-editor-card {
+      width: min(560px, 100%);
+      max-height: min(760px, calc(100vh - 48px));
+      overflow: auto;
+      border-radius: 28px;
+      padding: 24px;
+      background: rgba(252,252,253,.98);
+      border: 1px solid rgba(30,30,40,.08);
+      box-shadow: 0 28px 80px rgba(20,20,24,.20);
+      transform: translateY(10px) scale(.985);
+      transition: transform .18s ease;
+    }
+
+    .exercise-editor-backdrop.open .exercise-editor-card { transform: translateY(0) scale(1); }
+
+    .exercise-editor-header,
+    .exercise-sets-head,
+    .exercise-editor-actions,
+    .exercise-editor-actions-right {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .exercise-editor-header h2 {
+      margin: 0;
+      font-size: 1.6rem;
+      letter-spacing: -.04em;
+    }
+
+    .exercise-name-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin: 22px 0;
+      color: #77777d;
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .exercise-name-field input {
+      width: 100%;
+      border: 1px solid rgba(30,30,40,.10);
+      background: white;
+      border-radius: 14px;
+      padding: 12px 13px;
+      color: #2f2f33;
+      outline: none;
+      font-size: 1rem;
+    }
+
+    .exercise-sets-head { margin-bottom: 10px; }
+
+    .exercise-sets-head > div {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .exercise-set-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .exercise-set-row {
+      display: grid;
+      grid-template-columns: 42px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 15px;
+      background: #f4f4f6;
+    }
+
+    .exercise-set-number {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      background: #e7e7ea;
+      color: #66666c;
+      font-weight: 700;
+      font-size: .8rem;
+    }
+
+    .exercise-weight-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 9px 11px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid rgba(30,30,40,.08);
+    }
+
+    .exercise-weight-input input {
+      min-width: 0;
+      width: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      font-weight: 700;
+      color: #303034;
+    }
+
+    .exercise-weight-input span {
+      color: #8d8d93;
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .exercise-set-delete {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 10px;
+      background: rgba(255,255,255,.78);
+      color: #929298;
+      cursor: pointer;
+    }
+
+    .exercise-editor-actions {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(30,30,40,.07);
+    }
+
+    .exercise-delete-button {
+      border: 0;
+      background: rgba(196,72,72,.09);
+      color: #a44747;
+      padding: 10px 13px;
+      border-radius: 13px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 620px) {
+      .gym-exercise-card { grid-template-columns: 1fr; }
+      .gym-exercise-weights { justify-content: flex-start; max-width: none; }
+      .exercise-editor-actions { align-items: stretch; flex-direction: column; }
+      .exercise-editor-actions-right { width: 100%; }
+      .exercise-editor-actions-right button { flex: 1; }
+    }
+
+
+    /* Kalender: ausgewählter Tag ist immer klar der Fokus */
+    .gym-day-card.today {
+      background: rgba(255,255,255,.88);
+      color: inherit;
+      box-shadow: inset 0 0 0 2px rgba(30,30,40,.16);
+    }
+
+    .gym-day-card.today .gym-day-name,
+    .gym-day-card.today .gym-day-index {
+      color: #6f6f76;
+    }
+
+    .gym-day-card.today .gym-session-name {
+      color: #4b4b50;
+    }
+
+    .gym-day-card.selected,
+    .gym-day-card.selected.today {
+      background: #1d1d1f;
+      color: white;
+      box-shadow: 0 12px 28px rgba(20,20,24,.16), inset 0 0 0 2px rgba(255,255,255,.06);
+      transform: translateY(-2px);
+    }
+
+    .gym-day-card.selected .gym-day-name,
+    .gym-day-card.selected .gym-day-index,
+    .gym-day-card.selected.today .gym-day-name,
+    .gym-day-card.selected.today .gym-day-index {
+      color: rgba(255,255,255,.62);
+    }
+
+    .gym-day-card.selected .gym-session-name,
+    .gym-day-card.selected.today .gym-session-name {
+      color: white;
+    }
+
+    .gym-selected-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 7px;
+      font-size: .68rem;
+      font-weight: 700;
+      color: rgba(255,255,255,.66);
+    }
+
+    .gym-selected-label::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .gym-last-time {
+      margin-top: 7px;
+      color: #8a8a90;
+      font-size: .72rem;
+      font-weight: 650;
+    }
+
+    .gym-weight-chip.reference {
+      background: #e9e9ec;
+      color: #64646a;
+    }
+
+    .gym-weight-chip.current {
+      background: #1d1d1f;
+      color: white;
+    }
+
+    .exercise-set-row {
+      grid-template-columns: 42px minmax(0,1fr) minmax(0,1fr) auto;
+    }
+
+    .exercise-reps-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 9px 11px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid rgba(30,30,40,.08);
+    }
+
+    .exercise-reps-input input {
+      min-width: 0;
+      width: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      font-weight: 700;
+      color: #303034;
+    }
+
+    .exercise-reps-input span {
+      color: #8d8d93;
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    @media (max-width: 620px) {
+      .exercise-set-row {
+        grid-template-columns: 36px 1fr 1fr 32px;
+        gap: 6px;
+      }
+    }
+
+
+    /* Dezente Gym-Farben für wichtige Zahlen */
+    .gym-session-badge {
+      background: #e8eef9;
+      color: #3e5f8f;
+    }
+
+    .gym-weight-chip {
+      background: #eef3fb;
+      color: #46658e;
+    }
+
+    .gym-weight-chip.current {
+      background: #e7f4eb;
+      color: #3f7651;
+    }
+
+    .gym-weight-chip.reference {
+      background: #fff1df;
+      color: #9b6a2b;
+    }
+
+    .gym-weight-chip .chip-weight {
+      font-weight: 800;
+    }
+
+    .gym-weight-chip .chip-reps {
+      font-weight: 700;
+      opacity: .82;
+    }
+
+    .gym-weight-chip .chip-separator {
+      opacity: .45;
+      padding: 0 2px;
+    }
+
+    .gym-exercise-meta {
+      color: #6d7ea0;
+      font-weight: 650;
+    }
+
+    .gym-last-time {
+      color: #9b6a2b;
+    }
+
+    .exercise-set-number {
+      background: #ebeef6;
+      color: #50658f;
+    }
+
+    .exercise-weight-input {
+      background: #f4f8ff;
+      border-color: rgba(76,105,150,.13);
+    }
+
+    .exercise-weight-input input {
+      color: #3f628e;
+    }
+
+    .exercise-weight-input span {
+      color: #6d83a4;
+    }
+
+    .exercise-reps-input {
+      background: #f3fbf6;
+      border-color: rgba(67,131,91,.13);
+    }
+
+    .exercise-reps-input input {
+      color: #3d7650;
+    }
+
+    .exercise-reps-input span {
+      color: #6b9278;
+    }
+
+    .gym-day-number {
+      color: #3f4f6d;
+    }
+
+    .gym-day-card.selected .gym-day-number,
+    .gym-day-card.selected.today .gym-day-number {
+      color: white;
+    }
+
+    .gym-editor-index {
+      background: #ebeef6;
+      color: #50658f;
+    }
+
+    .gym-editor-loop-head strong,
+    #exerciseSetCount {
+      color: #50658f;
+    }
+
+    #selectedGymDayTitle {
+      color: #2f3f57;
+    }
+
+
+    .nutrition-shell {
+      border-radius: 34px;
+      padding: 30px;
+      background: rgba(255,255,255,.70);
+      border: 1px solid rgba(255,255,255,.92);
+      box-shadow: 0 20px 55px rgba(30,30,40,.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .nutrition-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .nutrition-heading h1 {
+      margin: 0;
+      font-size: clamp(2rem,4vw,3.2rem);
+      letter-spacing: -.055em;
+    }
+
+    .nutrition-eyebrow {
+      color: #5b7b68;
+    }
+
+    .nutrition-layout {
+      display: grid;
+      grid-template-columns: 92px minmax(0,1fr) 310px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .nutrition-day-rail,
+    .nutrition-day-summary,
+    .shopping-panel,
+    .nutrition-meal-card {
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(30,30,40,.06);
+      box-shadow: 0 10px 28px rgba(30,30,40,.045);
+    }
+
+    .nutrition-day-rail {
+      border-radius: 24px;
+      padding: 12px 9px;
+      position: sticky;
+      top: 105px;
+    }
+
+    .nutrition-rail-label {
+      padding: 5px 4px 10px;
+      color: #9a9aa0;
+      font-size: .68rem;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      font-weight: 800;
+    }
+
+    .nutrition-days {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .nutrition-day-button {
+      border: 0;
+      background: transparent;
+      border-radius: 16px;
+      min-height: 66px;
+      padding: 8px 5px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: .17s ease;
+      color: #696970;
+    }
+
+    .nutrition-day-button:hover {
+      background: #f3f3f5;
+      transform: translateX(2px);
+    }
+
+    .nutrition-day-button.today:not(.selected) {
+      box-shadow: inset 0 0 0 1.5px rgba(55,95,69,.18);
+      background: #f4f8f5;
+    }
+
+    .nutrition-day-button.selected {
+      background: #2f4f3a;
+      color: white;
+      box-shadow: 0 9px 20px rgba(47,79,58,.18);
+      transform: translateX(3px);
+    }
+
+    .nutrition-day-short {
+      font-size: .68rem;
+      text-transform: uppercase;
+      font-weight: 800;
+      opacity: .68;
+    }
+
+    .nutrition-day-number {
+      margin-top: 2px;
+      font-size: 1.4rem;
+      line-height: 1;
+      font-weight: 760;
+      letter-spacing: -.05em;
+    }
+
+    .nutrition-day-meals {
+      margin-top: 4px;
+      font-size: .62rem;
+      font-weight: 700;
+      opacity: .65;
+    }
+
+    .nutrition-main {
+      min-width: 0;
+    }
+
+    .nutrition-day-summary {
+      border-radius: 26px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    .nutrition-summary-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nutrition-summary-head h2 {
+      margin: 3px 0 0;
+      font-size: 1.45rem;
+      letter-spacing: -.04em;
+    }
+
+    .nutrition-kicker {
+      color: #8c8c92;
+      font-size: .72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    .nutrition-total-kcal {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      padding: 9px 13px;
+      border-radius: 15px;
+      background: #f4f0ff;
+      color: #67578c;
+    }
+
+    .nutrition-total-kcal strong {
+      font-size: 1.45rem;
+      letter-spacing: -.04em;
+    }
+
+    .nutrition-total-kcal span {
+      font-size: .72rem;
+      font-weight: 800;
+    }
+
+    .nutrition-macros {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .macro-pill {
+      border-radius: 15px;
+      padding: 11px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .macro-pill span {
+      font-size: .72rem;
+      font-weight: 700;
+      color: #77777e;
+    }
+
+    .macro-pill strong {
+      font-size: .9rem;
+    }
+
+    .macro-pill.protein {
+      background: #eef4ff;
+      color: #44658f;
+    }
+
+    .macro-pill.carbs {
+      background: #fff5e8;
+      color: #9b6a2b;
+    }
+
+    .macro-pill.fat {
+      background: #f8eef8;
+      color: #805b80;
+    }
+
+    .nutrition-meals {
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 12px;
+    }
+
+    .nutrition-meal-card {
+      border-radius: 23px;
+      padding: 17px;
+      cursor: pointer;
+      transition: transform .17s ease, box-shadow .17s ease, background .17s ease;
+      text-align: left;
+      color: inherit;
+      min-height: 185px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nutrition-meal-card:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,.97);
+      box-shadow: 0 14px 30px rgba(30,30,40,.07);
+    }
+
+    .meal-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .meal-slot {
+      color: #99999f;
+      font-size: .7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    .meal-name {
+      display: block;
+      margin-top: 3px;
+      font-size: 1.08rem;
+      font-weight: 750;
+      color: #353539;
+      line-height: 1.25;
+    }
+
+    .meal-kcal {
+      padding: 6px 9px;
+      border-radius: 10px;
+      background: #f4f0ff;
+      color: #67578c;
+      font-size: .74rem;
+      font-weight: 800;
+      white-space: nowrap;
