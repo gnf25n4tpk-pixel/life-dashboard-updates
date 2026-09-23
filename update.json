@@ -9,7 +9,11 @@
     "dashboard.part05",
     "dashboard.part06",
     "dashboard.part07",
-    "dashboard.part08"
+    "dashboard.part08",
+    "dashboard.part09",
+    "dashboard.part10",
+    "dashboard.part11",
+    "dashboard.part12"
   ],
   "sha256": "bfd676b6aaa2794a6a74c42726be798aafc614964c7fadd0fd4173e72c8916b7",
   "releaseNotes": "V9: feste GitHub-Updatequelle und automatische Dashboard-Updates.",
