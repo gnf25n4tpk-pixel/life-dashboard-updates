@@ -1,5 +1,5 @@
 {
-  "dashboardVersion": "0.9.0",
+  "dashboardVersion": "0.15.0",
   "minimumNativeVersion": "0.11.0",
   "dashboardParts": [
     "dashboard.part01",
@@ -13,9 +13,10 @@
     "dashboard.part09",
     "dashboard.part10",
     "dashboard.part11",
-    "dashboard.part12"
+    "dashboard.part12",
+    "dashboard.part13"
   ],
-  "sha256": "bfd676b6aaa2794a6a74c42726be798aafc614964c7fadd0fd4173e72c8916b7",
+  "sha256": "a5f7f9312b589449cfdd4392b2d73c0c21fe12a9d153cf42a8de70a1e33fc28a",
   "resources": [
     {
       "kind": "appIconPNG",
@@ -24,6 +25,6 @@
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "V11: App-Ressourcen wie das Icon können zusammen mit Dashboard-Updates verteilt und zurückgesetzt werden.",
+  "releaseNotes": "V15 Apple Clean: ruhigere Flächen, weniger Verläufe und Glows, klarere visuelle Hierarchie und gezielte Bereichsfarben.",
   "nativeDownloadURL": ""
 }
