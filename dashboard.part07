@@ -831,7 +831,6 @@
     .dashboard-stat-strip > div {
       min-height: 82px;
     }
-
 </style>
 </head>
 <body>
