@@ -1,8 +1,8 @@
 {
-  "dashboardVersion": "0.15.0",
+  "dashboardVersion": "0.15.1",
   "minimumNativeVersion": "0.11.0",
   "dashboardGzipBase64URL": "dashboard.html.gz.b64",
-  "sha256": "a5f7f9312b589449cfdd4392b2d73c0c21fe12a9d153cf42a8de70a1e33fc28a",
+  "sha256": "a3b2f34c2438dec72e85892e2dc2a33d0fe82810172a06ed65b4fce3b5d8d9fb",
   "resources": [
     {
       "kind": "appIconPNG",
