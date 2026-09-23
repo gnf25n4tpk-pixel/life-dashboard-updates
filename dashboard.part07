@@ -1,0 +1,1000 @@
+          </div>
+        </div>
+
+        <section class="dashboard-stat-strip nutrition-stat-strip">
+          <div><span>Ø Kalorien</span><strong id="nutritionWeekAvgKcal">0 kcal</strong></div>
+          <div><span>Ø Protein</span><strong id="nutritionWeekAvgProtein">0 g</strong></div>
+          <div><span>Geplant</span><strong id="nutritionWeekMealsPlanned">0 Mahlzeiten</strong></div>
+        </section>
+
+        <section class="nutrition-today-card">
+          <div class="nutrition-today-head">
+            <div>
+              <span class="nutrition-kicker">Heute</span>
+              <h2 id="nutritionTodayTitle">Tagesplan</h2>
+            </div>
+
+            <div class="nutrition-today-total">
+              <strong id="nutritionTodayCalories">0</strong>
+              <span>kcal</span>
+            </div>
+          </div>
+
+          <div class="nutrition-today-body">
+            <div class="nutrition-today-meals" id="nutritionTodayMeals"></div>
+
+            <div class="nutrition-today-macros">
+              <div class="today-macro protein">
+                <span>Protein</span>
+                <strong id="nutritionTodayProtein">0 g</strong>
+              </div>
+              <div class="today-macro carbs">
+                <span>KH</span>
+                <strong id="nutritionTodayCarbs">0 g</strong>
+              </div>
+              <div class="today-macro fat">
+                <span>Fett</span>
+                <strong id="nutritionTodayFat">0 g</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="nutrition-week-section">
+          <div class="nutrition-section-head">
+            <div>
+              <span class="nutrition-kicker">Wochenübersicht</span>
+              <h2 id="nutritionWeekTitle">Diese Woche</h2>
+            </div>
+            <span class="two-day-note">Mo/Di · Mi/Do · Fr/Sa · So</span>
+          </div>
+
+          <div class="nutrition-week-grid" id="nutritionWeekGrid"></div>
+        </section>
+
+        <div class="nutrition-detail-layout">
+          <main class="nutrition-main">
+            <div class="nutrition-meals-toolbar">
+              <span id="nutritionSelectedDayMini">Ausgewählter Tag</span>
+              <button id="individualDayToggle">Nur diesen Tag bearbeiten</button>
+            </div>
+            <section class="nutrition-meals" id="nutritionMeals"></section>
+
+          </main>
+
+          <aside class="shopping-panel">
+            <div class="shopping-head">
+              <div>
+                <span class="nutrition-kicker">Diese Woche</span>
+                <h2>Einkaufsliste</h2>
+              </div>
+              <button class="shopping-clear" id="shoppingClearChecks" title="Haken zurücksetzen">↺</button>
+            </div>
+
+            <div class="shopping-mode-toggle">
+              <button data-shopping-mode="category" class="active">Kategorien</button>
+              <button data-shopping-mode="day">Wochentage</button>
+            </div>
+
+            <div class="shopping-list" id="shoppingList"></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="nutrition-print-view" id="nutritionPrintView">
+      <section class="nutrition-print-page">
+        <div class="nutrition-print-header">
+          <div>
+            <span>Life Dashboard</span>
+            <h1>Essensplan</h1>
+          </div>
+          <strong id="nutritionPrintRange"></strong>
+        </div>
+
+        <div class="nutrition-print-grid" id="nutritionPrintGrid"></div>
+
+        <div class="nutrition-print-footer">
+          Mengen und Nährwerte beziehen sich auf eine Person. Die Personenzahl der Mahlzeit ist separat angegeben.
+        </div>
+      </section>
+
+      <section class="nutrition-print-page nutrition-print-shopping-page">
+        <div class="nutrition-print-header">
+          <div>
+            <span>Life Dashboard</span>
+            <h1>Einkaufsliste</h1>
+          </div>
+          <strong id="nutritionPrintShoppingRange"></strong>
+        </div>
+
+        <div class="nutrition-print-shopping-grid" id="nutritionPrintShoppingGrid"></div>
+
+        <div class="nutrition-print-footer">
+          Mengen berücksichtigen automatisch die eingestellte Personenzahl der jeweiligen Mahlzeiten.
+        </div>
+      </section>
+    </section>
+
+
+    <section class="section-view hidden" id="calendarView">
+      <div class="calendar-shell">
+        <div class="calendar-heading">
+          <div>
+            <p class="eyebrow calendar-eyebrow">Kalender</p>
+            <h1>Alles an einem Ort</h1>
+            <p>Termine, Training und Ernährung in einer gemeinsamen Übersicht.</p>
+          </div>
+
+          <div class="calendar-heading-actions">
+            <button class="calendar-secondary-button" id="calendarAppleImport">Apple Kalender</button>
+            <button class="calendar-primary-button" id="calendarAddEvent">＋ Termin</button>
+            <input type="file" id="calendarAppleFileInput" accept=".ics,text/calendar" multiple hidden />
+          </div>
+        </div>
+
+        <div class="calendar-toolbar">
+          <div class="calendar-month-navigation">
+            <button id="calendarPrevMonth" aria-label="Vorheriger Monat">←</button>
+            <div>
+              <span class="calendar-kicker">Monatsansicht</span>
+              <h2 id="calendarMonthTitle">Monat</h2>
+            </div>
+            <button id="calendarNextMonth" aria-label="Nächster Monat">→</button>
+          </div>
+
+          <button class="calendar-today-button" id="calendarToday">Heute</button>
+        </div>
+
+        <div class="calendar-source-row">
+          <span class="calendar-source personal">Eigene Termine</span>
+          <span class="calendar-source apple">Apple Kalender</span>
+          <span class="calendar-source gym">Gym</span>
+          <span class="calendar-source nutrition">Ernährung</span>
+        </div>
+
+        <div class="calendar-layout">
+          <section class="calendar-month-panel">
+            <div class="calendar-weekdays">
+              <span>Mo</span>
+              <span>Di</span>
+              <span>Mi</span>
+              <span>Do</span>
+              <span>Fr</span>
+              <span>Sa</span>
+              <span>So</span>
+            </div>
+            <div class="calendar-month-grid" id="calendarMonthGrid"></div>
+          </section>
+
+          <aside class="calendar-agenda-panel">
+            <div class="calendar-agenda-head">
+              <span class="calendar-kicker" id="calendarAgendaKicker">Ausgewählt</span>
+              <h2 id="calendarAgendaTitle">Tag</h2>
+            </div>
+
+            <div class="calendar-agenda-list" id="calendarAgendaList"></div>
+
+            <div class="calendar-apple-status">
+              <div>
+                <span class="calendar-kicker">Apple Kalender</span>
+                <strong id="calendarAppleStatus">Noch nicht importiert</strong>
+                <small id="calendarAppleStatusDetail">Für V24 kannst du exportierte .ics-Kalender einlesen.</small>
+              </div>
+              <button class="calendar-clear-apple hidden" id="calendarClearApple">Import entfernen</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-card hidden" id="contentCard">
+      <p class="eyebrow">Aktiver Bereich</p>
+      <h2 id="sectionTitle">Gym</h2>
+      <p id="sectionText">Hier kommt später dein Bereich hin.</p>
+    </section>
+  </main>
+
+
+
+
+
+    <div class="home-modal-backdrop" id="homeEventModal" aria-hidden="true">
+      <div class="home-modal-card">
+        <div class="home-modal-header">
+          <div>
+            <p class="eyebrow">Kalender</p>
+            <h2 id="homeEventModalTitle">Termin hinzufügen</h2>
+          </div>
+          <button class="home-modal-close" id="homeEventClose">×</button>
+        </div>
+
+        <label class="home-modal-field">
+          <span>Titel</span>
+          <input id="homeEventTitle" type="text" placeholder="z. B. Zahnarzt" />
+        </label>
+
+        <div class="home-modal-grid">
+          <label class="home-modal-field">
+            <span>Datum</span>
+            <input id="homeEventDate" type="date" />
+          </label>
+          <label class="home-modal-field">
+            <span>Uhrzeit</span>
+            <input id="homeEventTime" type="time" />
+          </label>
+        </div>
+
+        <div class="home-modal-actions">
+          <button class="home-delete-button hidden" id="homeEventDelete">Löschen</button>
+          <div>
+            <button class="home-small-button" id="homeEventCancel">Abbrechen</button>
+            <button class="home-save-button" id="homeEventSave">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-modal-backdrop" id="homeSettingsModal" aria-hidden="true">
+      <div class="home-modal-card settings">
+        <div class="home-modal-header">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h2>Einstellungen</h2>
+          </div>
+          <button class="home-modal-close" id="homeSettingsClose">×</button>
+        </div>
+
+        <div class="settings-stack">
+          <div class="backup-card">
+            <div>
+              <strong>Backup</strong>
+              <span>Alle Dashboard-Daten sichern oder wiederherstellen.</span>
+            </div>
+            <div class="settings-inline-actions">
+              <button class="home-small-button" id="homeRestoreButton">Backup laden</button>
+              <button class="home-save-button" id="homeBackupButton">Backup erstellen</button>
+              <input type="file" id="homeRestoreFile" accept=".json,application/json" hidden />
+            </div>
+          </div>
+
+          <div class="settings-card update-settings-card">
+            <div class="update-settings-copy">
+              <strong>Updates</strong>
+              <span id="updateStatusText">Update-System bereit</span>
+            </div>
+
+            <label class="update-feed-field">
+              <span>Update-Quelle</span>
+              <input id="updateFeedUrl" type="url" placeholder="https://…/update.json" autocomplete="off" />
+            </label>
+
+            <div class="update-settings-actions">
+              <label class="update-auto-toggle">
+                <input type="checkbox" id="autoUpdateToggle" checked />
+                <span>Automatisch</span>
+              </label>
+              <button class="home-small-button" id="saveUpdateFeed">Speichern</button>
+              <button class="home-save-button" id="checkForUpdates">Jetzt prüfen</button>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div>
+              <strong>Erscheinungsbild</strong>
+              <span>Hell oder dunkel – wird auf diesem Gerät gespeichert.</span>
+            </div>
+            <div class="theme-toggle">
+              <button data-theme-choice="light">Hell</button>
+              <button data-theme-choice="dark">Dunkel</button>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div>
+              <strong>Benachrichtigungen</strong>
+              <span>Hinweis ungefähr 30 Minuten vor einem Termin, sofern der Browser es erlaubt.</span>
+            </div>
+            <button class="home-small-button" id="notificationPermissionButton">Aktivieren</button>
+          </div>
+
+          <div class="settings-card music-settings-card">
+            <div>
+              <strong>Apple Music</strong>
+              <span>Desktop-Modus: Das Dashboard steuert direkt die Musik-App auf deinem Mac. Kein Developer Token nötig.</span>
+            </div>
+            <div class="settings-inline-actions">
+              <button class="home-small-button" id="desktopMusicOpenSettings">Music öffnen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-modal-backdrop" id="globalSearchModal" aria-hidden="true">
+      <div class="home-modal-card search-modal-card">
+        <div class="home-modal-header">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h2>Suchen</h2>
+          </div>
+          <button class="home-modal-close" id="globalSearchClose">×</button>
+        </div>
+
+        <input class="global-search-input" id="globalSearchInput" type="search" placeholder="Termin, Übung, Lebensmittel, Ausgabe …" />
+        <div class="global-search-results" id="globalSearchResults"></div>
+      </div>
+    </div>
+
+    <div class="home-modal-backdrop" id="quickAddModal" aria-hidden="true">
+      <div class="home-modal-card quick-add-modal-card">
+        <div class="home-modal-header">
+          <div>
+            <p class="eyebrow">Schnell hinzufügen</p>
+            <h2>Was möchtest du eintragen?</h2>
+          </div>
+          <button class="home-modal-close" id="quickAddClose">×</button>
+        </div>
+
+        <div class="quick-add-choice-grid">
+          <button data-quick-action="event"><span>＋</span><strong>Termin</strong><small>Kalender</small></button>
+          <button data-quick-action="todo"><span>✓</span><strong>To-Do</strong><small>Startseite</small></button>
+          <button data-quick-action="expense"><span>€</span><strong>Ausgabe</strong><small>Finanzen</small></button>
+          <button data-quick-action="gym"><span>⌁</span><strong>Gym</strong><small>Heute bearbeiten</small></button>
+        </div>
+      </div>
+    </div>
+
+    <datalist id="foodLibraryOptions"></datalist>
+
+    <div class="nutrition-generator-backdrop" id="nutritionGeneratorModal" aria-hidden="true">
+      <div class="nutrition-generator-card" role="dialog" aria-modal="true" aria-labelledby="nutritionGeneratorTitle">
+        <div class="meal-editor-header">
+          <div>
+            <p class="eyebrow nutrition-eyebrow">Meal Prep</p>
+            <h2 id="nutritionGeneratorTitle">Plan erstellen</h2>
+          </div>
+          <button class="meal-editor-close" id="nutritionGeneratorClose" aria-label="Schließen">×</button>
+        </div>
+
+        <div class="generator-intro">
+          Für Mo/Di, Mi/Do und Fr/Sa werden gemeinsame Meal-Prep-Pläne erstellt. Sonntag bekommt einen eigenen Plan. Pflicht-Lebensmittel werden automatisch eingebaut.
+        </div>
+
+        <div class="generator-food-grid">
+          <label class="generator-field">
+            <span>Pflicht-Lebensmittel</span>
+            <textarea id="generatorRequiredFoods" rows="5" placeholder="z. B.&#10;Hähnchen&#10;Reis&#10;Brokkoli&#10;Skyr"></textarea>
+            <small>Diese Lebensmittel sollen im Plan vorkommen.</small>
+          </label>
+
+          <label class="generator-field">
+            <span>Vermeiden</span>
+            <textarea id="generatorAvoidFoods" rows="5" placeholder="z. B.&#10;Pilze&#10;Thunfisch&#10;Spinat"></textarea>
+            <small>Diese Lebensmittel werden aus dem Generator ausgeschlossen.</small>
+          </label>
+        </div>
+
+        <div class="generator-options">
+          <label>
+            <span>Kalorien-Ziel pro Tag</span>
+            <input type="number" id="generatorCalories" min="1000" step="50" value="3000" />
+          </label>
+
+          <label>
+            <span>Protein-Ziel pro Tag</span>
+            <input type="number" id="generatorProtein" min="50" step="5" value="180" />
+          </label>
+        </div>
+
+        <div class="generator-actions">
+          <button class="nutrition-secondary-button" id="nutritionGeneratorCancel">Abbrechen</button>
+          <button class="nutrition-primary-button" id="nutritionGeneratorCreate">Plan generieren</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="meal-editor-backdrop" id="mealEditorModal" aria-hidden="true">
+      <div class="meal-editor-card" role="dialog" aria-modal="true" aria-labelledby="mealEditorTitle">
+        <div class="meal-editor-header">
+          <div>
+            <p class="eyebrow nutrition-eyebrow" id="mealEditorSlot">Mahlzeit</p>
+            <h2 id="mealEditorTitle">Mahlzeit bearbeiten</h2>
+          </div>
+          <button class="meal-editor-close" id="mealEditorClose" aria-label="Schließen">×</button>
+        </div>
+
+        <div class="meal-editor-top-grid">
+          <label class="meal-name-field">
+            <span>Name der Mahlzeit</span>
+            <input type="text" id="mealEditorName" placeholder="z. B. Chicken Rice Bowl" />
+          </label>
+
+          <label class="meal-persons-field">
+            <span>Personen</span>
+            <div class="persons-stepper">
+              <button type="button" id="mealPersonsMinus">−</button>
+              <strong id="mealPersonsValue">1</strong>
+              <button type="button" id="mealPersonsPlus">＋</button>
+            </div>
+            <small>Nährwerte bleiben pro Person</small>
+          </label>
+        </div>
+
+        <div class="meal-editor-ingredients-head">
+          <div>
+            <span class="nutrition-kicker">Lebensmittel</span>
+            <strong id="mealIngredientCount">0 Zutaten</strong>
+          </div>
+          <button class="nutrition-secondary-button" id="mealAddIngredient">＋ Lebensmittel</button>
+        </div>
+
+        <div class="ingredient-editor-list" id="ingredientEditorList"></div>
+
+        <div class="meal-editor-actions">
+          <button class="meal-delete-button" id="mealDelete">Leeren</button>
+          <div>
+            <button class="nutrition-secondary-button" id="mealEditorCancel">Abbrechen</button>
+            <button class="nutrition-primary-button" id="mealEditorSave">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gym-editor-backdrop" id="gymEditorModal" aria-hidden="true">
+      <div class="gym-editor-card" role="dialog" aria-modal="true" aria-labelledby="gymEditorTitle">
+        <div class="gym-editor-header">
+          <div>
+            <p class="eyebrow gym-eyebrow">Trainingsplan</p>
+            <h2 id="gymEditorTitle">Plan bearbeiten</h2>
+          </div>
+          <button class="gym-editor-close" id="gymEditorClose" aria-label="Schließen">×</button>
+        </div>
+
+        <div class="gym-editor-fields">
+          <label>
+            <span>Name</span>
+            <input type="text" id="gymEditorName" />
+          </label>
+
+          <label>
+            <span>Startdatum · Tag 1</span>
+            <input type="date" id="gymEditorStartDate" />
+          </label>
+        </div>
+
+        <div class="gym-editor-loop-head">
+          <div>
+            <span class="gym-kicker">Reihenfolge</span>
+            <strong id="gymEditorLoopCount">0 Tage</strong>
+          </div>
+          <button class="gym-secondary-button" id="gymEditorNewPlan">＋ Neuer Plan</button>
+        </div>
+
+        <div class="gym-editor-loop" id="gymEditorLoop"></div>
+
+        <button class="gym-editor-add" id="gymEditorAddDay">＋ Tag hinzufügen</button>
+
+        <div class="gym-editor-actions">
+          <button class="gym-secondary-button" id="gymEditorCancel">Abbrechen</button>
+          <button class="gym-primary-button" id="gymEditorSave">Speichern</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="exercise-editor-backdrop" id="exerciseEditorModal" aria-hidden="true">
+      <div class="exercise-editor-card" role="dialog" aria-modal="true" aria-labelledby="exerciseEditorTitle">
+        <div class="exercise-editor-header">
+          <div>
+            <p class="eyebrow gym-eyebrow">Übung</p>
+            <h2 id="exerciseEditorTitle">Übung bearbeiten</h2>
+          </div>
+          <button class="gym-editor-close" id="exerciseEditorClose" aria-label="Schließen">×</button>
+        </div>
+
+        <label class="exercise-name-field">
+          <span>Name der Übung</span>
+          <input type="text" id="exerciseEditorName" placeholder="z. B. Bankdrücken" />
+        </label>
+
+        <div class="exercise-sets-head">
+          <div>
+            <span class="gym-kicker">Sätze</span>
+            <strong id="exerciseSetCount">0 Sätze</strong>
+          </div>
+          <button class="gym-secondary-button" id="exerciseAddSet">＋ Satz</button>
+        </div>
+
+        <div class="exercise-set-list" id="exerciseSetList"></div>
+
+        <div class="exercise-history hidden" id="exerciseHistory">
+          <div class="exercise-history-head">
+            <span class="gym-kicker">Verlauf</span>
+            <strong>Letzte Trainings</strong>
+          </div>
+          <div class="exercise-history-list" id="exerciseHistoryList"></div>
+        </div>
+
+        <div class="exercise-editor-actions">
+          <button class="exercise-delete-button hidden" id="exerciseDelete">Übung löschen</button>
+          <div class="exercise-editor-actions-right">
+            <button class="gym-secondary-button" id="exerciseEditorCancel">Abbrechen</button>
+            <button class="gym-primary-button" id="exerciseEditorSave">Speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="editModal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <h3 id="modalTitle">Betrag bearbeiten</h3>
+        <p id="modalText">Neuen Betrag eingeben.</p>
+        <label class="modal-field">
+          <span>€</span>
+          <input id="modalInput" type="text" inputmode="decimal" autocomplete="off" />
+        </label>
+        <div class="modal-actions">
+          <button class="modal-cancel" id="modalCancel">Abbrechen</button>
+          <button class="modal-save" id="modalSave">Speichern</button>
+        </div>
+      </div>
+    </div>
+
+  <script>
+    const tabs = document.querySelectorAll(".tab[data-tab]");
+    const clock = document.getElementById("clock");
+    const fullDate = document.getElementById("fullDate");
+    const compactDatetime = document.getElementById("compactDatetime");
+    const homeView = document.getElementById("homeView");
+    const contentCard = document.getElementById("contentCard");
+    const financeView = document.getElementById("financeView");
+    const gymView = document.getElementById("gymView");
+    const nutritionView = document.getElementById("nutritionView");
+    const calendarView = document.getElementById("calendarView");
+    const homeButton = document.getElementById("homeButton");
+    const sectionTitle = document.getElementById("sectionTitle");
+    const sectionText = document.getElementById("sectionText");
+
+    const sectionCopy = {
+      ernaehrung: ["Ernährung", "Hier kommt später dein Wochen-Essensplan mit Mahlzeiten und Lebensmitteln hin."]
+    };
+
+    const STORAGE_KEY = "lifeDashboardFinanceV5";
+    const LEGACY_STORAGE_KEY = "lifeDashboardFinanceV3";
+    const defaultFinance = { baseBalance: 0, subscriptions: [], shopping: [], other: [], income: [] };
+    let finance = loadFinance();
+
+    function cloneDefault() {
+      return JSON.parse(JSON.stringify(defaultFinance));
+    }
+
+    function loadFinance() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved) return { ...cloneDefault(), ...saved };
+
+        // Alte V4-Daten übernehmen, falls vorhanden.
+        const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY));
+        if (legacy) {
+          const migrated = {
+            ...cloneDefault(),
+            subscriptions: legacy.subscriptions || [],
+            shopping: legacy.shopping || [],
+            other: legacy.other || [],
+            income: legacy.income || []
+          };
+
+          const oldExpenses =
+            migrated.subscriptions.reduce((s, i) => s + Number(i.amount || 0), 0) +
+            migrated.shopping.reduce((s, i) => s + Number(i.amount || 0), 0) +
+            migrated.other.reduce((s, i) => s + Number(i.amount || 0), 0);
+
+          const oldIncome =
+            migrated.income.reduce((s, i) => s + Number(i.amount || 0), 0);
+
+          migrated.baseBalance = Number(legacy.balance || 0) - oldIncome + oldExpenses;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+          return migrated;
+        }
+
+        return cloneDefault();
+      } catch {
+        return cloneDefault();
+      }
+    }
+
+    function saveFinance() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(finance));
+    }
+
+    function euro(value) {
+      return Number(value || 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+    }
+
+    function getGreeting(hour) {
+      if (hour < 11) return "Guten Morgen";
+      if (hour < 18) return "Guten Tag";
+      return "Guten Abend";
+    }
+
+    function updateClock() {
+      const now = new Date();
+      clock.textContent = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+      fullDate.textContent = now.toLocaleDateString("de-DE", {
+        weekday: "long", day: "2-digit", month: "long", year: "numeric"
+      });
+
+      const time = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+      const weekday = now.toLocaleDateString("de-DE", { weekday: "short" });
+      const date = now.toLocaleDateString("de-DE", { day: "numeric", month: "short" });
+      compactDatetime.textContent = `${time} · ${weekday} ${date}`;
+      document.getElementById("greeting").textContent = getGreeting(now.getHours());
+    }
+
+    function startOfWeek(date) {
+      const copy = new Date(date);
+      const day = copy.getDay() || 7;
+      copy.setHours(0,0,0,0);
+      copy.setDate(copy.getDate() - day + 1);
+      return copy;
+    }
+
+    function sameDate(a,b) {
+      return a.getFullYear() === b.getFullYear() &&
+             a.getMonth() === b.getMonth() &&
+             a.getDate() === b.getDate();
+    }
+
+    function renderWeek() { renderHomeDashboard(); }
+
+    function hideMainViews() {
+      homeView.classList.add("hidden");
+      contentCard.classList.add("hidden");
+      financeView.classList.add("hidden");
+      gymView.classList.add("hidden");
+      nutritionView.classList.add("hidden");
+      calendarView.classList.add("hidden");
+    }
+
+    const sectionScrollPositions = {
+      home: 0,
+      finanzen: 0,
+      gym: 0,
+      ernaehrung: 0,
+      kalender: 0
+    };
+
+    let currentMainSection = "home";
+
+    function saveCurrentScrollPosition() {
+      sectionScrollPositions[currentMainSection] = window.scrollY;
+    }
+
+    function restoreSectionScroll(tabKey, mode = "preserve") {
+      const target =
+        mode === "top"
+          ? 0
+          : Number(sectionScrollPositions[tabKey] || 0);
+
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: target,
+          behavior: "auto"
+        });
+      });
+    }
+
+    function openSection(tabKey, tabElement, options = {}) {
+      const scrollMode = options.scrollMode || "preserve";
+
+      saveCurrentScrollPosition();
+
+      tabs.forEach(t => t.classList.remove("active"));
+      if (tabElement) tabElement.classList.add("active");
+      hideMainViews();
+      compactDatetime.classList.add("visible");
+
+      if (tabKey === "finanzen") {
+        financeView.classList.remove("hidden");
+        document.body.classList.add("finance-active");
+        renderFinance();
+      } else if (tabKey === "gym") {
+        document.body.classList.remove("finance-active");
+        gymView.classList.remove("hidden");
+        renderGym();
+        syncGymDayWidth();
+        requestAnimationFrame(() => centerGymCalendarOnToday(false));
+      } else if (tabKey === "ernaehrung") {
+        document.body.classList.remove("finance-active");
+        nutritionView.classList.remove("hidden");
+        renderNutrition();
+      } else if (tabKey === "kalender") {
+        document.body.classList.remove("finance-active");
+        calendarView.classList.remove("hidden");
+        renderFullCalendar();
+      } else {
+        document.body.classList.remove("finance-active");
+        const [title,text] = sectionCopy[tabKey];
+        sectionTitle.textContent = title;
+        sectionText.textContent = text;
+        contentCard.classList.remove("hidden");
+      }
+
+      currentMainSection = tabKey;
+
+      if (scrollMode === "top") {
+        sectionScrollPositions[tabKey] = 0;
+      }
+
+      restoreSectionScroll(tabKey, scrollMode);
+    }
+
+    function goHome(options = {}) {
+      const scrollMode = options.scrollMode || "preserve";
+
+      saveCurrentScrollPosition();
+
+      tabs.forEach(t => t.classList.remove("active"));
+      hideMainViews();
+      homeView.classList.remove("hidden");
+      compactDatetime.classList.remove("visible");
+      document.body.classList.remove("finance-active");
+
+      currentMainSection = "home";
+      renderHomeDashboard();
+      requestAnimationFrame(() => centerHomeCalendarOnToday(false));
+
+      restoreSectionScroll("home", scrollMode);
+    }
+
+    function totalFor(key) {
+      return finance[key].reduce((sum,item) => sum + Number(item.amount || 0), 0);
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+
+    const editModal = document.getElementById("editModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalText = document.getElementById("modalText");
+    const modalInput = document.getElementById("modalInput");
+    const modalCancel = document.getElementById("modalCancel");
+    const modalSave = document.getElementById("modalSave");
+
+    let modalSaveHandler = null;
+
+    function parseMoney(value) {
+      const cleaned = String(value)
+        .trim()
+        .replace(/\s/g, "")
+        .replace(/\./g, "")
+        .replace(",", ".");
+      const parsed = Number(cleaned);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function openTextModal({ title, text, value = "", onSave }) {
+      modalInput.closest(".modal-field")?.classList.add("text-mode");
+      modalTitle.textContent = title;
+      modalText.textContent = text;
+      modalInput.value = value;
+      modalInput.inputMode = "text";
+
+      modalSaveHandler = () => {
+        const parsed = modalInput.value.trim();
+        if (!parsed) {
+          modalInput.focus();
+          modalInput.select();
+          return;
+        }
+        onSave(parsed);
+        closeAmountModal();
+      };
+
+      editModal.classList.add("open");
+      editModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => {
+        modalInput.focus();
+        modalInput.select();
+      }, 30);
+    }
+
+    function openAmountModal({ title, text, value, allowNegative = false, onSave }) {
+      modalInput.closest(".modal-field")?.classList.remove("text-mode");
+      modalTitle.textContent = title;
+      modalText.textContent = text;
+      modalInput.inputMode = "decimal";
+      modalInput.value = Number(value || 0).toLocaleString("de-DE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+      modalSaveHandler = () => {
+        const parsed = parseMoney(modalInput.value);
+        if (parsed === null || (!allowNegative && parsed < 0)) {
+          modalInput.focus();
+          modalInput.select();
+          return;
+        }
+        onSave(parsed);
+        closeAmountModal();
+      };
+
+      editModal.classList.add("open");
+      editModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => {
+        modalInput.focus();
+        modalInput.select();
+      }, 30);
+    }
+
+    function closeAmountModal() {
+      editModal.classList.remove("open");
+      editModal.setAttribute("aria-hidden", "true");
+      modalSaveHandler = null;
+    }
+
+    modalCancel.addEventListener("click", closeAmountModal);
+    modalSave.addEventListener("click", () => modalSaveHandler?.());
+
+    modalInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") modalSaveHandler?.();
+      if (event.key === "Escape") closeAmountModal();
+    });
+
+    editModal.addEventListener("click", event => {
+      if (event.target === editModal) closeAmountModal();
+    });
+
+    function renderList(key) {
+      const list = document.getElementById(`list-${key}`);
+      const entries = finance[key];
+      list.innerHTML = "";
+
+      if (!entries.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "Noch keine Einträge";
+        list.appendChild(empty);
+      } else {
+        entries.forEach((entry,index) => {
+          const row = document.createElement("div");
+          row.className = "money-row";
+          row.innerHTML = `
+            <span class="name">${escapeHtml(entry.name)}</span>
+            <span class="amount">${euro(entry.amount)}</span>
+            <button class="edit-entry" data-edit="${key}" data-index="${index}" title="Betrag ändern">✎</button>
+            <button class="delete-entry" data-delete="${key}" data-index="${index}" title="Eintrag löschen">×</button>
+          `;
+          list.appendChild(row);
+        });
+      }
+
+      document.getElementById(`total-${key}`).textContent = euro(totalFor(key));
+    }
+
+    function currentBalance() {
+      const expenses = totalFor("subscriptions") + totalFor("shopping") + totalFor("other");
+      return Number(finance.baseBalance || 0) + totalFor("income") - expenses;
+    }
+
+    function renderFinance() {
+      renderList("subscriptions");
+      renderList("shopping");
+      renderList("other");
+      renderList("income");
+
+      const income = totalFor("income");
+      const expenses = totalFor("subscriptions") + totalFor("shopping") + totalFor("other");
+      const balance = currentBalance();
+
+      document.getElementById("balanceValue").textContent = euro(balance);
+      document.getElementById("incomeTotal").textContent = euro(income);
+      document.getElementById("expenseTotal").textContent = euro(expenses);
+
+      const balanceCard = document.getElementById("balanceCard");
+      const incomeCard = document.getElementById("incomeCard");
+      const expenseCard = document.getElementById("expenseCard");
+
+      balanceCard.classList.toggle("positive-balance", balance >= 0);
+      balanceCard.classList.toggle("negative-balance", balance < 0);
+
+      incomeCard.classList.toggle("income-leading", income > expenses);
+      expenseCard.classList.toggle("expense-leading", expenses > income);
+    }
+
+
+    const GYM_STORAGE_KEY = "lifeDashboardGymV1";
+
+    function gymClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function makeIsoDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    const todayForGym = new Date();
+    todayForGym.setHours(0,0,0,0);
+
+    function makeGymDay(name) {
+      return {
+        id: `day-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+        name,
+        exercises: []
+      };
+    }
+
+    const defaultGym = {
+      activeProfileId: "default",
+      profiles: [
+        {
+          id: "default",
+          name: "Mein Plan",
+          startDate: makeIsoDate(todayForGym),
+          loop: [
+            makeGymDay("Push"),
+            makeGymDay("Pull"),
+            makeGymDay("Leg"),
+            makeGymDay("Rest"),
+            makeGymDay("Push"),
+            makeGymDay("Pull"),
+            makeGymDay("Rest")
+          ]
+        }
+      ]
+    };
+
+    let gymData = loadGymData();
+    let selectedGymDate = new Date(todayForGym);
+
+    function workoutKey(name) {
+      return String(name || "Training").trim().toLocaleLowerCase("de-DE");
+    }
+
+    function ensureProfileWorkoutData(profile) {
+      if (!profile.templates || typeof profile.templates !== "object") profile.templates = {};
+      if (!profile.logs || typeof profile.logs !== "object") profile.logs = {};
+
+      profile.loop.forEach(day => {
+        const key = workoutKey(day.name);
+
+        if (!profile.templates[key]) {
+          const migratedExercises = Array.isArray(day.exercises)
+            ? day.exercises.map(exercise => ({
+                id: exercise.id || `ex-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+                name: exercise.name || "Übung",
+                setCount: Array.isArray(exercise.sets) && exercise.sets.length ? exercise.sets.length : 3
+              }))
+            : [];
+
+          profile.templates[key] = {
+            name: day.name,
+            exercises: migratedExercises
+          };
+        }
+      });
+
+      return profile;
+    }
+
+    function normalizeGymData(data) {
+      if (!data || !Array.isArray(data.profiles)) return gymClone(defaultGym);
+
+      data.profiles.forEach(profile => {
+        if (!Array.isArray(profile.loop)) profile.loop = [];
+
+        profile.loop = profile.loop.map(item => {
+          if (typeof item === "string") return makeGymDay(item);
