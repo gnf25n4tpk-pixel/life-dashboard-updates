@@ -1,0 +1,1000 @@
+
+    function eventsForHomeDate(date) {
+      const iso = makeIsoDate(date);
+
+      const personal = homeData.events
+        .filter(event => event.date === iso)
+        .map(event => ({ ...event, source: "personal" }));
+
+      const apple = (homeData.appleEvents || [])
+        .filter(event => event.date === iso)
+        .map(event => ({ ...event, source: "apple" }));
+
+      return [...personal, ...apple]
+        .sort((a,b) => String(a.time || "").localeCompare(String(b.time || "")));
+    }
+
+    function renderHomeCalendar() {
+      const track = document.getElementById("homeCalendarTrack");
+      if (!track) return;
+
+      track.innerHTML = "";
+
+      for (let i = -30; i <= 30; i++) {
+        const date = new Date(nutritionToday);
+        date.setDate(nutritionToday.getDate() + i);
+
+        const session = gymSessionForDate(date);
+        const events = eventsForHomeDate(date);
+
+        const card = document.createElement("div");
+        card.className = "home-day-card";
+        card.setAttribute("role","button");
+        card.tabIndex = 0;
+        card.dataset.homeDate = makeIsoDate(date);
+
+        if (sameDate(date, homeSelectedDate)) card.classList.add("selected");
+
+        const visibleEvents = events.slice(0,2);
+
+        card.innerHTML = `
+          ${sameDate(date, nutritionToday) ? `<span class="home-today-badge">Heute</span>` : ""}
+          <div class="home-day-weekday">${date.toLocaleDateString("de-DE",{weekday:"short"})}</div>
+          <div class="home-day-number">${date.getDate()}</div>
+          <div class="home-day-month">${date.toLocaleDateString("de-DE",{month:"short"})}</div>
+
+          <div class="home-day-content">
+            <div class="home-gym-chip">Gym · ${escapeHtml(session.name)}</div>
+            ${visibleEvents.map(event => `
+              <button type="button" class="home-event-chip${event.source === "apple" ? " apple" : ""}" data-home-event-id="${event.id}" data-home-event-source="${event.source}">
+                ${event.time ? `${escapeHtml(event.time)} · ` : ""}${escapeHtml(event.title)}
+              </button>
+            `).join("")}
+            ${events.length > 2 ? `<div class="home-more-events">+ ${events.length - 2} weitere</div>` : ""}
+          </div>
+        `;
+
+        track.appendChild(card);
+      }
+    }
+
+    function syncHomeDayWidth() {
+      const viewport = document.getElementById("homeCalendarViewport");
+      const track = document.getElementById("homeCalendarTrack");
+      if (!viewport || !track || window.innerWidth <= 700) return;
+
+      const gap = 10;
+      const visible = 5;
+      const width = Math.max(145, (viewport.clientWidth - gap * (visible - 1)) / visible);
+      track.style.setProperty("--home-day-width", `${width}px`);
+    }
+
+    function centerHomeCalendarOnToday(smooth = true) {
+      const viewport = document.getElementById("homeCalendarViewport");
+      const today = document.querySelector(`.home-day-card[data-home-date="${makeIsoDate(nutritionToday)}"]`);
+      if (!viewport || !today) return;
+
+      viewport.scrollTo({
+        left: today.offsetLeft - viewport.clientWidth / 2 + today.clientWidth / 2,
+        behavior: smooth ? "smooth" : "auto"
+      });
+    }
+
+    function renderHomeNutritionPreview() {
+      const host = document.getElementById("homeNutritionPreview");
+      if (!host) return;
+
+      const totals = dayTotals(nutritionToday);
+      const meals = nutritionMealSlots.map(slot => ({
+        slot: slot.label,
+        meal: canonicalMealForPair(nutritionToday, slot.key)
+      }));
+
+      host.innerHTML = `
+        <div class="home-meal-mini-list">
+          ${meals.map(({slot, meal}) => `
+            <div class="home-mini-row">
+              <span>${slot}</span>
+              <strong>${escapeHtml(meal.name || "–")}</strong>
+            </div>
+          `).join("")}
+        </div>
+        <div class="home-summary-stat">
+          <span>${formatNutritionNumber(totals.kcal)} kcal</span>
+          <span>${formatNutritionNumber(totals.protein,0)} g Protein</span>
+        </div>
+      `;
+    }
+
+    function renderHomeGymPreview() {
+      const host = document.getElementById("homeGymPreview");
+      if (!host) return;
+
+      const session = gymSessionForDate(todayForGym);
+      const template = activeWorkoutTemplate(session);
+      const exercises = template?.exercises || [];
+
+      host.innerHTML = `
+        <div class="home-meal-mini-list">
+          <div class="home-mini-row">
+            <span>Heute</span>
+            <strong>${escapeHtml(session.name)}</strong>
+          </div>
+          ${exercises.slice(0,3).map(exercise => `
+            <div class="home-mini-row">
+              <span>${exercise.setCount} Sätze</span>
+              <strong>${escapeHtml(exercise.name)}</strong>
+            </div>
+          `).join("")}
+          ${!exercises.length ? `<div class="home-mini-row"><span>Plan</span><strong>Noch keine Übungen</strong></div>` : ""}
+        </div>
+      `;
+    }
+
+    function renderHomeTodos() {
+      const host = document.getElementById("homeTodoList");
+      if (!host) return;
+
+      if (!homeData.todos.length) {
+        host.innerHTML = `<div class="meal-empty">Noch keine To-Dos.</div>`;
+        return;
+      }
+
+      host.innerHTML = homeData.todos.map(todo => `
+        <label class="home-todo-item${todo.done ? " done" : ""}">
+          <input type="checkbox" data-home-todo-check="${todo.id}" ${todo.done ? "checked" : ""} />
+          <span>${escapeHtml(todo.text)}</span>
+          <button type="button" data-home-todo-delete="${todo.id}">×</button>
+        </label>
+      `).join("");
+    }
+
+
+    function renderHomeAgenda() {
+      const host = document.getElementById("homeAgendaPreview");
+      const kicker = document.getElementById("homeAgendaKicker");
+      if (!host) return;
+
+      const now = new Date();
+      const hour = now.getHours();
+      kicker.textContent =
+        hour < 11 ? "Heute Morgen" :
+        hour < 17 ? "Heute" :
+        "Heute Abend";
+
+      const items = fullCalendarItemsForDate(nutritionToday)
+        .map(item => ({
+          ...item,
+          sortMinutes: item.time
+            ? Number(item.time.slice(0,2)) * 60 + Number(item.time.slice(3,5))
+            : (item.source === "gym" ? 12 * 60 : item.source === "nutrition" ? 18 * 60 : 23 * 60)
+        }))
+        .sort((a,b) => a.sortMinutes - b.sortMinutes);
+
+      if (!items.length) {
+        host.innerHTML = `<div class="global-search-empty">Heute ist noch nichts geplant.</div>`;
+        return;
+      }
+
+      host.innerHTML = `
+        <div class="home-agenda-list">
+          ${items.slice(0,5).map(item => `
+            <div class="home-agenda-row">
+              <span class="home-agenda-time">${item.time || (item.source === "gym" ? "Gym" : item.source === "nutrition" ? "Essen" : "–")}</span>
+              <span class="home-agenda-dot ${item.source}"></span>
+              <strong>${escapeHtml(item.title)}</strong>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderHomeDashboard() {
+      renderHomeCalendar();
+      renderHomeAgenda();
+      renderHomeNutritionPreview();
+      renderHomeGymPreview();
+      renderHomeTodos();
+
+      const note = document.getElementById("homeNote");
+      if (note && note !== document.activeElement) note.value = homeData.note || "";
+
+      syncHomeDayWidth();
+    }
+
+
+    function openQuickAdd() {
+      const modal = document.getElementById("quickAddModal");
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden","false");
+    }
+
+    function closeQuickAdd() {
+      const modal = document.getElementById("quickAddModal");
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden","true");
+    }
+
+    function quickAddTodo() {
+      openTextModal({
+        title: "To-Do hinzufügen",
+        text: "Was möchtest du erledigen?",
+        value: "",
+        onSave: value => {
+          const clean = String(value || "").trim();
+          if (!clean) return;
+          homeData.todos.push({
+            id: `todo-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+            text: clean,
+            done: false
+          });
+          saveHomeData();
+          renderHomeTodos();
+        }
+      });
+    }
+
+    function quickAddExpense() {
+      openTextModal({
+        title: "Ausgabe hinzufügen",
+        text: "Wie soll die Ausgabe heißen?",
+        value: "",
+        onSave: name => {
+          const cleanName = String(name || "").trim();
+          if (!cleanName) return;
+
+          setTimeout(() => {
+            openAmountModal({
+              title: "Betrag",
+              text: `${cleanName} – Betrag eingeben.`,
+              value: 0,
+              onSave: amount => {
+                finance.other.push({ name: cleanName, amount });
+                saveFinance();
+                renderFinance();
+              }
+            });
+          }, 120);
+        }
+      });
+    }
+
+    function openHomeEventModal(eventId = null, defaultDate = null) {
+      const modal = document.getElementById("homeEventModal");
+      const title = document.getElementById("homeEventTitle");
+      const date = document.getElementById("homeEventDate");
+      const time = document.getElementById("homeEventTime");
+      const deleteButton = document.getElementById("homeEventDelete");
+
+      editingHomeEventId = eventId;
+
+      if (eventId) {
+        const event = homeData.events.find(item => item.id === eventId);
+        if (!event) return;
+
+        document.getElementById("homeEventModalTitle").textContent = "Termin bearbeiten";
+        title.value = event.title;
+        date.value = event.date;
+        time.value = event.time || "";
+        deleteButton.classList.remove("hidden");
+      } else {
+        document.getElementById("homeEventModalTitle").textContent = "Termin hinzufügen";
+        title.value = "";
+        date.value = makeIsoDate(defaultDate || homeSelectedDate);
+        time.value = "";
+        deleteButton.classList.add("hidden");
+      }
+
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden","false");
+      setTimeout(() => title.focus(), 30);
+    }
+
+    function closeHomeEventModal() {
+      const modal = document.getElementById("homeEventModal");
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden","true");
+      editingHomeEventId = null;
+    }
+
+
+    function collectGlobalSearchResults(query) {
+      const q = String(query || "").trim().toLocaleLowerCase("de-DE");
+      if (!q) return [];
+
+      const results = [];
+      const add = (section, title, meta = {}) => {
+        if (!String(title || "").toLocaleLowerCase("de-DE").includes(q)) return;
+        results.push({ section, title, ...meta });
+      };
+
+      // Finanzen
+      ["subscriptions","shopping","other","income"].forEach(key => {
+        (finance[key] || []).forEach(item =>
+          add("finanzen", item.name, { subtitle: euro(item.amount) })
+        );
+      });
+
+      // Termine
+      [...(homeData.events || []), ...(homeData.appleEvents || [])].forEach(event =>
+        add("kalender", event.title, {
+          date: event.date,
+          subtitle: `${event.date}${event.time ? ` · ${event.time}` : ""}`
+        })
+      );
+
+      // Gym
+      const profile = activeGymProfile();
+      (profile?.loop || []).forEach(day => add("gym", day.name, { subtitle: "Trainingstag" }));
+      Object.values(profile?.templates || {}).forEach(template => {
+        (template.exercises || []).forEach(exercise =>
+          add("gym", exercise.name, { subtitle: template.name || "Übung" })
+        );
+      });
+
+      // Ernährung
+      const seenMeals = new Set();
+      Object.values(nutritionData.days || {}).forEach(day => {
+        nutritionMealSlots.forEach(slot => {
+          const meal = day?.[slot.key];
+          if (meal?.name && !seenMeals.has(meal.name)) {
+            seenMeals.add(meal.name);
+            add("ernaehrung", meal.name, { subtitle: slot.label });
+          }
+
+          (meal?.ingredients || []).forEach(item =>
+            add("ernaehrung", item.name, { subtitle: meal?.name || "Lebensmittel" })
+          );
+        });
+      });
+
+      return results.slice(0,40);
+    }
+
+    function renderGlobalSearch(query) {
+      const host = document.getElementById("globalSearchResults");
+      const results = collectGlobalSearchResults(query);
+
+      if (!String(query || "").trim()) {
+        host.innerHTML = `<div class="global-search-empty">Tippe etwas ein, um das gesamte Dashboard zu durchsuchen.</div>`;
+        return;
+      }
+
+      if (!results.length) {
+        host.innerHTML = `<div class="global-search-empty">Keine passenden Einträge gefunden.</div>`;
+        return;
+      }
+
+      host.innerHTML = results.map((item,index) => `
+        <button class="global-search-result" data-search-result="${index}">
+          <span>${item.section === "ernaehrung" ? "Ernährung" : item.section.charAt(0).toUpperCase() + item.section.slice(1)}</span>
+          <strong>${escapeHtml(item.title)}${item.subtitle ? ` · ${escapeHtml(item.subtitle)}` : ""}</strong>
+        </button>
+      `).join("");
+
+      host._results = results;
+    }
+
+    function openGlobalSearch() {
+      const modal = document.getElementById("globalSearchModal");
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden","false");
+      document.getElementById("globalSearchInput").value = "";
+      renderGlobalSearch("");
+      setTimeout(() => document.getElementById("globalSearchInput").focus(), 30);
+    }
+
+    function closeGlobalSearch() {
+      const modal = document.getElementById("globalSearchModal");
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden","true");
+    }
+
+
+    let nativeNotificationStatus = null;
+
+    function hasNativeNotificationBridge() {
+      return !!window.webkit?.messageHandlers?.notifications;
+    }
+
+    window.nativeNotificationState = function(payload) {
+      nativeNotificationStatus = payload?.status || null;
+      updateNotificationButton();
+    };
+
+    function updateNotificationButton() {
+      const button = document.getElementById("notificationPermissionButton");
+      if (!button) return;
+
+      if (hasNativeNotificationBridge()) {
+        button.disabled = false;
+        button.textContent =
+          nativeNotificationStatus === "authorized" ? "Aktiv" :
+          nativeNotificationStatus === "denied" ? "Systemeinstellungen" :
+          "Aktivieren";
+        return;
+      }
+
+      if (!("Notification" in window)) {
+        button.textContent = "Nicht verfügbar";
+        button.disabled = true;
+        return;
+      }
+
+      button.disabled = false;
+      button.textContent =
+        Notification.permission === "granted" ? "Aktiv" :
+        Notification.permission === "denied" ? "Blockiert" :
+        "Aktivieren";
+    }
+
+    async function requestDashboardNotifications() {
+      if (hasNativeNotificationBridge()) {
+        window.webkit.messageHandlers.notifications.postMessage({
+          action: nativeNotificationStatus === "denied" ? "settings" : "request"
+        });
+        return;
+      }
+
+      if (!("Notification" in window)) return;
+      try {
+        await Notification.requestPermission();
+      } catch {}
+      updateNotificationButton();
+    }
+
+    function checkUpcomingNotifications() {
+      const nativeReady =
+        hasNativeNotificationBridge() && nativeNotificationStatus === "authorized";
+      const browserReady =
+        !hasNativeNotificationBridge() &&
+        "Notification" in window &&
+        Notification.permission === "granted";
+
+      if (!nativeReady && !browserReady) return;
+
+      if (!homeData.notifiedEvents || typeof homeData.notifiedEvents !== "object") {
+        homeData.notifiedEvents = {};
+      }
+
+      const now = new Date();
+      const currentIso = makeIsoDate(now);
+
+      eventsForHomeDate(now).forEach(event => {
+        if (!event.time) return;
+
+        const [h,m] = event.time.split(":").map(Number);
+        const eventDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+        const diff = (eventDate - now) / 60000;
+        const notifyKey = `${event.source}|${event.id}|${currentIso}|${event.time}`;
+
+        if (diff >= 25 && diff <= 35 && !homeData.notifiedEvents[notifyKey]) {
+          const body = `${event.time} Uhr · ${event.source === "apple" ? "Apple Kalender" : "Life Dashboard"}`;
+
+          if (nativeReady) {
+            window.webkit.messageHandlers.notifications.postMessage({
+              action: "notify",
+              identifier: notifyKey,
+              title: event.title,
+              body
+            });
+          } else {
+            new Notification(event.title, { body });
+          }
+
+          homeData.notifiedEvents[notifyKey] = true;
+          saveHomeData();
+        }
+      });
+    }
+
+
+    let nativeUpdateSnapshot = {
+      nativeVersion: "0.9.0",
+      dashboardVersion: "0.9.0",
+      feedUrl: "",
+      autoUpdate: true,
+      status: "idle",
+      message: "Update-System bereit",
+      nativeDownloadUrl: ""
+    };
+
+    function hasNativeUpdateBridge() {
+      return !!window.webkit?.messageHandlers?.updates;
+    }
+
+    function renderUpdateSettings() {
+      const status = document.getElementById("updateStatusText");
+      const feed = document.getElementById("updateFeedUrl");
+      const auto = document.getElementById("autoUpdateToggle");
+      const check = document.getElementById("checkForUpdates");
+
+      if (!status || !feed || !auto || !check) return;
+
+      status.textContent =
+        nativeUpdateSnapshot.message ||
+        `Dashboard ${nativeUpdateSnapshot.dashboardVersion || "–"}`;
+
+      if (feed !== document.activeElement) {
+        feed.value = nativeUpdateSnapshot.feedUrl || "";
+      }
+
+      auto.checked = nativeUpdateSnapshot.autoUpdate !== false;
+
+      if (!hasNativeUpdateBridge()) {
+        check.disabled = true;
+        check.textContent = "Desktop-App nötig";
+        return;
+      }
+
+      check.disabled = nativeUpdateSnapshot.status === "checking" ||
+        nativeUpdateSnapshot.status === "downloading";
+
+      check.textContent =
+        nativeUpdateSnapshot.status === "checking" ? "Prüfe …" :
+        nativeUpdateSnapshot.status === "downloading" ? "Installiere …" :
+        nativeUpdateSnapshot.status === "nativeRequired" ? "Desktop-Update öffnen" :
+        "Jetzt prüfen";
+    }
+
+    window.nativeUpdateState = function(snapshot) {
+      nativeUpdateSnapshot = {
+        ...nativeUpdateSnapshot,
+        ...(snapshot || {})
+      };
+      renderUpdateSettings();
+    };
+
+    function requestNativeUpdateState() {
+      if (!hasNativeUpdateBridge()) {
+        renderUpdateSettings();
+        return;
+      }
+
+      window.webkit.messageHandlers.updates.postMessage({ action: "state" });
+    }
+
+    function openHomeSettings() {
+      const modal = document.getElementById("homeSettingsModal");
+      updateNotificationButton();
+      requestNativeUpdateState();
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden","false");
+    }
+
+    function closeHomeSettings() {
+      const modal = document.getElementById("homeSettingsModal");
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden","true");
+    }
+
+
+    function hasNativeFileBridge() {
+      return !!window.webkit?.messageHandlers?.files;
+    }
+
+    function applyBackupPayload(payload) {
+      try {
+        const parsed = typeof payload === "string" ? JSON.parse(payload) : payload;
+        const data = parsed?.data;
+
+        if (!data || typeof data !== "object") {
+          throw new Error("Ungültiges Backup");
+        }
+
+        if (!confirm("Backup laden und die aktuellen Dashboard-Daten ersetzen?")) {
+          return;
+        }
+
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.startsWith("lifeDashboard")) keysToRemove.push(key);
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+
+        Object.entries(data).forEach(([key, value]) => {
+          if (!key.startsWith("lifeDashboard")) return;
+          localStorage.setItem(
+            key,
+            typeof value === "string" ? value : JSON.stringify(value)
+          );
+        });
+
+        location.reload();
+      } catch {
+        alert("Das Backup konnte nicht gelesen werden.");
+      }
+    }
+
+    window.nativeBackupLoaded = function(payload) {
+      applyBackupPayload(payload?.text ?? payload);
+    };
+
+    async function restoreLifeDashboardBackup(file) {
+      if (!file) return;
+
+      try {
+        applyBackupPayload(await file.text());
+      } catch {
+        alert("Das Backup konnte nicht gelesen werden.");
+      }
+    }
+
+    function buildLifeDashboardBackupText() {
+      const data = {};
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key?.startsWith("lifeDashboard")) continue;
+
+        try {
+          data[key] = JSON.parse(localStorage.getItem(key));
+        } catch {
+          data[key] = localStorage.getItem(key);
+        }
+      }
+
+      return JSON.stringify({
+        createdAt: new Date().toISOString(),
+        version: "Desktop 0.9",
+        data
+      }, null, 2);
+    }
+
+    function exportLifeDashboardBackup() {
+      const text = buildLifeDashboardBackupText();
+      const filename = `Life-Dashboard-Backup-${makeIsoDate(new Date())}.json`;
+
+      if (hasNativeFileBridge()) {
+        window.webkit.messageHandlers.files.postMessage({
+          action: "saveBackup",
+          filename,
+          text
+        });
+        return;
+      }
+
+      const blob = new Blob([text], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+    }
+
+    document.getElementById("homeCalendarTrack").addEventListener("click", event => {
+      const eventChip = event.target.closest("[data-home-event-id]");
+      if (eventChip) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (eventChip.dataset.homeEventSource === "apple") {
+          calendarSelectedDate = parseIsoLocal(eventChip.closest("[data-home-date]").dataset.homeDate);
+          calendarVisibleMonth = new Date(calendarSelectedDate.getFullYear(), calendarSelectedDate.getMonth(), 1);
+          openSection("kalender", document.querySelector('.tab[data-tab="kalender"]'), { scrollMode: "top" });
+        } else {
+          openHomeEventModal(eventChip.dataset.homeEventId);
+        }
+        return;
+      }
+
+      const card = event.target.closest("[data-home-date]");
+      if (!card) return;
+
+      calendarSelectedDate = parseIsoLocal(card.dataset.homeDate);
+      calendarVisibleMonth = new Date(
+        calendarSelectedDate.getFullYear(),
+        calendarSelectedDate.getMonth(),
+        1
+      );
+
+      const calendarTab = document.querySelector('.tab[data-tab="kalender"]');
+      openSection("kalender", calendarTab, { scrollMode: "top" });
+    });
+
+
+    document.getElementById("homeCalendarCard").addEventListener("click", event => {
+      if (
+        event.target.closest("#homeAddEvent") ||
+        event.target.closest(".home-calendar-viewport")
+      ) return;
+
+      calendarSelectedDate = new Date(nutritionToday);
+      calendarVisibleMonth = new Date(
+        nutritionToday.getFullYear(),
+        nutritionToday.getMonth(),
+        1
+      );
+
+      const calendarTab = document.querySelector('.tab[data-tab="kalender"]');
+      openSection("kalender", calendarTab, { scrollMode: "top" });
+    });
+
+    document.getElementById("homeAgendaCard").addEventListener("click", () => {
+      calendarSelectedDate = new Date(nutritionToday);
+      calendarVisibleMonth = new Date(
+        nutritionToday.getFullYear(),
+        nutritionToday.getMonth(),
+        1
+      );
+      const calendarTab = document.querySelector('.tab[data-tab="kalender"]');
+      openSection("kalender", calendarTab, { scrollMode: "top" });
+    });
+
+    document.getElementById("homeAddEvent").addEventListener("click", () => openHomeEventModal());
+
+    document.getElementById("homeEventSave").addEventListener("click", () => {
+      const title = document.getElementById("homeEventTitle").value.trim();
+      const date = document.getElementById("homeEventDate").value;
+      const time = document.getElementById("homeEventTime").value;
+      if (!title || !date) return;
+
+      if (editingHomeEventId) {
+        const event = homeData.events.find(item => item.id === editingHomeEventId);
+        if (event) Object.assign(event, { title, date, time });
+      } else {
+        homeData.events.push({
+          id: `event-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+          title, date, time
+        });
+      }
+
+      saveHomeData();
+      closeHomeEventModal();
+      renderHomeDashboard();
+      renderFullCalendar();
+    });
+
+    document.getElementById("homeEventDelete").addEventListener("click", () => {
+      if (!editingHomeEventId) return;
+      homeData.events = homeData.events.filter(event => event.id !== editingHomeEventId);
+      saveHomeData();
+      closeHomeEventModal();
+      renderHomeDashboard();
+      renderFullCalendar();
+    });
+
+    document.getElementById("homeEventCancel").addEventListener("click", closeHomeEventModal);
+    document.getElementById("homeEventClose").addEventListener("click", closeHomeEventModal);
+    document.getElementById("homeEventModal").addEventListener("click", event => {
+      if (event.target.id === "homeEventModal") closeHomeEventModal();
+    });
+
+    document.getElementById("globalSearchButton").addEventListener("click", openGlobalSearch);
+    document.getElementById("globalSearchClose").addEventListener("click", closeGlobalSearch);
+    document.getElementById("globalSearchModal").addEventListener("click", event => {
+      if (event.target.id === "globalSearchModal") closeGlobalSearch();
+    });
+    document.getElementById("globalSearchInput").addEventListener("input", event => {
+      renderGlobalSearch(event.target.value);
+    });
+    document.getElementById("globalSearchResults").addEventListener("click", event => {
+      const button = event.target.closest("[data-search-result]");
+      if (!button) return;
+
+      const results = event.currentTarget._results || [];
+      const item = results[Number(button.dataset.searchResult)];
+      if (!item) return;
+
+      closeGlobalSearch();
+
+      if (item.section === "kalender" && item.date) {
+        calendarSelectedDate = parseIsoLocal(item.date);
+        calendarVisibleMonth = new Date(calendarSelectedDate.getFullYear(), calendarSelectedDate.getMonth(), 1);
+      }
+
+      const tab = document.querySelector(`.tab[data-tab="${item.section}"]`);
+      openSection(item.section, tab, { scrollMode: "top" });
+    });
+
+    document.getElementById("quickAddButton").addEventListener("click", openQuickAdd);
+    document.getElementById("quickAddClose").addEventListener("click", closeQuickAdd);
+    document.getElementById("quickAddModal").addEventListener("click", event => {
+      if (event.target.id === "quickAddModal") closeQuickAdd();
+    });
+    document.querySelector(".quick-add-choice-grid").addEventListener("click", event => {
+      const button = event.target.closest("[data-quick-action]");
+      if (!button) return;
+      closeQuickAdd();
+
+      if (button.dataset.quickAction === "event") {
+        openHomeEventModal(null, new Date());
+      } else if (button.dataset.quickAction === "todo") {
+        quickAddTodo();
+      } else if (button.dataset.quickAction === "expense") {
+        quickAddExpense();
+      } else if (button.dataset.quickAction === "gym") {
+        selectedGymDate = new Date(todayForGym);
+        const tab = document.querySelector('.tab[data-tab="gym"]');
+        openSection("gym", tab, { scrollMode: "top" });
+
+        requestAnimationFrame(() => {
+          renderSelectedGymDay();
+          document.querySelector(".gym-workout-card")?.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+        });
+      }
+    });
+
+    document.getElementById("homeSettingsButton").addEventListener("click", openHomeSettings);
+    document.getElementById("homeSettingsClose").addEventListener("click", closeHomeSettings);
+    document.getElementById("homeSettingsModal").addEventListener("click", event => {
+      if (event.target.id === "homeSettingsModal") closeHomeSettings();
+    });
+    document.getElementById("homeBackupButton").addEventListener("click", exportLifeDashboardBackup);
+    document.getElementById("homeRestoreButton").addEventListener("click", () => {
+      if (hasNativeFileBridge()) {
+        window.webkit.messageHandlers.files.postMessage({ action: "openBackup" });
+      } else {
+        document.getElementById("homeRestoreFile").click();
+      }
+    });
+    document.getElementById("homeRestoreFile").addEventListener("change", event => {
+      restoreLifeDashboardBackup(event.target.files?.[0]);
+      event.target.value = "";
+    });
+
+    document.querySelector(".theme-toggle").addEventListener("click", event => {
+      const button = event.target.closest("[data-theme-choice]");
+      if (!button) return;
+      applyDashboardTheme(button.dataset.themeChoice);
+    });
+
+    document.getElementById("notificationPermissionButton").addEventListener("click", requestDashboardNotifications);
+
+    document.getElementById("saveUpdateFeed").addEventListener("click", () => {
+      if (!hasNativeUpdateBridge()) return;
+
+      window.webkit.messageHandlers.updates.postMessage({
+        action: "setFeed",
+        feedUrl: document.getElementById("updateFeedUrl").value.trim()
+      });
+    });
+
+    document.getElementById("autoUpdateToggle").addEventListener("change", event => {
+      if (!hasNativeUpdateBridge()) return;
+
+      window.webkit.messageHandlers.updates.postMessage({
+        action: "setAuto",
+        enabled: !!event.target.checked
+      });
+    });
+
+    document.getElementById("checkForUpdates").addEventListener("click", () => {
+      if (!hasNativeUpdateBridge()) return;
+
+      if (
+        nativeUpdateSnapshot.status === "nativeRequired" &&
+        nativeUpdateSnapshot.nativeDownloadUrl
+      ) {
+        window.webkit.messageHandlers.updates.postMessage({ action: "openNativeUpdate" });
+        return;
+      }
+
+      window.webkit.messageHandlers.updates.postMessage({ action: "check" });
+    });
+
+
+
+
+
+    document.getElementById("musicConnectButton").addEventListener("click", initializeAppleMusic);
+    document.getElementById("musicPlayPause").addEventListener("click", () => sendNativeMusic("playPause"));
+    document.getElementById("musicPrevious").addEventListener("click", () => sendNativeMusic("previous"));
+    document.getElementById("musicNext").addEventListener("click", () => sendNativeMusic("next"));
+    document.getElementById("desktopMusicOpenSettings").addEventListener("click", () => sendNativeMusic("open"));
+
+    document.querySelectorAll("[data-home-open]").forEach(card => {
+      card.addEventListener("click", () => {
+        const key = card.dataset.homeOpen;
+        const tab = document.querySelector(`.tab[data-tab="${key}"]`);
+        if (tab) openSection(key, tab, { scrollMode: "top" });
+      });
+    });
+
+    document.getElementById("homeTodoAdd").addEventListener("click", () => {
+      const input = document.getElementById("homeTodoInput");
+      const value = input.value.trim();
+      if (!value) return;
+
+      homeData.todos.push({
+        id: `todo-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+        text: value,
+        done: false
+      });
+
+      input.value = "";
+      saveHomeData();
+      renderHomeTodos();
+    });
+
+    document.getElementById("homeTodoInput").addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        document.getElementById("homeTodoAdd").click();
+      }
+    });
+
+    document.getElementById("homeTodoList").addEventListener("change", event => {
+      const box = event.target.closest("[data-home-todo-check]");
+      if (!box) return;
+
+      const todo = homeData.todos.find(item => item.id === box.dataset.homeTodoCheck);
+      if (todo) todo.done = box.checked;
+      saveHomeData();
+      renderHomeTodos();
+    });
+
+    document.getElementById("homeTodoList").addEventListener("click", event => {
+      const button = event.target.closest("[data-home-todo-delete]");
+      if (!button) return;
+
+      homeData.todos = homeData.todos.filter(item => item.id !== button.dataset.homeTodoDelete);
+      saveHomeData();
+      renderHomeTodos();
+    });
+
+    document.getElementById("homeNote").addEventListener("input", event => {
+      homeData.note = event.target.value;
+      saveHomeData();
+    });
+
+    window.addEventListener("resize", () => {
+      syncHomeDayWidth();
+    });
+
+    document.getElementById("calendarPrevMonth").addEventListener("click", () => {
+      calendarVisibleMonth.setMonth(calendarVisibleMonth.getMonth() - 1);
+      calendarVisibleMonth = new Date(calendarVisibleMonth.getFullYear(), calendarVisibleMonth.getMonth(), 1);
+      renderFullCalendar();
+    });
+
+    document.getElementById("calendarNextMonth").addEventListener("click", () => {
+      calendarVisibleMonth.setMonth(calendarVisibleMonth.getMonth() + 1);
+      calendarVisibleMonth = new Date(calendarVisibleMonth.getFullYear(), calendarVisibleMonth.getMonth(), 1);
+      renderFullCalendar();
+    });
+
+    document.getElementById("calendarToday").addEventListener("click", () => {
+      calendarSelectedDate = new Date(nutritionToday);
+      calendarVisibleMonth = new Date(
+        nutritionToday.getFullYear(),
+        nutritionToday.getMonth(),
+        1
+      );
+      renderFullCalendar();
+    });
+
+    document.getElementById("calendarMonthGrid").addEventListener("click", event => {
+      const cell = event.target.closest("[data-calendar-date]");
+      if (!cell) return;
+
+      calendarSelectedDate = parseIsoLocal(cell.dataset.calendarDate);
+
+      if (
+        calendarSelectedDate.getMonth() !== calendarVisibleMonth.getMonth() ||
+        calendarSelectedDate.getFullYear() !== calendarVisibleMonth.getFullYear()
+      ) {
+        calendarVisibleMonth = new Date(
+          calendarSelectedDate.getFullYear(),
+          calendarSelectedDate.getMonth(),
+          1
+        );
+      }
+
+      renderFullCalendar();
+    });
+
+    document.getElementById("calendarAgendaList").addEventListener("click", event => {
+      const item = event.target.closest("[data-calendar-edit-event]");
+      if (!item) return;
+      openHomeEventModal(item.dataset.calendarEditEvent, calendarSelectedDate);
+    });
+
+    document.getElementById("calendarAddEvent").addEventListener("click", () => {
