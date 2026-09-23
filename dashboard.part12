@@ -769,7 +769,7 @@
 
       return JSON.stringify({
         createdAt: new Date().toISOString(),
-        version: "Desktop 0.15",
+        version: "Desktop 0.15.1",
         data
       }, null, 2);
     }
