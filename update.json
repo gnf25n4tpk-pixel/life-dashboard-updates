@@ -1,21 +1,7 @@
 {
   "dashboardVersion": "0.15.0",
   "minimumNativeVersion": "0.11.0",
-  "dashboardParts": [
-    "dashboard.part01",
-    "dashboard.part02",
-    "dashboard.part03",
-    "dashboard.part04",
-    "dashboard.part05",
-    "dashboard.part06",
-    "dashboard.part07",
-    "dashboard.part08",
-    "dashboard.part09",
-    "dashboard.part10",
-    "dashboard.part11",
-    "dashboard.part12",
-    "dashboard.part13"
-  ],
+  "dashboardGzipBase64URL": "dashboard.html.gz.b64",
   "sha256": "a5f7f9312b589449cfdd4392b2d73c0c21fe12a9d153cf42a8de70a1e33fc28a",
   "resources": [
     {
@@ -25,6 +11,6 @@
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "V15 Apple Clean: ruhigere Flächen, weniger Verläufe und Glows, klarere visuelle Hierarchie und gezielte Bereichsfarben.",
+  "releaseNotes": "V15 Apple Clean: ruhigere Flächen, weniger Verläufe, gezielte Bereichsfarben und klarere visuelle Hierarchie.",
   "nativeDownloadURL": ""
 }
