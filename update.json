@@ -1,16 +1,16 @@
 {
-  "dashboardVersion": "0.15.1",
+  "dashboardVersion": "0.16.0",
   "minimumNativeVersion": "0.11.0",
-  "sha256": "a3b2f34c2438dec72e85892e2dc2a33d0fe82810172a06ed65b4fce3b5d8d9fb",
+  "sha256": "9439cc84c8c0aedd9339354bc14e317ad3baaf3546bdadd02a2b2f57a77d8bb8",
   "resources": [
     {
       "kind": "appIconPNG",
       "url": "AppIcon.png.b64",
-      "sha256": "6acfeb85260a2f96d879f826343124e5b368ee62aa2a7990931f69791844d1d2",
+      "sha256": "4a52de64efcab81162f5bfe17280b490bbe706d865dc549315b230364cc9c8ba",
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "V15.1: Startseite bleibt im hellen Dashboard-Modus vollständig hell und übernimmt nicht mehr teilweise den macOS-Dark-Mode.",
+  "releaseNotes": "V16: Apple-Cream-Redesign mit warmen Off-White-/Cremeflächen, deutlich weniger Farbakzenten und Farblinien, neutraleren Karten und Buttons sowie neuem App-Icon ohne D-Monogramm.",
   "nativeDownloadURL": "",
   "dashboardParts": [
     "dashboard.part01",
