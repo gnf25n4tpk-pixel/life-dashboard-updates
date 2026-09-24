@@ -867,7 +867,7 @@
 <body>
   <script>
     try {
-      if (localStorage.getItem("lifeDashboardIntroV17") !== "seen" &&
+      if (sessionStorage.getItem("lifeDashboardIntroSessionV1") !== "seen" &&
           !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         document.body.classList.add("show-launch-intro");
       }

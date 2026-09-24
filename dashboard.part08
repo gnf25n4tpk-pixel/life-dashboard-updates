@@ -693,7 +693,7 @@
       const finish = () => {
         overlay.remove();
         document.body.classList.remove("show-launch-intro");
-        try { localStorage.setItem("lifeDashboardIntroV17", "seen"); } catch (_) {}
+        try { sessionStorage.setItem("lifeDashboardIntroSessionV1", "seen"); } catch (_) {}
       };
       const typing = setInterval(() => {
         typed.textContent = word.slice(0, ++index);

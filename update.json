@@ -1,7 +1,7 @@
 {
-  "dashboardVersion": "0.17.1",
+  "dashboardVersion": "0.17.2",
   "minimumNativeVersion": "0.11.0",
-  "sha256": "4dd791e0f9b858670cb5acbffd5fd696df3032af127ac998797d456a3bc9d297",
+  "sha256": "830e410916be34dce3ab9758a552a0b275a95a482ff5e8a386e2e83036292c8b",
   "resources": [
     {
       "kind": "appIconPNG",
@@ -10,7 +10,7 @@
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "V17.1: Repariertes App-Icon ohne D-Monogramm und korrigierte Ressourcen-Prüfsumme. Enthält die Startanimation und das Feedback beim Erstellen eines Essensplans aus V17.",
+  "releaseNotes": "V17.2: Die Dashboard-Startanimation erscheint bei jedem neuen App-Start. Essensplan-Feedback und das reparierte App-Icon bleiben enthalten.",
   "nativeDownloadURL": "",
   "dashboardParts": [
     "dashboard.part01",
