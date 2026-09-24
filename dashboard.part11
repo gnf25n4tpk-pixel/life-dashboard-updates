@@ -311,6 +311,52 @@
       renderNutrition();
     }
 
+    let generatingNutritionPlan = false;
+
+    function setPlanProgress(title, detail, state = "loading") {
+      const progress = document.getElementById("planProgress");
+      progress.dataset.state = state;
+      document.getElementById("planProgressTitle").textContent = title;
+      document.getElementById("planProgressDetail").textContent = detail;
+      document.getElementById("planProgressSymbol").innerHTML = state === "success"
+        ? "✓" : state === "error" ? "!" : '<span class="plan-progress-spinner"></span>';
+    }
+
+    async function generateNutritionPlanWithFeedback() {
+      if (generatingNutritionPlan) return;
+      generatingNutritionPlan = true;
+      const progress = document.getElementById("planProgress");
+      const createButton = document.getElementById("nutritionGeneratorCreate");
+      createButton.disabled = true;
+      closeNutritionGenerator();
+      setPlanProgress("Essensplan wird erstellt", "Gerichte werden ausgewählt");
+      progress.classList.add("open");
+      progress.setAttribute("aria-hidden", "false");
+
+      // Let the progress card paint before the synchronous generator runs.
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await new Promise(resolve => setTimeout(resolve, 420));
+      try {
+        generateNutritionPlanForWeek();
+        setPlanProgress("Essensplan erstellt", "Mahlzeiten und Einkaufsliste sind bereit", "success");
+        nutritionView.classList.remove("plan-reveal");
+        void nutritionView.offsetWidth;
+        nutritionView.classList.add("plan-reveal");
+        setTimeout(() => nutritionView.classList.remove("plan-reveal"), 1000);
+        await new Promise(resolve => setTimeout(resolve, 850));
+      } catch (error) {
+        console.error("Essensplan konnte nicht erstellt werden", error);
+        setPlanProgress("Erstellen fehlgeschlagen", "Bitte versuche es erneut", "error");
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        openNutritionGenerator();
+      } finally {
+        progress.classList.remove("open");
+        progress.setAttribute("aria-hidden", "true");
+        createButton.disabled = false;
+        generatingNutritionPlan = false;
+      }
+    }
+
     function openNutritionGenerator() {
       nutritionGeneratorModal.classList.add("open");
       nutritionGeneratorModal.setAttribute("aria-hidden", "false");
@@ -503,7 +549,7 @@
     document.getElementById("generateNutritionPlan").addEventListener("click", openNutritionGenerator);
     document.getElementById("nutritionGeneratorClose").addEventListener("click", closeNutritionGenerator);
     document.getElementById("nutritionGeneratorCancel").addEventListener("click", closeNutritionGenerator);
-    document.getElementById("nutritionGeneratorCreate").addEventListener("click", generateNutritionPlanForWeek);
+    document.getElementById("nutritionGeneratorCreate").addEventListener("click", generateNutritionPlanWithFeedback);
 
     nutritionGeneratorModal.addEventListener("click", event => {
       if (event.target === nutritionGeneratorModal) closeNutritionGenerator();

@@ -527,6 +527,14 @@
       </div>
     </div>
 
+    <div class="plan-progress-backdrop" id="planProgress" role="status" aria-live="polite" aria-hidden="true">
+      <div class="plan-progress-card">
+        <div class="plan-progress-symbol" id="planProgressSymbol" aria-hidden="true"><span class="plan-progress-spinner"></span></div>
+        <strong id="planProgressTitle">Essensplan wird erstellt</strong>
+        <span id="planProgressDetail">Einen Moment bitte …</span>
+      </div>
+    </div>
+
     <div class="meal-editor-backdrop" id="mealEditorModal" aria-hidden="true">
       <div class="meal-editor-card" role="dialog" aria-modal="true" aria-labelledby="mealEditorTitle">
         <div class="meal-editor-header">
@@ -675,6 +683,35 @@
     </div>
 
   <script>
+    function playLaunchIntro() {
+      if (!document.body.classList.contains("show-launch-intro")) return;
+      const overlay = document.getElementById("launchIntro");
+      const wordmark = document.getElementById("launchWordmark");
+      const typed = document.getElementById("launchTyped");
+      const word = "Dashboard";
+      let index = 1;
+      const finish = () => {
+        overlay.remove();
+        document.body.classList.remove("show-launch-intro");
+        try { localStorage.setItem("lifeDashboardIntroV17", "seen"); } catch (_) {}
+      };
+      const typing = setInterval(() => {
+        typed.textContent = word.slice(0, ++index);
+        if (index < word.length) return;
+        clearInterval(typing);
+        setTimeout(() => {
+          const from = wordmark.getBoundingClientRect();
+          const to = document.getElementById("homeButton").getBoundingClientRect();
+          wordmark.style.setProperty("--intro-x", `${to.left + to.width / 2 - from.left - from.width / 2}px`);
+          wordmark.style.setProperty("--intro-y", `${to.top + to.height / 2 - from.top - from.height / 2}px`);
+          wordmark.classList.add("to-header");
+          setTimeout(() => overlay.classList.add("leaving"), 330);
+          setTimeout(finish, 850);
+        }, 240);
+      }, 95);
+    }
+    playLaunchIntro();
+
     const tabs = document.querySelectorAll(".tab[data-tab]");
     const clock = document.getElementById("clock");
     const fullDate = document.getElementById("fullDate");

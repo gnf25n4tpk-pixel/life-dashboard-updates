@@ -832,8 +832,50 @@
       min-height: 82px;
     }
 </style>
+<style>
+  /* V17: quiet first-run transition and visible meal generation feedback. */
+  .launch-intro { display: none; position: fixed; inset: 0; z-index: 10000; place-items: center; background: #f3f0e9; color: #1d1d1f; pointer-events: all; transition: opacity .3s ease; }
+  body.show-launch-intro .launch-intro { display: grid; }
+  .launch-intro.leaving { opacity: 0; }
+  .launch-wordmark { font: 650 clamp(38px, 5vw, 56px)/1.1 -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; letter-spacing: -.045em; white-space: nowrap; transform-origin: center; transition: transform .58s cubic-bezier(.22,1,.36,1), opacity .58s ease; }
+  .launch-wordmark.to-header { transform: translate(var(--intro-x), var(--intro-y)) scale(.35); opacity: .3; }
+  .launch-cursor { display: inline-block; width: 2px; height: .85em; margin-left: 4px; background: currentColor; vertical-align: -.08em; animation: launch-caret .72s steps(1) infinite; }
+  @keyframes launch-caret { 50% { opacity: 0; } }
+  .plan-progress-backdrop { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; padding: 24px; background: rgba(30,28,24,.25); -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .24s ease, visibility .24s ease; }
+  .plan-progress-backdrop.open { opacity: 1; visibility: visible; pointer-events: auto; }
+  .plan-progress-card { display: flex; align-items: center; flex-direction: column; gap: 8px; width: min(100%, 320px); padding: 32px 28px; border: 1px solid rgba(61,58,51,.08); border-radius: 24px; background: #fffdf8; color: #1d1d1f; box-shadow: 0 22px 65px rgba(37,34,30,.13); text-align: center; transform: translateY(8px) scale(.98); transition: transform .26s cubic-bezier(.22,1,.36,1); }
+  .plan-progress-backdrop.open .plan-progress-card { transform: translateY(0) scale(1); }
+  .plan-progress-card strong { font-size: 17px; letter-spacing: -.02em; }
+  .plan-progress-card > span { font-size: 13px; color: #77736d; }
+  .plan-progress-symbol { display: grid; place-items: center; width: 45px; height: 45px; margin-bottom: 10px; border-radius: 50%; background: #f0ede6; color: #32694a; font-size: 26px; }
+  .plan-progress-backdrop[data-state="error"] .plan-progress-symbol { color: #a26262; }
+  .plan-progress-spinner { width: 21px; height: 21px; border: 2px solid #d7d2ca; border-top-color: #34322e; border-radius: 50%; animation: plan-spin .85s linear infinite; }
+  @keyframes plan-spin { to { transform: rotate(360deg); } }
+  .plan-reveal .nutrition-meal-card { animation: meal-arrive .48s cubic-bezier(.22,1,.36,1) both; }
+  .plan-reveal .nutrition-meal-card:nth-child(2) { animation-delay: .06s; }
+  .plan-reveal .nutrition-meal-card:nth-child(3) { animation-delay: .12s; }
+  .plan-reveal .nutrition-meal-card:nth-child(4) { animation-delay: .18s; }
+  @keyframes meal-arrive { from { opacity: .25; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  body.dark-mode .launch-intro { background: #1c1c1e; color: #f5f3ee; }
+  body.dark-mode .plan-progress-card { background: #29292b; color: #f5f3ee; border-color: rgba(255,255,255,.08); }
+  body.dark-mode .plan-progress-symbol { background: #38383a; }
+  body.dark-mode .plan-progress-card > span { color: #aaa8a2; }
+  @media (prefers-reduced-motion: reduce) { .launch-cursor, .plan-progress-spinner, .plan-reveal .nutrition-meal-card { animation: none; } .plan-progress-backdrop, .plan-progress-card { transition: none; } }
+  @media print { .launch-intro, .plan-progress-backdrop { display: none !important; } }
+</style>
 </head>
 <body>
+  <script>
+    try {
+      if (localStorage.getItem("lifeDashboardIntroV17") !== "seen" &&
+          !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.body.classList.add("show-launch-intro");
+      }
+    } catch (_) { /* The dashboard remains usable when storage is unavailable. */ }
+  </script>
+  <div class="launch-intro" id="launchIntro" aria-hidden="true">
+    <div class="launch-wordmark" id="launchWordmark"><span id="launchTyped">D</span><span class="launch-cursor"></span></div>
+  </div>
   <main class="app-shell">
     <header class="topbar">
       <button class="brand" id="homeButton" aria-label="Zur Startseite">
