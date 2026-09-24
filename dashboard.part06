@@ -562,7 +562,7 @@
     body.dark-mode :is(
       .plan-picker select,.ingredient-field input,.ingredient-field select,
       .exercise-name-field input,.exercise-set-row input,
-      .generator-field textarea,.generator-options input,
+      .generator-field textarea,.generator-mode-field select,.generator-options input,
       .home-todo-add input,.home-note,.global-search-input
     ) {
       background: #292a2f !important;

@@ -434,18 +434,202 @@
     }
 
     function applyNutritionPlanForWeek(plan) {
-      plan.uniquePairStarts.forEach((start, dayIndex) =>
-        nutritionMealSlots.forEach((slot, slotIndex) =>
-          syncPairMeal(start, slot.key, recipeToMeal(plan.planned[dayIndex][slotIndex]))
-        )
-      );
-      const dates = new Set(plan.weekDates.map(makeIsoDate));
-      dates.forEach(iso => delete nutritionData.individualDays[iso]);
-      Object.keys(nutritionData.completedMeals).forEach(key => {
-        if (dates.has(key.split("|||")[0])) delete nutritionData.completedMeals[key];
+      const previousData = nutritionClone(nutritionData);
+      try {
+        plan.uniquePairStarts.forEach((start, dayIndex) =>
+          nutritionMealSlots.forEach((slot, slotIndex) =>
+            syncPairMeal(start, slot.key, recipeToMeal(plan.planned[dayIndex][slotIndex]))
+          )
+        );
+        const dates = new Set(plan.weekDates.map(makeIsoDate));
+        dates.forEach(iso => delete nutritionData.individualDays[iso]);
+        Object.keys(nutritionData.completedMeals).forEach(key => {
+          if (dates.has(key.split("|||")[0])) delete nutritionData.completedMeals[key];
+        });
+        saveNutritionData();
+        renderNutrition();
+      } catch (error) {
+        nutritionData = previousData;
+        try { saveNutritionData(); renderNutrition(); } catch {}
+        throw error;
+      }
+    }
+
+    function hasNativeAIBridge() {
+      return !!window.webkit?.messageHandlers?.nutritionAI;
+    }
+
+    function requestNativeAIState() {
+      if (hasNativeAIBridge()) {
+        window.webkit.messageHandlers.nutritionAI.postMessage({ action: "state" });
+      } else {
+        document.getElementById("openAIKeyStatus").textContent =
+          "Für KI-Pläne wird die aktuelle Desktop-App benötigt.";
+      }
+    }
+
+    let nativeAIConfigured = false;
+    let nextAIRequest = 0;
+    const pendingAIPlans = new Map();
+
+    window.nativeAIState = function(snapshot) {
+      nativeAIConfigured = !!snapshot?.configured;
+      const status = document.getElementById("openAIKeyStatus");
+      status.textContent = snapshot?.message || "API-Schlüsselstatus nicht verfügbar";
+      document.getElementById("openAIKeyDelete").disabled = !nativeAIConfigured;
+    };
+
+    window.nativeAIPlanResult = function(result) {
+      const pending = pendingAIPlans.get(result?.requestId);
+      if (!pending) return;
+      clearTimeout(pending.timeout);
+      pendingAIPlans.delete(result.requestId);
+      if (result.ok) pending.resolve(result.plan);
+      else pending.reject(new Error(result.error || "Der KI-Plan konnte nicht erstellt werden."));
+    };
+
+    function collectAIPlanPreferences() {
+      if (!hasNativeAIBridge()) {
+        throw new Error("Für KI-Pläne benötigst du die aktuelle Desktop-App. Wähle sonst „Ohne KI“.");
+      }
+      if (!nativeAIConfigured) {
+        throw new Error("Bitte zuerst deinen OpenAI-API-Schlüssel in den Einstellungen speichern.");
+      }
+      const required = parseRequiredFoods();
+      const avoided = document.getElementById("generatorAvoidFoods").value
+        .split(/\n|,/).map(value => value.trim()).filter(Boolean);
+      const avoidKeys = avoided.map(normalizeFoodKey);
+      const conflicts = required.filter(food => avoidKeys.some(key =>
+        normalizeFoodKey(food).includes(key) || key.includes(normalizeFoodKey(food))
+      ));
+      if (conflicts.length) {
+        throw new Error(conflicts.join(", ") + " steht gleichzeitig bei Pflicht-Lebensmitteln und „Vermeiden“.");
+      }
+      if (required.length > 20 || avoided.length > 20) {
+        throw new Error("Bitte höchstens 20 Pflicht-Lebensmittel und 20 Ausschlüsse angeben.");
+      }
+      const calories = Number(document.getElementById("generatorCalories").value);
+      const protein = Number(document.getElementById("generatorProtein").value);
+      if (!Number.isInteger(calories) || calories < 1000 || calories > 5000 ||
+          !Number.isInteger(protein) || protein < 50 || protein > 300) {
+        throw new Error("Bitte Kalorien (1000–5000) und Protein (50–300 g) als gültige Tagesziele eingeben.");
+      }
+      const notes = document.getElementById("generatorNotes").value.trim();
+      const weekStart = makeIsoDate(nutritionWeekDates()[0]);
+      const recentMeals = [...new Set(Object.entries(nutritionData.days || {})
+        .filter(([date]) => date < weekStart)
+        .sort(([a], [b]) => b.localeCompare(a))
+        .slice(0, 14)
+        .flatMap(([, day]) => nutritionMealSlots.map(slot => day?.[slot.key]?.name?.trim()))
+        .filter(Boolean))].slice(0, 24);
+      return { calories, protein, required, avoided, notes, recentMeals };
+    }
+
+    function requestNutritionAI(preferences) {
+      return new Promise((resolve, reject) => {
+        const requestId = "nutrition-" + Date.now() + "-" + ++nextAIRequest;
+        const timeout = setTimeout(() => {
+          pendingAIPlans.delete(requestId);
+          reject(new Error("Die KI-Anfrage hat zu lange gedauert. Bitte erneut versuchen."));
+        }, 120000);
+        pendingAIPlans.set(requestId, { resolve, reject, timeout });
+        try {
+          window.webkit.messageHandlers.nutritionAI.postMessage({
+            action: "generate", requestId, preferences
+          });
+        } catch {
+          clearTimeout(timeout);
+          pendingAIPlans.delete(requestId);
+          reject(new Error("Die Desktop-Verbindung zur KI ist nicht verfügbar."));
+        }
       });
-      saveNutritionData();
-      renderNutrition();
+    }
+
+    function validateNutritionAIPlan(response, preferences) {
+      const weekDates = nutritionWeekDates();
+      const uniquePairStarts = weekDates.filter((date, index) => index % 2 === 0);
+      if (!Array.isArray(response?.pairs) || response.pairs.length !== 4) {
+        throw new Error("Die KI hat keinen vollständigen Wochenplan geliefert. Bitte erneut versuchen.");
+      }
+      const names = new Set();
+      const usedRequired = new Set();
+      const avoidKeys = preferences.avoided.map(normalizeFoodKey);
+      const planned = response.pairs.map((pair, pairIndex) => {
+        if (!Array.isArray(pair?.meals) || pair.meals.length !== 4) {
+          throw new Error("Die KI hat Mahlzeiten ausgelassen. Bitte erneut versuchen.");
+        }
+        const recipes = pair.meals.map((meal, slotIndex) => {
+          if (meal?.slot !== nutritionMealSlots[slotIndex].key ||
+              typeof meal.name !== "string" || meal.name.trim().length < 4 ||
+              meal.name.length > 120 ||
+              !Array.isArray(meal.ingredients) ||
+              meal.ingredients.length < 2 || meal.ingredients.length > 10) {
+            throw new Error("Die KI hat ein unvollständiges Gericht geliefert. Bitte erneut versuchen.");
+          }
+          const name = meal.name.trim();
+          const key = normalizeFoodKey(name);
+          if (names.has(key)) throw new Error("Die KI hat ein Gericht mehrfach eingeplant. Bitte erneut versuchen.");
+          names.add(key);
+          if (avoidKeys.some(avoid => key.includes(avoid))) {
+            throw new Error("Die KI hat ein ausgeschlossenes Lebensmittel eingeplant. Der Plan wurde nicht gespeichert.");
+          }
+          const foods = meal.ingredients.map(item => {
+            const ingredientName = typeof item?.name === "string" ? item.name.trim() : "";
+            const ingredientKey = normalizeFoodKey(ingredientName);
+            const values = ["amount", "kcal", "protein", "carbs", "fat"].map(field => Number(item?.[field]));
+            if (!ingredientName || ingredientName.length > 100 ||
+                !["g", "ml", "Stk.", "EL", "TL"].includes(item?.unit) ||
+                !values.every(Number.isFinite) || values[0] <= 0 || values[0] > 1500 ||
+                values.slice(1).some(value => value < 0 || value > 3000)) {
+              throw new Error("Die KI hat ungültige Zutaten oder Nährwerte geliefert. Bitte erneut versuchen.");
+            }
+            if (avoidKeys.some(avoid => ingredientKey.includes(avoid))) {
+              throw new Error("Die KI hat ein ausgeschlossenes Lebensmittel eingeplant. Der Plan wurde nicht gespeichert.");
+            }
+            preferences.required.forEach(food => {
+              const requiredKey = normalizeFoodKey(food);
+              if (ingredientKey.includes(requiredKey) || requiredKey.includes(ingredientKey)) {
+                usedRequired.add(requiredKey);
+              }
+            });
+            return [ingredientName, ...values.slice(0, 1), item.unit, ...values.slice(1)];
+          });
+          return { name, foods };
+        });
+        const totals = recipes.reduce((sum, recipe) => {
+          const current = recipeTotals(recipe);
+          sum.kcal += current.kcal; sum.protein += current.protein;
+          return sum;
+        }, { kcal: 0, protein: 0 });
+        if (totals.kcal < preferences.calories * .6 ||
+            totals.kcal > preferences.calories * 1.5 ||
+            totals.protein < preferences.protein * .5 ||
+            totals.protein > preferences.protein * 1.8) {
+          throw new Error("Der KI-Plan liegt zu weit von den Tageszielen entfernt. Bitte erneut versuchen.");
+        }
+        return recipes;
+      });
+      const missing = preferences.required.filter(food => !usedRequired.has(normalizeFoodKey(food)));
+      if (missing.length) {
+        throw new Error("Diese Wunschzutaten fehlen in der KI-Antwort: " + missing.join(", ") + ". Der Plan wurde nicht gespeichert.");
+      }
+      return { weekDates, uniquePairStarts, planned, requiredCount: preferences.required.length };
+    }
+
+    function updateNutritionGeneratorMode() {
+      const ai = document.getElementById("generatorMode").value === "ai";
+      document.getElementById("generatorNotesField").hidden = !ai;
+      document.getElementById("generatorOpenKeySettings").hidden = !ai;
+      document.getElementById("generatorRequiredHint").textContent = ai
+        ? "Die KI baut diese Zutaten sinnvoll in Gerichte ein."
+        : "Nur wenn sie in einem hinterlegten oder von dir gespeicherten Gericht vorkommen.";
+      document.getElementById("generatorTargetHint").textContent = ai
+        ? "Kalorien und Protein sind Richtwerte. KI-Nährwerte sind Schätzungen; prüfe Produkte und Portionsgrößen."
+        : "Kalorien und Protein sind Richtwerte. Die App wählt gespeicherte Gerichte ohne neue Nährwerte.";
+      document.querySelector(".generator-intro").textContent = ai
+        ? "Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Die KI erstellt neue Gerichte aus deinen Wünschen. Bestehende Mahlzeiten dieser Woche werden ersetzt."
+        : "Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Die App wählt gespeicherte Gerichte. Bestehende Mahlzeiten dieser Woche werden ersetzt.";
+      localStorage.setItem("lifeDashboardNutritionGeneratorMode", ai ? "ai" : "local");
     }
 
     let generatingNutritionPlan = false;
@@ -464,8 +648,11 @@
       const errorMessage = document.getElementById("nutritionGeneratorError");
       errorMessage.hidden = true;
       let plan;
+      let preferences;
+      const useAI = document.getElementById("generatorMode").value === "ai";
       try {
-        plan = buildNutritionPlanForWeek();
+        if (useAI) preferences = collectAIPlanPreferences();
+        else plan = buildNutritionPlanForWeek();
       } catch (error) {
         errorMessage.textContent = error.message || "Der Plan konnte nicht erstellt werden.";
         errorMessage.hidden = false;
@@ -477,14 +664,20 @@
       const createButton = document.getElementById("nutritionGeneratorCreate");
       createButton.disabled = true;
       closeNutritionGenerator();
-      setPlanProgress("Essensplan wird erstellt", "Gerichte werden ausgewählt");
+      setPlanProgress("Essensplan wird erstellt", useAI
+        ? "Die KI stellt neue Gerichte zusammen …"
+        : "Gespeicherte Gerichte werden ausgewählt …");
       progress.classList.add("open");
       progress.setAttribute("aria-hidden", "false");
 
-      // Let the progress card paint before the synchronous generator runs.
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      await new Promise(resolve => setTimeout(resolve, 420));
       try {
+        if (useAI) {
+          const answer = await requestNutritionAI(preferences);
+          plan = validateNutritionAIPlan(answer, preferences);
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 420));
+        }
         applyNutritionPlanForWeek(plan);
         const detail = plan.requiredCount
           ? `${plan.requiredCount} Wunsch-Lebensmittel in passenden Gerichten eingeplant`
@@ -497,10 +690,10 @@
         await new Promise(resolve => setTimeout(resolve, 850));
       } catch (error) {
         console.error("Essensplan konnte nicht erstellt werden", error);
-        setPlanProgress("Erstellen fehlgeschlagen", "Bitte versuche es erneut", "error");
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        setPlanProgress("Erstellen fehlgeschlagen", error.message || "Bitte erneut versuchen", "error");
+        await new Promise(resolve => setTimeout(resolve, 1500));
         openNutritionGenerator();
-        errorMessage.textContent = "Der Plan konnte nicht gespeichert werden. Bitte versuche es erneut.";
+        errorMessage.textContent = error.message || "Der Plan konnte nicht gespeichert werden. Bitte versuche es erneut.";
         errorMessage.hidden = false;
       } finally {
         progress.classList.remove("open");
@@ -704,6 +897,34 @@
     document.getElementById("nutritionGeneratorClose").addEventListener("click", closeNutritionGenerator);
     document.getElementById("nutritionGeneratorCancel").addEventListener("click", closeNutritionGenerator);
     document.getElementById("nutritionGeneratorCreate").addEventListener("click", generateNutritionPlanWithFeedback);
+    const generatorMode = document.getElementById("generatorMode");
+    generatorMode.value = localStorage.getItem("lifeDashboardNutritionGeneratorMode") === "local"
+      ? "local" : "ai";
+    updateNutritionGeneratorMode();
+    generatorMode.addEventListener("change", updateNutritionGeneratorMode);
+    document.getElementById("generatorOpenKeySettings").addEventListener("click", () => {
+      closeNutritionGenerator();
+      openHomeSettings();
+      document.getElementById("openAIKeyInput").focus();
+    });
+
+    document.getElementById("openAIKeySave").addEventListener("click", () => {
+      const input = document.getElementById("openAIKeyInput");
+      const key = input.value.trim();
+      input.value = "";
+      if (!hasNativeAIBridge()) {
+        document.getElementById("openAIKeyStatus").textContent = "Die aktuelle Desktop-App wird benötigt.";
+        return;
+      }
+      document.getElementById("openAIKeyStatus").textContent = "Schlüssel wird gespeichert …";
+      window.webkit.messageHandlers.nutritionAI.postMessage({ action: "saveKey", key });
+    });
+    document.getElementById("openAIKeyDelete").addEventListener("click", () => {
+      if (hasNativeAIBridge()) {
+        window.webkit.messageHandlers.nutritionAI.postMessage({ action: "deleteKey" });
+      }
+    });
+    document.getElementById("openAIKeyDelete").disabled = true;
 
     nutritionGeneratorModal.addEventListener("click", event => {
       if (event.target === nutritionGeneratorModal) closeNutritionGenerator();

@@ -690,6 +690,7 @@
       const modal = document.getElementById("homeSettingsModal");
       updateNotificationButton();
       requestNativeUpdateState();
+      requestNativeAIState();
       modal.classList.add("open");
       modal.setAttribute("aria-hidden","false");
     }
@@ -997,4 +998,3 @@
         enabled: !!event.target.checked
       });
     });
-

@@ -332,6 +332,7 @@
       window.webkit.messageHandlers.notifications.postMessage({ action: "state" });
     }
     requestNativeUpdateState();
+    requestNativeAIState();
     requestAnimationFrame(() => centerHomeCalendarOnToday(false));
     setInterval(updateClock,1000);
     setInterval(checkUpcomingNotifications,60000);

@@ -1,7 +1,7 @@
 {
-  "dashboardVersion": "0.18.0",
-  "minimumNativeVersion": "0.11.0",
-  "sha256": "bbb10e02ff6beb560bd258944ccc10c19be5e9ef06f4b7b2cfc9ffeb290944af",
+  "dashboardVersion": "0.19.0",
+  "minimumNativeVersion": "0.12.0",
+  "sha256": "0ea42d58469f3054e6826ee06911c970e0479951785832e3f4d97b0e22090288",
   "resources": [
     {
       "kind": "appIconPNG",
@@ -10,8 +10,8 @@
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "V18: Trainingspläne löschen; Essenspläne mit passenden Wunschzutaten, strikt beachteten Ausschlüssen, Kalorien- und Proteinrichtwerten, zusätzlichen Gerichten und eigenen Mahlzeiten.",
-  "nativeDownloadURL": "",
+  "releaseNotes": "V19: KI erstellt abwechslungsreiche Wochenpläne mit passenden Wunschzutaten. OpenAI-Schlüssel sicher im macOS-Schlüsselbund; bisherige Planung ohne KI bleibt verfügbar.",
+  "nativeDownloadURL": "https://raw.githubusercontent.com/gnf25n4tpk-pixel/life-dashboard-updates/main/Install-Life-Dashboard-Desktop-v12.zip",
   "dashboardParts": [
     "dashboard.part01",
     "dashboard.part02",

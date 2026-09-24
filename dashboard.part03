@@ -927,6 +927,21 @@
       font: inherit;
     }
 
+    .generator-mode-field { margin: 0 0 15px; }
+    .generator-mode-field select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid rgba(30,30,40,.10);
+      border-radius: 13px;
+      background: white;
+      color: #333338;
+      font: inherit;
+    }
+    .generator-key-button { margin: -5px 0 15px; }
+    .generator-notes-field { margin-top: 14px; }
+    .generator-notes-field textarea { min-height: 66px; }
+    .generator-notes-field[hidden],.generator-key-button[hidden] { display: none !important; }
+
     .generator-field small {
       color: #9a9aa0;
       font-weight: 500;

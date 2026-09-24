@@ -391,6 +391,23 @@
             </div>
           </div>
 
+          <div class="settings-card ai-settings-card">
+            <div>
+              <strong>KI für Ernährungspläne</strong>
+              <span>Neue Gerichte mit OpenAI erstellen. Es wird dein eigener API-Schlüssel verwendet; die Nutzung kann Kosten verursachen.</span>
+            </div>
+            <label class="update-feed-field">
+              <span>OpenAI-API-Schlüssel</span>
+              <input id="openAIKeyInput" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false" />
+            </label>
+            <div class="settings-inline-actions">
+              <button class="home-save-button" id="openAIKeySave">Schlüssel speichern</button>
+              <button class="home-small-button" id="openAIKeyDelete">Entfernen</button>
+            </div>
+            <span id="openAIKeyStatus" role="status">Schlüsselstatus wird geladen …</span>
+            <span>Der Schlüssel liegt im macOS-Schlüsselbund. Für einen KI-Plan werden nur deine Ernährungswünsche und bisherige Gerichtsnamen an OpenAI gesendet.</span>
+          </div>
+
           <div class="settings-card update-settings-card">
             <div class="update-settings-copy">
               <strong>Updates</strong>
@@ -491,14 +508,23 @@
         </div>
 
         <div class="generator-intro">
-          Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Gewünschte Lebensmittel werden über passende Gerichte eingeplant. Bestehende Mahlzeiten dieser Woche werden ersetzt.
+          Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Die KI erstellt neue, passende Gerichte aus deinen Wünschen. Bestehende Mahlzeiten dieser Woche werden ersetzt.
         </div>
+
+        <label class="generator-field generator-mode-field">
+          <span>Planungsart</span>
+          <select id="generatorMode">
+            <option value="ai">Mit KI · neue Gerichte</option>
+            <option value="local">Ohne KI · gespeicherte Gerichte</option>
+          </select>
+        </label>
+        <button type="button" class="home-small-button generator-key-button" id="generatorOpenKeySettings">API-Schlüssel einrichten</button>
 
         <div class="generator-food-grid">
           <label class="generator-field">
             <span>Pflicht-Lebensmittel</span>
             <textarea id="generatorRequiredFoods" rows="5" placeholder="z. B.&#10;Hähnchen&#10;Reis&#10;Brokkoli&#10;Skyr"></textarea>
-            <small>Nur wenn sie in einem hinterlegten oder von dir gespeicherten Gericht vorkommen.</small>
+            <small id="generatorRequiredHint">Die KI baut diese Zutaten sinnvoll in Gerichte ein.</small>
           </label>
 
           <label class="generator-field">
@@ -507,6 +533,11 @@
             <small>Diese Lebensmittel werden aus dem Generator ausgeschlossen.</small>
           </label>
         </div>
+
+        <label class="generator-field generator-notes-field" id="generatorNotesField">
+          <span>Weitere Wünsche</span>
+          <textarea id="generatorNotes" rows="2" maxlength="600" placeholder="z. B. mediterran, unkompliziert, 30 Minuten Kochzeit"></textarea>
+        </label>
 
         <div class="generator-options">
           <label>
@@ -520,7 +551,7 @@
           </label>
         </div>
 
-        <p class="generator-target-hint">Kalorien und Protein sind Richtwerte. Die App wählt passende Gerichte aus, ohne Nährwerte zu erfinden.</p>
+        <p class="generator-target-hint" id="generatorTargetHint">Kalorien und Protein sind Richtwerte. KI-Nährwerte sind Schätzungen; prüfe Produkte und Portionsgrößen.</p>
         <p class="generator-error" id="nutritionGeneratorError" role="alert" hidden></p>
 
         <div class="generator-actions">
