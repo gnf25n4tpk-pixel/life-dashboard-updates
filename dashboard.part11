@@ -39,6 +39,31 @@
             ["Apfel", 150, "g", 80, 0, 21, 0],
             ["Whey", 25, "g", 95, 20, 2, 1]
           ]
+        },
+        {
+          name: "Rührei mit Vollkornbrot",
+          foods: [
+            ["Eier", 3, "Stk.", 240, 21, 2, 16],
+            ["Vollkornbrot", 150, "g", 340, 13, 62, 4],
+            ["Paprika", 100, "g", 30, 1, 6, 0]
+          ]
+        },
+        {
+          name: "Hafer-Bananen-Bowl",
+          foods: [
+            ["Haferflocken", 100, "g", 375, 13, 60, 7],
+            ["Banane", 125, "g", 110, 1, 28, 0],
+            ["Beeren", 100, "g", 45, 1, 9, 0],
+            ["Honig", 25, "g", 75, 0, 20, 0]
+          ]
+        },
+        {
+          name: "Putenbrot mit Apfel",
+          foods: [
+            ["Vollkornbrot", 150, "g", 340, 13, 62, 4],
+            ["Putenbrust-Aufschnitt", 100, "g", 110, 23, 2, 2],
+            ["Apfel", 150, "g", 80, 0, 21, 0]
+          ]
         }
       ],
       lunch: [
@@ -73,6 +98,23 @@
             ["Hähnchen", 250, "g", 410, 77, 0, 9],
             ["Couscous", 150, "g", 540, 18, 105, 3],
             ["Möhren", 150, "g", 60, 1, 13, 0],
+            ["Erbsen", 100, "g", 80, 5, 13, 1]
+          ]
+        },
+        {
+          name: "Puten-Reis-Brokkoli",
+          foods: [
+            ["Pute", 250, "g", 375, 74, 0, 7],
+            ["Reis", 150, "g", 540, 10, 120, 2],
+            ["Brokkoli", 200, "g", 70, 6, 10, 1]
+          ]
+        },
+        {
+          name: "Rinderhack-Couscous-Bowl",
+          foods: [
+            ["Rinderhack", 250, "g", 570, 51, 0, 39],
+            ["Couscous", 150, "g", 540, 18, 105, 3],
+            ["Paprika", 150, "g", 45, 2, 9, 0],
             ["Erbsen", 100, "g", 80, 5, 13, 1]
           ]
         }
@@ -110,6 +152,30 @@
             ["Putenbrust-Aufschnitt", 100, "g", 110, 23, 2, 2],
             ["Frischkäse", 50, "g", 110, 4, 3, 9]
           ]
+        },
+        {
+          name: "Eier & Reiswaffeln",
+          foods: [
+            ["Eier", 3, "Stk.", 240, 21, 2, 16],
+            ["Reiswaffeln", 50, "g", 190, 4, 40, 1],
+            ["Paprika", 100, "g", 30, 1, 6, 0]
+          ]
+        },
+        {
+          name: "Isoclear & Apfel",
+          foods: [
+            ["Isoclear", 30, "g", 105, 25, 1, 0],
+            ["Apfel", 150, "g", 80, 0, 21, 0],
+            ["Reiswaffeln", 50, "g", 190, 4, 40, 1]
+          ]
+        },
+        {
+          name: "Putenbrot mit Paprika",
+          foods: [
+            ["Vollkornbrot", 100, "g", 225, 9, 41, 3],
+            ["Putenbrust-Aufschnitt", 100, "g", 110, 23, 2, 2],
+            ["Paprika", 100, "g", 30, 1, 6, 0]
+          ]
         }
       ],
       dinner: [
@@ -145,6 +211,23 @@
             ["Penne", 150, "g", 525, 19, 103, 4],
             ["Tomatensauce", 200, "g", 100, 3, 18, 1]
           ]
+        },
+        {
+          name: "Puten-Couscous-Pfanne",
+          foods: [
+            ["Pute", 250, "g", 375, 74, 0, 7],
+            ["Couscous", 150, "g", 540, 18, 105, 3],
+            ["Brokkoli", 200, "g", 70, 6, 10, 1]
+          ]
+        },
+        {
+          name: "Rinderhack mit Kartoffeln",
+          foods: [
+            ["Rinderhack", 250, "g", 570, 51, 0, 39],
+            ["Kartoffeln", 400, "g", 300, 8, 68, 0],
+            ["Paprika", 150, "g", 45, 2, 9, 0],
+            ["Erbsen", 100, "g", 80, 5, 13, 1]
+          ]
         }
       ]
     };
@@ -161,80 +244,120 @@
     }
 
     function parseRequiredFoods() {
+      const seen = new Set();
       return document.getElementById("generatorRequiredFoods").value
         .split(/\n|,/)
         .map(x => x.trim())
-        .filter(Boolean);
+        .filter(name => {
+          const key = normalizeFoodKey(name);
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    }
+
+    function normalizeFoodKey(value) {
+      const key = String(value || "").trim().toLocaleLowerCase("de-DE")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/ß/g, "ss").replace(/[^a-z0-9]/g, "");
+      const aliases = {
+        huhnchen: "hahnchen", huhnchenbrust: "hahnchen", hahnchenbrust: "hahnchen",
+        hahnchenbrustfilet: "hahnchen", putenbrust: "pute",
+        nudeln: "penne", pasta: "penne", kartoffel: "kartoffeln",
+        ei: "eier", rind: "rinderhack", rinderhackfleisch: "rinderhack"
+      };
+      return aliases[key] || key;
     }
 
     function parseAvoidFoods() {
       return document.getElementById("generatorAvoidFoods").value
         .split(/\n|,/)
-        .map(x => x.trim().toLocaleLowerCase("de-DE"))
+        .map(normalizeFoodKey)
         .filter(Boolean);
     }
 
-    function mealContainsAvoidedFood(meal, avoidFoods) {
-      if (!avoidFoods.length) return false;
-
-      const haystack = [
-        meal.name,
-        ...(meal.ingredients || []).map(i => i.name)
-      ]
-        .join(" ")
-        .toLocaleLowerCase("de-DE");
-
-      return avoidFoods.some(food => haystack.includes(food));
+    function recipeHasFood(recipe, foodKey) {
+      return recipe.foods.some(food => normalizeFoodKey(food[0]) === foodKey);
     }
 
-    function addRequiredFoodToMeal(meal, foodName) {
-      const exists = meal.ingredients.some(i =>
-        i.name.toLocaleLowerCase("de-DE") === foodName.toLocaleLowerCase("de-DE")
-      );
-      if (exists) return;
-
-      meal.ingredients.push({
-        id: `food-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-        name: foodName,
-        amount: 100,
-        unit: "g",
-        kcal: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0
-      });
+    function recipeContainsAvoidedFood(recipe, avoidFoods) {
+      const names = [recipe.name, ...recipe.foods.map(food => food[0])]
+        .map(normalizeFoodKey);
+      return avoidFoods.some(avoid => names.some(name => name.includes(avoid)));
     }
 
-    function recipeFoodNames(recipe) {
-      return recipe.foods.map(food => String(food[0]).toLocaleLowerCase("de-DE"));
+    function generatorRecipeBanks() {
+      const banks = Object.fromEntries(nutritionMealSlots.map(slot =>
+        [slot.key, [...generatorRecipes[slot.key]]]
+      ));
+      const storedDays = [
+        ...Object.values(nutritionData.days || {}),
+        ...Object.values(nutritionData.individualDays || {})
+      ];
+
+      // Selbst gespeicherte Mahlzeiten mit Nährwerten stehen ebenfalls zur Wahl.
+      storedDays.forEach(day => nutritionMealSlots.forEach(slot => {
+        const meal = day?.[slot.key];
+        if (!meal?.name?.trim() || !Array.isArray(meal.ingredients) ||
+            !meal.ingredients.length || banks[slot.key].length >= 16 ||
+            banks[slot.key].some(recipe => recipe.name.toLocaleLowerCase("de-DE") ===
+              meal.name.trim().toLocaleLowerCase("de-DE"))) return;
+
+        const foods = meal.ingredients
+          .filter(item => item?.name?.trim() && Number(item.amount) > 0)
+          .map(item => [item.name.trim(), Number(item.amount), item.unit || "g",
+            Number(item.kcal || 0), Number(item.protein || 0),
+            Number(item.carbs || 0), Number(item.fat || 0)]);
+        if (!foods.length || foods.some(food => food[3] <= 0)) return;
+        banks[slot.key].push({ name: meal.name.trim(), foods });
+      }));
+
+      return banks;
     }
 
-    function chooseGeneratorRecipe(bank, avoidFoods, usedMealNames, usedFoodNames) {
-      const allowed = bank.filter(recipe => {
-        const preview = recipeToMeal(recipe);
-        return !mealContainsAvoidedFood(preview, avoidFoods);
-      });
-
-      const pool = allowed.length ? allowed : bank;
-
-      const unused = pool.filter(recipe => !usedMealNames.has(recipe.name));
-      const candidates = unused.length ? unused : pool;
-
-      // Möglichst keine Hauptzutat doppelt am selben Tag.
-      const scored = candidates.map(recipe => {
-        const overlap = recipeFoodNames(recipe)
-          .filter(name => usedFoodNames.has(name))
-          .length;
-
-        return { recipe, overlap };
-      }).sort((a,b) => a.overlap - b.overlap);
-
-      return scored[0].recipe;
+    function recipeTotals(recipe) {
+      return recipe.foods.reduce((total, food) => {
+        total.kcal += Number(food[3] || 0);
+        total.protein += Number(food[4] || 0);
+        return total;
+      }, { kcal: 0, protein: 0 });
     }
 
-    function generateNutritionPlanForWeek() {
+    function buildNutritionPlanForWeek() {
       const requiredFoods = parseRequiredFoods();
       const avoidFoods = parseAvoidFoods();
+      const targetCalories = Number(document.getElementById("generatorCalories").value);
+      const targetProtein = Number(document.getElementById("generatorProtein").value);
+      if (!Number.isFinite(targetCalories) || targetCalories < 1000 ||
+          !Number.isFinite(targetProtein) || targetProtein < 50) {
+        throw new Error("Bitte gültige Kalorien- und Proteinziele eingeben.");
+      }
+
+      const conflicting = requiredFoods.filter(food =>
+        avoidFoods.some(avoid => normalizeFoodKey(food).includes(avoid))
+      );
+      if (conflicting.length) {
+        throw new Error(`${conflicting.join(", ")} steht gleichzeitig bei Pflicht-Lebensmitteln und „Vermeiden“.`);
+      }
+
+      const banks = generatorRecipeBanks();
+      const allowed = Object.fromEntries(nutritionMealSlots.map(slot =>
+        [slot.key, banks[slot.key].filter(recipe =>
+          !recipeContainsAvoidedFood(recipe, avoidFoods))]
+      ));
+      const missingSlot = nutritionMealSlots.find(slot => !allowed[slot.key].length);
+      if (missingSlot) {
+        throw new Error(`Für ${missingSlot.label} bleibt mit „Vermeiden“ kein passendes Gericht übrig.`);
+      }
+
+      const unavailable = requiredFoods.filter(food =>
+        !nutritionMealSlots.some(slot => allowed[slot.key].some(recipe =>
+          recipeHasFood(recipe, normalizeFoodKey(food))))
+      );
+      if (unavailable.length) {
+        throw new Error(`Kein passendes Gericht für: ${unavailable.join(", ")}. Lege dafür zuerst eine eigene Mahlzeit mit Nährwerten an oder ändere die Vorgabe.`);
+      }
+
       const weekDates = nutritionWeekDates();
       const uniquePairStarts = [];
 
@@ -247,67 +370,81 @@
         }
       });
 
-      const usedBySlot = Object.fromEntries(
-        nutritionMealSlots.map(slot => [slot.key, new Set()])
-      );
+      const planned = uniquePairStarts.map(() => Array(nutritionMealSlots.length).fill(null));
+      const usedNames = new Set();
+      const uncovered = new Set(requiredFoods.map(normalizeFoodKey));
 
-      uniquePairStarts.forEach((pairStart, pairIndex) => {
-        const usedFoodsThisDay = new Set();
-
-        nutritionMealSlots.forEach((slot, slotIndex) => {
-          const bank = generatorRecipes[slot.key];
-
-          let recipe = chooseGeneratorRecipe(
-            bank,
-            avoidFoods,
-            usedBySlot[slot.key],
-            usedFoodsThisDay
-          );
-
-          // Wenn morgens Skyr eingeplant ist, soll der Snack nicht noch einmal
-          // Skyr sein. Dann bevorzugen wir bewusst einen Shake.
-          if (slot.key === "snack" && usedFoodsThisDay.has("skyr")) {
-            const shake = bank.find(candidate =>
-              candidate.name === "Protein Shake" &&
-              !mealContainsAvoidedFood(recipeToMeal(candidate), avoidFoods) &&
-              !usedBySlot[slot.key].has(candidate.name)
-            );
-
-            if (shake) recipe = shake;
-          }
-
-          usedBySlot[slot.key].add(recipe.name);
-
-          const meal = recipeToMeal(recipe);
-
-          meal.ingredients = meal.ingredients.filter(item =>
-            !avoidFoods.some(food =>
-              item.name.toLocaleLowerCase("de-DE").includes(food)
-            )
-          );
-
-          // Pflicht-Lebensmittel gleichmäßig verteilen, aber nie wenn sie
-          // gleichzeitig auf "Vermeiden" stehen.
-          requiredFoods.forEach((food, foodIndex) => {
-            const blocked = avoidFoods.some(avoid =>
-              food.toLocaleLowerCase("de-DE").includes(avoid)
-            );
-
-            if (!blocked && (foodIndex % nutritionMealSlots.length) === slotIndex) {
-              addRequiredFoodToMeal(meal, food);
-            }
+      // Reserviere erst Gerichte, die möglichst viele Wunschzutaten gemeinsam abdecken.
+      while (uncovered.size) {
+        let best = null;
+        planned.forEach((day, dayIndex) => nutritionMealSlots.forEach((slot, slotIndex) => {
+          if (day[slotIndex]) return;
+          allowed[slot.key].forEach(recipe => {
+            if (usedNames.has(recipe.name)) return;
+            const counterpart = day[slotIndex === 0 ? 2 : 0];
+            if ((slotIndex === 0 || slotIndex === 2) && counterpart &&
+                recipeHasFood(recipe, "skyr") && recipeHasFood(counterpart, "skyr")) return;
+            const covered = [...uncovered].filter(food => recipeHasFood(recipe, food));
+            if (!covered.length) return;
+            const score = covered.length * 100 - dayIndex * 2 - slotIndex;
+            if (!best || score > best.score) best = { dayIndex, slotIndex, recipe, covered, score };
           });
+        }));
+        if (!best) throw new Error("Diese Wunschzutaten lassen sich nicht gemeinsam auf unterschiedliche Gerichte verteilen.");
+        planned[best.dayIndex][best.slotIndex] = best.recipe;
+        usedNames.add(best.recipe.name);
+        best.covered.forEach(food => uncovered.delete(food));
+      }
 
-          meal.ingredients.forEach(item =>
-            usedFoodsThisDay.add(item.name.toLocaleLowerCase("de-DE"))
-          );
-
-          syncPairMeal(pairStart, slot.key, meal);
-        });
+      // Wähle die übrigen Gerichte so, dass die Tageswerte den Richtwerten nahekommen.
+      planned.forEach((day, dayIndex) => {
+        let best = null;
+        const visit = (slotIndex, chosen, names) => {
+          if (slotIndex === nutritionMealSlots.length) {
+            if (recipeHasFood(chosen[0], "skyr") && recipeHasFood(chosen[2], "skyr")) return;
+            const totals = chosen.reduce((sum, recipe) => {
+              const value = recipeTotals(recipe);
+              sum.kcal += value.kcal; sum.protein += value.protein;
+              return sum;
+            }, { kcal: 0, protein: 0 });
+            const score = Math.abs(totals.kcal - targetCalories) / targetCalories +
+              .7 * Math.abs(totals.protein - targetProtein) / targetProtein +
+              Math.random() * .025;
+            if (!best || score < best.score) best = { recipes: [...chosen], score };
+            return;
+          }
+          const fixed = day[slotIndex];
+          const options = fixed ? [fixed] :
+            allowed[nutritionMealSlots[slotIndex].key]
+              .filter(recipe => !usedNames.has(recipe.name)).slice(0, 12);
+          options.forEach(recipe => {
+            if (names.has(recipe.name)) return;
+            names.add(recipe.name); chosen.push(recipe);
+            visit(slotIndex + 1, chosen, names);
+            chosen.pop(); names.delete(recipe.name);
+          });
+        };
+        visit(0, [], new Set());
+        if (!best) throw new Error("Mit diesen Vorgaben gibt es nicht genug verschiedene Gerichte für die Woche. Bitte „Vermeiden“ anpassen oder eigene Mahlzeiten speichern.");
+        planned[dayIndex] = best.recipes;
+        best.recipes.forEach(recipe => usedNames.add(recipe.name));
       });
 
+      return { weekDates, uniquePairStarts, planned, requiredCount: requiredFoods.length };
+    }
+
+    function applyNutritionPlanForWeek(plan) {
+      plan.uniquePairStarts.forEach((start, dayIndex) =>
+        nutritionMealSlots.forEach((slot, slotIndex) =>
+          syncPairMeal(start, slot.key, recipeToMeal(plan.planned[dayIndex][slotIndex]))
+        )
+      );
+      const dates = new Set(plan.weekDates.map(makeIsoDate));
+      dates.forEach(iso => delete nutritionData.individualDays[iso]);
+      Object.keys(nutritionData.completedMeals).forEach(key => {
+        if (dates.has(key.split("|||")[0])) delete nutritionData.completedMeals[key];
+      });
       saveNutritionData();
-      closeNutritionGenerator();
       renderNutrition();
     }
 
@@ -324,6 +461,17 @@
 
     async function generateNutritionPlanWithFeedback() {
       if (generatingNutritionPlan) return;
+      const errorMessage = document.getElementById("nutritionGeneratorError");
+      errorMessage.hidden = true;
+      let plan;
+      try {
+        plan = buildNutritionPlanForWeek();
+      } catch (error) {
+        errorMessage.textContent = error.message || "Der Plan konnte nicht erstellt werden.";
+        errorMessage.hidden = false;
+        return;
+      }
+
       generatingNutritionPlan = true;
       const progress = document.getElementById("planProgress");
       const createButton = document.getElementById("nutritionGeneratorCreate");
@@ -337,8 +485,11 @@
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       await new Promise(resolve => setTimeout(resolve, 420));
       try {
-        generateNutritionPlanForWeek();
-        setPlanProgress("Essensplan erstellt", "Mahlzeiten und Einkaufsliste sind bereit", "success");
+        applyNutritionPlanForWeek(plan);
+        const detail = plan.requiredCount
+          ? `${plan.requiredCount} Wunsch-Lebensmittel in passenden Gerichten eingeplant`
+          : "Mahlzeiten und Einkaufsliste sind bereit";
+        setPlanProgress("Essensplan erstellt", detail, "success");
         nutritionView.classList.remove("plan-reveal");
         void nutritionView.offsetWidth;
         nutritionView.classList.add("plan-reveal");
@@ -349,6 +500,8 @@
         setPlanProgress("Erstellen fehlgeschlagen", "Bitte versuche es erneut", "error");
         await new Promise(resolve => setTimeout(resolve, 1200));
         openNutritionGenerator();
+        errorMessage.textContent = "Der Plan konnte nicht gespeichert werden. Bitte versuche es erneut.";
+        errorMessage.hidden = false;
       } finally {
         progress.classList.remove("open");
         progress.setAttribute("aria-hidden", "true");
@@ -358,6 +511,7 @@
     }
 
     function openNutritionGenerator() {
+      document.getElementById("nutritionGeneratorError").hidden = true;
       nutritionGeneratorModal.classList.add("open");
       nutritionGeneratorModal.setAttribute("aria-hidden", "false");
     }

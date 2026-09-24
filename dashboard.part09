@@ -314,6 +314,7 @@
     const gymEditorStartDate = document.getElementById("gymEditorStartDate");
     const gymEditorLoop = document.getElementById("gymEditorLoop");
     const gymEditorLoopCount = document.getElementById("gymEditorLoopCount");
+    const gymEditorDeletePlan = document.getElementById("gymEditorDeletePlan");
 
     let gymEditorDraft = null;
     let gymEditorIsNew = false;
@@ -561,6 +562,13 @@
 
       gymEditorName.value = gymEditorDraft.name;
       gymEditorStartDate.value = gymEditorDraft.startDate;
+      gymEditorDeletePlan.hidden = asNew;
+      gymEditorDeletePlan.disabled = gymData.profiles.length <= 1;
+      gymEditorDeletePlan.title = gymEditorDeletePlan.disabled
+        ? "Der letzte Trainingsplan kann nicht gelöscht werden"
+        : "Löscht diesen Plan mit seinen Trainingsdaten";
+      gymEditorDeletePlan.dataset.confirm = "";
+      gymEditorDeletePlan.textContent = "Plan löschen";
       renderGymEditorLoop();
 
       gymEditorModal.classList.add("open");
@@ -592,6 +600,30 @@
       }
 
       ensureProfileWorkoutData(activeGymProfile());
+      saveGymData();
+      closeGymEditor();
+      renderGym();
+      syncGymDayWidth();
+      requestAnimationFrame(() => centerGymCalendarOnToday(false));
+    }
+
+    function deleteGymProfile() {
+      if (gymEditorIsNew || !gymEditorDraft || gymData.profiles.length <= 1) return;
+      if (gymEditorDeletePlan.dataset.confirm !== gymEditorDraft.id) {
+        const profileId = gymEditorDraft.id;
+        gymEditorDeletePlan.dataset.confirm = profileId;
+        gymEditorDeletePlan.textContent = "Wirklich löschen?";
+        setTimeout(() => {
+          if (gymEditorDeletePlan.dataset.confirm !== profileId) return;
+          gymEditorDeletePlan.dataset.confirm = "";
+          gymEditorDeletePlan.textContent = "Plan löschen";
+        }, 5000);
+        return;
+      }
+
+      gymData.profiles = gymData.profiles.filter(profile => profile.id !== gymEditorDraft.id);
+      gymData.activeProfileId = gymData.profiles[0].id;
+      selectedGymDate = new Date(todayForGym);
       saveGymData();
       closeGymEditor();
       renderGym();
@@ -898,6 +930,7 @@
     document.getElementById("gymEditorClose").addEventListener("click", closeGymEditor);
     document.getElementById("gymEditorCancel").addEventListener("click", closeGymEditor);
     document.getElementById("gymEditorSave").addEventListener("click", saveGymEditor);
+    gymEditorDeletePlan.addEventListener("click", deleteGymProfile);
 
     document.getElementById("gymEditorAddDay").addEventListener("click", () => {
       if (!gymEditorDraft) return;

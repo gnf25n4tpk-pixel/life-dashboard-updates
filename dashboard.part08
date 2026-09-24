@@ -491,14 +491,14 @@
         </div>
 
         <div class="generator-intro">
-          Für Mo/Di, Mi/Do und Fr/Sa werden gemeinsame Meal-Prep-Pläne erstellt. Sonntag bekommt einen eigenen Plan. Pflicht-Lebensmittel werden automatisch eingebaut.
+          Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Gewünschte Lebensmittel werden über passende Gerichte eingeplant. Bestehende Mahlzeiten dieser Woche werden ersetzt.
         </div>
 
         <div class="generator-food-grid">
           <label class="generator-field">
             <span>Pflicht-Lebensmittel</span>
             <textarea id="generatorRequiredFoods" rows="5" placeholder="z. B.&#10;Hähnchen&#10;Reis&#10;Brokkoli&#10;Skyr"></textarea>
-            <small>Diese Lebensmittel sollen im Plan vorkommen.</small>
+            <small>Nur wenn sie in einem hinterlegten oder von dir gespeicherten Gericht vorkommen.</small>
           </label>
 
           <label class="generator-field">
@@ -519,6 +519,9 @@
             <input type="number" id="generatorProtein" min="50" step="5" value="180" />
           </label>
         </div>
+
+        <p class="generator-target-hint">Kalorien und Protein sind Richtwerte. Die App wählt passende Gerichte aus, ohne Nährwerte zu erfinden.</p>
+        <p class="generator-error" id="nutritionGeneratorError" role="alert" hidden></p>
 
         <div class="generator-actions">
           <button class="nutrition-secondary-button" id="nutritionGeneratorCancel">Abbrechen</button>
@@ -617,8 +620,11 @@
         <button class="gym-editor-add" id="gymEditorAddDay">＋ Tag hinzufügen</button>
 
         <div class="gym-editor-actions">
-          <button class="gym-secondary-button" id="gymEditorCancel">Abbrechen</button>
-          <button class="gym-primary-button" id="gymEditorSave">Speichern</button>
+          <button class="gym-editor-delete-plan" id="gymEditorDeletePlan" type="button">Plan löschen</button>
+          <div class="gym-editor-actions-right">
+            <button class="gym-secondary-button" id="gymEditorCancel">Abbrechen</button>
+            <button class="gym-primary-button" id="gymEditorSave">Speichern</button>
+          </div>
         </div>
       </div>
     </div>

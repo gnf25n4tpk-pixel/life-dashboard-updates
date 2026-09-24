@@ -259,11 +259,17 @@
     }
 
     .gym-editor-actions {
-      justify-content: flex-end;
+      justify-content: space-between;
       margin-top: 22px;
       padding-top: 18px;
       border-top: 1px solid rgba(30,30,40,.07);
     }
+
+    .gym-editor-actions-right { display: flex; align-items: center; gap: 10px; }
+    .gym-editor-delete-plan { border: 0; background: transparent; color: #a45d5a; padding: 10px 2px; font: inherit; font-weight: 600; cursor: pointer; }
+    .gym-editor-delete-plan:hover { color: #843f3c; }
+    .gym-editor-delete-plan:disabled { color: #aaa6a0; cursor: not-allowed; }
+    .gym-editor-delete-plan[hidden] { display: none; }
 
     @media (max-width: 620px) {
       .gym-editor-fields {

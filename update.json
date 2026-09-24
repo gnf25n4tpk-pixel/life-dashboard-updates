@@ -1,7 +1,7 @@
 {
-  "dashboardVersion": "0.17.2",
+  "dashboardVersion": "0.18.0",
   "minimumNativeVersion": "0.11.0",
-  "sha256": "830e410916be34dce3ab9758a552a0b275a95a482ff5e8a386e2e83036292c8b",
+  "sha256": "bbb10e02ff6beb560bd258944ccc10c19be5e9ef06f4b7b2cfc9ffeb290944af",
   "resources": [
     {
       "kind": "appIconPNG",
@@ -10,7 +10,7 @@
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "V17.2: Die Dashboard-Startanimation erscheint bei jedem neuen App-Start. Essensplan-Feedback und das reparierte App-Icon bleiben enthalten.",
+  "releaseNotes": "V18: Trainingspläne löschen; Essenspläne mit passenden Wunschzutaten, strikt beachteten Ausschlüssen, Kalorien- und Proteinrichtwerten, zusätzlichen Gerichten und eigenen Mahlzeiten.",
   "nativeDownloadURL": "",
   "dashboardParts": [
     "dashboard.part01",
