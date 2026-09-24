@@ -336,5 +336,265 @@
     setInterval(updateClock,1000);
     setInterval(checkUpcomingNotifications,60000);
   </script>
+<style>
+
+/* ===== V16 Apple Cream ===== */
+:root {
+  --apple-cream: #f3f0e9;
+  --apple-surface: rgba(255,254,250,.84);
+  --apple-surface-strong: #fffdf8;
+  --apple-surface-soft: #ece8df;
+  --apple-ink: #1d1d1f;
+  --apple-muted: #7b7974;
+  --apple-line: rgba(61,58,51,.075);
+  --apple-shadow: 0 12px 34px rgba(57,52,43,.055);
+  --apple-shadow-soft: 0 5px 18px rgba(57,52,43,.04);
+}
+body:not(.dark-mode) {
+  --bg: var(--apple-cream);
+  --panel: var(--apple-surface);
+  --panel-strong: var(--apple-surface-strong);
+  --text: var(--apple-ink);
+  --muted: var(--apple-muted);
+  --line: var(--apple-line);
+  --shadow: var(--apple-shadow);
+  --shadow-soft: var(--apple-shadow-soft);
+  background: var(--apple-cream) !important;
+  color: var(--apple-ink);
+}
+body:not(.dark-mode).finance-active { background: var(--apple-cream) !important; }
+.brand-dot { display: none !important; }
+.brand { gap: 0 !important; font-weight: 680; letter-spacing: -.025em; }
+body:not(.dark-mode) .app-shell { width: min(1200px, calc(100% - 42px)); }
+body:not(.dark-mode) .topbar,
+body:not(.dark-mode).finance-active .topbar {
+  background: rgba(250,248,242,.78) !important;
+  border: 1px solid rgba(255,255,255,.72) !important;
+  box-shadow: 0 8px 24px rgba(54,50,43,.055) !important;
+  backdrop-filter: blur(28px) saturate(1.05);
+  -webkit-backdrop-filter: blur(28px) saturate(1.05);
+}
+body:not(.dark-mode) .tabs {
+  background: rgba(229,226,218,.62) !important;
+  border-color: transparent !important;
+  padding: 5px;
+}
+body:not(.dark-mode) .tab { color: #6f6d68; }
+body:not(.dark-mode) .tab:hover { color: #1d1d1f; background: rgba(255,255,255,.35); }
+body:not(.dark-mode) .tab.active,
+body:not(.dark-mode).finance-active .tab.active {
+  background: rgba(255,254,250,.92) !important;
+  color: #1d1d1f !important;
+  box-shadow: 0 3px 11px rgba(45,41,34,.055) !important;
+}
+body:not(.dark-mode) .topbar-action-button,
+body:not(.dark-mode) .topbar-settings-button {
+  background: transparent !important;
+  color: #5f5d58 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+body:not(.dark-mode) .topbar-action-button:hover,
+body:not(.dark-mode) .topbar-settings-button:hover {
+  background: rgba(255,255,255,.46) !important;
+}
+body:not(.dark-mode) .home-hero {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+body:not(.dark-mode) .home-hero h1,
+body:not(.dark-mode) .finance-heading h1,
+body:not(.dark-mode) .gym-heading h1,
+body:not(.dark-mode) .nutrition-heading h1,
+body:not(.dark-mode) .calendar-heading h1 { color: #1d1d1f !important; }
+body:not(.dark-mode) .eyebrow,
+body:not(.dark-mode) .date-line,
+body:not(.dark-mode) .home-card-kicker,
+body:not(.dark-mode) .panel-kicker,
+body:not(.dark-mode) .gym-kicker,
+body:not(.dark-mode) .nutrition-kicker,
+body:not(.dark-mode) .calendar-kicker,
+body:not(.dark-mode) .finance-eyebrow,
+body:not(.dark-mode) .gym-eyebrow,
+body:not(.dark-mode) .nutrition-eyebrow,
+body:not(.dark-mode) .calendar-eyebrow { color: #84817b !important; }
+body:not(.dark-mode) :is(
+  .home-calendar-card,.home-summary-card,.home-music-card,.home-organizer-card,
+  .finance-shell,.gym-shell,.nutrition-shell,.calendar-shell,.content-card,
+  .balance-card,.money-panel,.gym-calendar-card,.gym-workout-card,.gym-panel,
+  .nutrition-day-rail,.nutrition-day-summary,.shopping-panel,.nutrition-meal-card,
+  .nutrition-today-card,.nutrition-week-section,.calendar-month-panel,.calendar-agenda-panel,
+  .calendar-apple-status,.dashboard-stat-strip > div,.settings-card,.backup-card,
+  .home-modal-card,.modal-card,.gym-editor-card,.exercise-editor-card,.meal-editor-card,
+  .nutrition-generator-card,.exercise-history
+) {
+  background: var(--apple-surface) !important;
+  background-image: none !important;
+  border-color: var(--apple-line) !important;
+  box-shadow: var(--apple-shadow-soft) !important;
+}
+body:not(.dark-mode) :is(.home-calendar-card,.home-summary-card,.home-music-card,.home-organizer-card) {
+  border-radius: 26px;
+}
+body:not(.dark-mode) :is(.finance-shell,.gym-shell,.nutrition-shell,.calendar-shell) {
+  background: rgba(250,248,243,.64) !important;
+  border: 1px solid rgba(255,255,255,.56) !important;
+  box-shadow: 0 14px 38px rgba(57,52,43,.045) !important;
+}
+body:not(.dark-mode) .home-summary-card::before,
+body:not(.dark-mode) .home-music-card::before,
+body:not(.dark-mode) .home-organizer-card::before,
+body:not(.dark-mode) .finance-shell::before,
+body:not(.dark-mode) .gym-shell::before,
+body:not(.dark-mode) .nutrition-shell::before,
+body:not(.dark-mode) .calendar-shell::before {
+  display: none !important;
+  content: none !important;
+}
+body:not(.dark-mode) .home-summary-card:hover,
+body:not(.dark-mode) .home-music-card:hover,
+body:not(.dark-mode) .home-organizer-card:hover,
+body:not(.dark-mode) .home-calendar-card:hover {
+  background: rgba(255,254,250,.96) !important;
+  transform: translateY(-1px) !important;
+  filter: none !important;
+  box-shadow: 0 12px 30px rgba(57,52,43,.065) !important;
+}
+body:not(.dark-mode) :is(
+  .home-day-card,.home-mini-row,.home-agenda-row,.home-todo-item,.home-note,.home-todo-add input,
+  .money-row,.income-panel .money-row,.calendar-day-cell,.calendar-agenda-item,.shopping-item,
+  .ingredient-editor-card,.exercise-set-row,.global-search-input,.global-search-result,
+  .quick-add-choice-grid button,.settings-card,.backup-card
+) {
+  background: rgba(236,232,223,.48) !important;
+  border-color: rgba(61,58,51,.055) !important;
+  box-shadow: none !important;
+}
+body:not(.dark-mode) :is(.home-day-card:hover,.calendar-day-cell:hover,.global-search-result:hover,.quick-add-choice-grid button:hover) {
+  background: rgba(245,242,235,.86) !important;
+}
+body:not(.dark-mode) :is(.home-day-card.selected,.calendar-day-cell.selected,.gym-day-card.selected) {
+  background: #e8e4db !important;
+  box-shadow: inset 0 0 0 1px rgba(61,58,51,.08) !important;
+}
+body:not(.dark-mode) .home-today-badge,
+body:not(.dark-mode) .day.today {
+  background: #1d1d1f !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+body:not(.dark-mode) :is(
+  .soft-button,.edit-balance,.home-small-button,.gym-secondary-button,.nutrition-secondary-button,
+  .calendar-secondary-button,.calendar-today-button,.add-button,.icon-button,
+  .shopping-clear,.calendar-month-navigation button,.music-controls button
+) {
+  background: rgba(235,231,222,.72) !important;
+  color: #4d4b47 !important;
+  border-color: rgba(61,58,51,.06) !important;
+  box-shadow: none !important;
+}
+body:not(.dark-mode) :is(
+  .gym-primary-button,.nutrition-primary-button,.calendar-primary-button,.gym-add-exercise,
+  .nutrition-add-meal,.meal-editor-save,.generator-save,.exercise-add-set,.exercise-editor-save,
+  .home-save-button,.quick-add button,.music-controls .music-play-button
+) {
+  background: #1d1d1f !important;
+  color: #fff !important;
+  border-color: #1d1d1f !important;
+  box-shadow: none !important;
+}
+body:not(.dark-mode) .music-connect-button {
+  background: #e9e5dc !important;
+  color: #504d48 !important;
+  box-shadow: none !important;
+}
+body:not(.dark-mode) .main-balance,
+body:not(.dark-mode) .income-panel,
+body:not(.dark-mode) .money-panel {
+  background: var(--apple-surface) !important;
+  border-color: var(--apple-line) !important;
+}
+body:not(.dark-mode) .balance-card > span:first-child,
+body:not(.dark-mode) .card-label-row > span,
+body:not(.dark-mode) .panel-kicker,
+body:not(.dark-mode) .money-row .name,
+body:not(.dark-mode) .panel-total { color: #77736d !important; }
+body:not(.dark-mode) .main-balance strong,
+body:not(.dark-mode) .panel-total strong { color: #262522 !important; }
+body:not(.dark-mode) .edit-entry { background: rgba(255,255,255,.46) !important; color: #64615b !important; }
+body:not(.dark-mode) .delete-entry { color: #a26262 !important; }
+body:not(.dark-mode) :is(.finance-eyebrow,.gym-eyebrow,.gym-kicker,.nutrition-eyebrow,.nutrition-kicker,.calendar-kicker) {
+  color: #86827b !important;
+}
+body:not(.dark-mode) .calendar-source,
+body:not(.dark-mode) .meal-mini-macro,
+body:not(.dark-mode) .today-macro,
+body:not(.dark-mode) .ingredient-field input {
+  border-color: rgba(61,58,51,.05) !important;
+  box-shadow: none !important;
+}
+body:not(.dark-mode) .calendar-source.personal,
+body:not(.dark-mode) .calendar-source.apple,
+body:not(.dark-mode) .calendar-source.gym,
+body:not(.dark-mode) .calendar-source.nutrition,
+body:not(.dark-mode) .meal-mini-macro.protein,
+body:not(.dark-mode) .meal-mini-macro.carbs,
+body:not(.dark-mode) .meal-mini-macro.fat,
+body:not(.dark-mode) .today-macro.protein,
+body:not(.dark-mode) .today-macro.carbs,
+body:not(.dark-mode) .today-macro.fat {
+  background: #efebe3 !important;
+  color: #625f59 !important;
+}
+body:not(.dark-mode) .nutrition-day-button.selected {
+  background: #1d1d1f !important;
+  color: #fff !important;
+}
+body:not(.dark-mode) .week-food-day[class*="pair-"] { border-top-color: transparent !important; }
+body:not(.dark-mode) :is(input:not([type="checkbox"]),select,textarea,.modal-field,.home-note) {
+  background: rgba(255,254,250,.82) !important;
+  border-color: rgba(61,58,51,.08) !important;
+  color: #2f2d2a !important;
+  box-shadow: inset 0 0 0 .5px rgba(255,255,255,.56) !important;
+}
+body:not(.dark-mode) input:focus,
+body:not(.dark-mode) select:focus,
+body:not(.dark-mode) textarea:focus {
+  border-color: rgba(61,58,51,.18) !important;
+  outline: none !important;
+}
+body:not(.dark-mode) .music-artwork {
+  background: #e9e5dc !important;
+  color: #77736d !important;
+  box-shadow: none !important;
+}
+body:not(.dark-mode) .home-summary-card .home-arrow {
+  background: transparent !important;
+  color: #696660 !important;
+  box-shadow: inset 0 0 0 1px rgba(61,58,51,.065) !important;
+}
+body:not(.dark-mode) .music-status-dot.connected {
+  background: #66816d !important;
+  box-shadow: none !important;
+}
+@media (prefers-color-scheme: dark) {
+  body:not(.dark-mode) {
+    background: var(--apple-cream) !important;
+    color: var(--apple-ink) !important;
+  }
+  body:not(.dark-mode) .home-hero { background: transparent !important; }
+  body:not(.dark-mode) .home-calendar-card,
+  body:not(.dark-mode) .home-summary-card,
+  body:not(.dark-mode) .home-music-card,
+  body:not(.dark-mode) .home-organizer-card {
+    background: var(--apple-surface) !important;
+    border-color: var(--apple-line) !important;
+    box-shadow: var(--apple-shadow-soft) !important;
+    color: var(--apple-ink) !important;
+  }
+}
+
+</style>
 </body>
 </html>
