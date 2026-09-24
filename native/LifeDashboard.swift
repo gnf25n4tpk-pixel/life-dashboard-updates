@@ -351,7 +351,6 @@ final class LifeDashboardDelegate: NSObject,
             }
             var query = aiKeychainQuery()
             query[kSecValueData as String] = Data(key.utf8)
-            query[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
             let status = SecItemAdd(query as CFDictionary, nil)
             if status == errSecDuplicateItem {
                 let update: [String: Any] = [kSecValueData as String: Data(key.utf8)]

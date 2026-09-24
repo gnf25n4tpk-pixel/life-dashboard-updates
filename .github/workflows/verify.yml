@@ -20,10 +20,12 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Typecheck native app
+      - name: Compile native app
         run: |
           sdk="$(xcrun --sdk macosx --show-sdk-path)"
           xcrun --sdk macosx swiftc -swift-version 5 -sdk "$sdk" \
-            -target "$(uname -m)-apple-macosx13.0" -typecheck \
+            -target "$(uname -m)-apple-macosx13.0" -O \
             -framework Cocoa -framework WebKit -framework EventKit \
-            -framework UserNotifications -framework Security native/LifeDashboard.swift
+            -framework UserNotifications -framework Security native/LifeDashboard.swift \
+            -o "$RUNNER_TEMP/LifeDashboard"
+          test -s "$RUNNER_TEMP/LifeDashboard"
