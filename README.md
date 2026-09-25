@@ -33,7 +33,7 @@ Die App prüft jede heruntergeladene Datei per SHA-256, bevor sie in das App-Bun
 
 Änderungen am nativen Swift-Code können weiterhin eine neue Desktop-Basis erfordern. Das wird über `minimumNativeVersion` erkannt.
 
-Aktuelle native Basis: **0.13.0**
+Aktuelle native Basis: **0.14.0**
 Aktuelle Dashboard-Basis: **0.19.2**
 
 ## KI für Ernährungspläne
@@ -42,4 +42,6 @@ V12 ergänzt die native OpenAI-Anbindung. In **Einstellungen → KI für Ernähr
 
 V13 liest den API-Schlüssel erst, wenn ein KI-Plan angefordert wird. Beim App-Start und beim Öffnen der Einstellungen findet kein Schlüsselbundzugriff statt. Der nicht geheime Status wird lokal gespeichert; bereits in V12 gespeicherte Schlüssel werden beim ersten KI-Plan erkannt.
 
-Desktop-Update: [Install-Life-Dashboard-Desktop-v13.zip](Install-Life-Dashboard-Desktop-v13.zip) herunterladen, entpacken und die `.command`-Datei ausführen. Die bestehende Dashboard-Datensicherung bleibt verfügbar.
+V14 wertet den Fehlercode der OpenAI-API aus und nennt bei HTTP 429 den konkreten Grund, sofern OpenAI ihn angibt: fehlendes Guthaben, Organisations- oder Projektausgabenlimit, Organisationsnutzungslimit oder kurzfristiges Anfragelimit. Fehlende oder unbekannte Codes werden nicht als Guthabenfehler ausgegeben.
+
+Desktop-Update: [Install-Life-Dashboard-Desktop-v14.zip](Install-Life-Dashboard-Desktop-v14.zip) herunterladen, entpacken und die `.command`-Datei ausführen. Die bestehende Dashboard-Datensicherung bleibt verfügbar.

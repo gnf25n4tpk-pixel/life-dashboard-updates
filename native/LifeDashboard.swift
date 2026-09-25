@@ -22,7 +22,7 @@ final class LifeDashboardDelegate: NSObject,
     private var updateTimer: Timer?
     private var aiRequestInFlight = false
 
-    private let nativeVersion = "0.13.0"
+    private let nativeVersion = "0.14.0"
     private let bundledDashboardVersion = "0.19.2"
     private let aiKeychainService = "com.lifedashboard.desktop.openai"
     private let aiKeychainAccount = "nutrition-plan"
@@ -518,10 +518,35 @@ final class LifeDashboardDelegate: NSObject,
             return .failure(aiError("OpenAI hat keine Antwort zurückgegeben."))
         }
         guard (200...299).contains(http.statusCode) else {
+            let apiError = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+            let details = apiError?["error"] as? [String: Any]
+            let code = details?["code"] as? String ?? ""
+            let type = details?["type"] as? String ?? ""
             let message: String
             switch http.statusCode {
             case 401, 403: message = "Der API-Schlüssel wurde abgelehnt. Bitte Schlüssel und Projektberechtigung prüfen."
-            case 429: message = "API-Limit oder Guthaben erreicht. Bitte dein OpenAI-Projekt prüfen."
+            case 429:
+                switch code {
+                case "credit_balance_exhausted":
+                    message = "Das OpenAI-API-Guthaben ist aufgebraucht. Prüfe Abrechnung und Guthaben in der API-Plattform."
+                case "organization_spend_limit_exceeded":
+                    message = "Das Ausgabenlimit deiner OpenAI-API-Organisation ist erreicht. Prüfe das Organisationslimit in der API-Plattform."
+                case "project_spend_limit_exceeded":
+                    message = "Das Ausgabenlimit dieses OpenAI-API-Projekts ist erreicht. Prüfe das Projektlimit in der API-Plattform."
+                case "organization_usage_limit_exceeded":
+                    message = "Das Nutzungslimit deiner OpenAI-API-Organisation ist erreicht. Prüfe die Limits in der API-Plattform."
+                default:
+                    if type == "insufficient_quota" || code == "insufficient_quota" {
+                        message = "Für diesen OpenAI-API-Zugang ist kein Kontingent verfügbar. Prüfe Guthaben und Abrechnung in der API-Plattform."
+                    } else if type == "rate_limit_error" || code == "rate_limit_exceeded" {
+                        message = "Das kurzfristige OpenAI-Anfragelimit ist erreicht. Warte kurz und versuche es erneut; prüfe bei Bedarf die API-Ratenlimits."
+                    } else {
+                        let safeCode = code.count <= 64 && code.allSatisfy {
+                            $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "_")
+                        } ? " (\(code))" : ""
+                        message = "OpenAI hat die Anfrage begrenzt (HTTP 429\(safeCode)). Prüfe Guthaben, Projektlimits und Ratenlimits in der API-Plattform."
+                    }
+                }
             default: message = "OpenAI konnte den Plan nicht erstellen (HTTP \(http.statusCode))."
             }
             return .failure(aiError(message))

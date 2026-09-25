@@ -1,6 +1,6 @@
 {
   "dashboardVersion": "0.19.2",
-  "minimumNativeVersion": "0.13.0",
+  "minimumNativeVersion": "0.14.0",
   "sha256": "7f30fca9e6ac45a5fb3bfd2225216c2cc2d74304f354a623ab2059e2b4483522",
   "resources": [
     {
@@ -10,8 +10,8 @@
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "V19.2 / Desktop V13: Keine Schlüsselbund-Abfrage mehr beim App-Start; der OpenAI-Schlüssel wird erst für einen KI-Plan gelesen. Die Einstellungen erklären, wann macOS nach dem Mac-Anmeldepasswort fragt.",
-  "nativeDownloadURL": "https://raw.githubusercontent.com/gnf25n4tpk-pixel/life-dashboard-updates/main/Install-Life-Dashboard-Desktop-v13.zip",
+  "releaseNotes": "Desktop V14: OpenAI-API-Fehler nennen jetzt, ob Guthaben, Ausgabenlimit, Nutzungslimit oder kurzfristiges Anfragelimit betroffen ist. Das Dashboard bleibt bei V19.2.",
+  "nativeDownloadURL": "https://raw.githubusercontent.com/gnf25n4tpk-pixel/life-dashboard-updates/main/Install-Life-Dashboard-Desktop-v14.zip",
   "dashboardParts": [
     "dashboard.part01",
     "dashboard.part02",

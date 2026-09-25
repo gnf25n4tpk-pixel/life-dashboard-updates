@@ -23,7 +23,7 @@ trap finish_with_error ERR
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  Life Dashboard Desktop V13"
+echo "  Life Dashboard Desktop V14"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -66,8 +66,8 @@ cat > "$BUILD_APP/Contents/Info.plist" <<'__PLIST__'
 <key>CFBundleExecutable</key><string>LifeDashboard</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleSignature</key><string>????</string>
-<key>CFBundleShortVersionString</key><string>0.13</string>
-<key>CFBundleVersion</key><string>13</string>
+<key>CFBundleShortVersionString</key><string>0.14</string>
+<key>CFBundleVersion</key><string>14</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSHighResolutionCapable</key><true/>
@@ -115,7 +115,7 @@ echo "6/6 Fertigstellen …"
 touch "$FINAL_APP"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✓ Life Dashboard Desktop V13 ist fertig"
+echo "✓ Life Dashboard Desktop V14 ist fertig"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "Deine Daten und der OpenAI-Schlüssel bleiben beim Update erhalten."
