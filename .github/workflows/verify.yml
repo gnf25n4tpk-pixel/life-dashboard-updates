@@ -13,8 +13,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --test tests/nutrition-ai-plan.cjs
-      - run: python3 native/build_installer.py && bash -n Install-Life-Dashboard-Desktop-v12.command
-      - run: unzip -t Install-Life-Dashboard-Desktop-v12.zip
+      - run: python3 native/build_installer.py && bash -n Install-Life-Dashboard-Desktop-v13.command
+      - run: unzip -t Install-Life-Dashboard-Desktop-v13.zip
 
   macos:
     runs-on: macos-15

@@ -483,7 +483,7 @@
         message.includes("konnte") || message.includes("benötigt");
       status.dataset.state = failed ? "error" : saved ? "success" : "idle";
       status.textContent = saved ? "✓ " + message : message;
-      document.getElementById("openAIKeyDelete").disabled = !nativeAIConfigured;
+      document.getElementById("openAIKeyDelete").disabled = !hasNativeAIBridge();
     };
 
     window.nativeAIPlanResult = function(result) {
@@ -498,9 +498,6 @@
     function collectAIPlanPreferences() {
       if (!hasNativeAIBridge()) {
         throw new Error("Für KI-Pläne benötigst du die aktuelle Desktop-App. Wähle sonst „Ohne KI“.");
-      }
-      if (!nativeAIConfigured) {
-        throw new Error("Bitte zuerst deinen OpenAI-API-Schlüssel in den Einstellungen speichern.");
       }
       const required = parseRequiredFoods();
       const avoided = document.getElementById("generatorAvoidFoods").value
@@ -939,7 +936,7 @@
         window.webkit.messageHandlers.nutritionAI.postMessage({ action: "deleteKey" });
       }
     });
-    document.getElementById("openAIKeyDelete").disabled = true;
+    document.getElementById("openAIKeyDelete").disabled = !hasNativeAIBridge();
 
     nutritionGeneratorModal.addEventListener("click", event => {
       if (event.target === nutritionGeneratorModal) closeNutritionGenerator();

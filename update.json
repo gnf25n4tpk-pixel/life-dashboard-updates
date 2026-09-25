@@ -1,7 +1,7 @@
 {
-  "dashboardVersion": "0.19.1",
-  "minimumNativeVersion": "0.12.0",
-  "sha256": "d72e0dadbd594e22ea827b26996e25d6d9aecc1103ad346cb3ec112e402e4a49",
+  "dashboardVersion": "0.19.2",
+  "minimumNativeVersion": "0.13.0",
+  "sha256": "7f30fca9e6ac45a5fb3bfd2225216c2cc2d74304f354a623ab2059e2b4483522",
   "resources": [
     {
       "kind": "appIconPNG",
@@ -10,8 +10,8 @@
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "V19.1: Einstellungsfenster scrollt selbst, der Hintergrund bleibt stehen. Das Speichern des OpenAI-Schlüssels zeigt jetzt eine deutliche Bestätigung oder Fehlermeldung direkt am Eingabefeld.",
-  "nativeDownloadURL": "https://raw.githubusercontent.com/gnf25n4tpk-pixel/life-dashboard-updates/main/Install-Life-Dashboard-Desktop-v12.zip",
+  "releaseNotes": "V19.2 / Desktop V13: Keine Schlüsselbund-Abfrage mehr beim App-Start; der OpenAI-Schlüssel wird erst für einen KI-Plan gelesen. Die Einstellungen erklären, wann macOS nach dem Mac-Anmeldepasswort fragt.",
+  "nativeDownloadURL": "https://raw.githubusercontent.com/gnf25n4tpk-pixel/life-dashboard-updates/main/Install-Life-Dashboard-Desktop-v13.zip",
   "dashboardParts": [
     "dashboard.part01",
     "dashboard.part02",

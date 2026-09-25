@@ -22,10 +22,11 @@ final class LifeDashboardDelegate: NSObject,
     private var updateTimer: Timer?
     private var aiRequestInFlight = false
 
-    private let nativeVersion = "0.12.0"
-    private let bundledDashboardVersion = "0.19.1"
+    private let nativeVersion = "0.13.0"
+    private let bundledDashboardVersion = "0.19.2"
     private let aiKeychainService = "com.lifedashboard.desktop.openai"
     private let aiKeychainAccount = "nutrition-plan"
+    private let aiKeyConfiguredKey = "LifeDashboardOpenAIKeyConfigured"
 
     private let updateFeedKey = "LifeDashboardUpdateFeedURL"
     private let autoUpdateKey = "LifeDashboardAutoUpdates"
@@ -112,7 +113,6 @@ final class LifeDashboardDelegate: NSObject,
             self?.startAutoBackupTimer()
             self?.startUpdateTimer()
             self?.pushUpdateState(status: "idle", message: nil)
-            self?.pushAIState()
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 self?.checkForUpdates(manual: false)
@@ -321,12 +321,16 @@ final class LifeDashboardDelegate: NSObject,
     }
 
     private func pushAIState(message: String? = nil) {
-        let configured = readAIKey() != nil
+        // Only the presence flag is read here. The secret is accessed when a plan is requested.
+        let configured = UserDefaults.standard.bool(forKey: aiKeyConfiguredKey)
+        let previouslyChecked = UserDefaults.standard.object(forKey: aiKeyConfiguredKey) != nil
         sendJSONObject(function: "window.nativeAIState", object: [
             "configured": configured,
             "message": message ?? (configured
                 ? "API-Schlüssel im macOS-Schlüsselbund gespeichert"
-                : "Noch kein API-Schlüssel gespeichert")
+                : previouslyChecked
+                    ? "Noch kein API-Schlüssel gespeichert"
+                    : "Schlüsselstatus wird beim ersten KI-Plan geprüft")
         ])
     }
 
@@ -355,10 +359,16 @@ final class LifeDashboardDelegate: NSObject,
             if status == errSecDuplicateItem {
                 let update: [String: Any] = [kSecValueData as String: Data(key.utf8)]
                 let updated = SecItemUpdate(aiKeychainQuery() as CFDictionary, update as CFDictionary)
+                if updated == errSecSuccess {
+                    UserDefaults.standard.set(true, forKey: aiKeyConfiguredKey)
+                }
                 pushAIState(message: updated == errSecSuccess
                     ? "API-Schlüssel im macOS-Schlüsselbund gespeichert"
                     : "Schlüsselbund konnte den API-Schlüssel nicht speichern (\(updated)).")
             } else {
+                if status == errSecSuccess {
+                    UserDefaults.standard.set(true, forKey: aiKeyConfiguredKey)
+                }
                 pushAIState(message: status == errSecSuccess
                     ? "API-Schlüssel im macOS-Schlüsselbund gespeichert"
                     : "Schlüsselbund konnte den API-Schlüssel nicht speichern (\(status)).")
@@ -366,6 +376,9 @@ final class LifeDashboardDelegate: NSObject,
 
         case "deleteKey":
             let status = SecItemDelete(aiKeychainQuery() as CFDictionary)
+            if status == errSecSuccess || status == errSecItemNotFound {
+                UserDefaults.standard.set(false, forKey: aiKeyConfiguredKey)
+            }
             pushAIState(message: status == errSecSuccess || status == errSecItemNotFound
                 ? "API-Schlüssel entfernt"
                 : "Schlüsselbund konnte den API-Schlüssel nicht entfernen (\(status)).")
@@ -378,8 +391,14 @@ final class LifeDashboardDelegate: NSObject,
                 return
             }
             guard let key = readAIKey(), !key.isEmpty else {
+                UserDefaults.standard.set(false, forKey: aiKeyConfiguredKey)
+                pushAIState()
                 sendAIResult(id: id, error: "Hinterlege zuerst deinen API-Schlüssel in den Einstellungen.")
                 return
+            }
+            if !UserDefaults.standard.bool(forKey: aiKeyConfiguredKey) {
+                UserDefaults.standard.set(true, forKey: aiKeyConfiguredKey)
+                pushAIState()
             }
             guard let preferences = body["preferences"] as? [String: Any],
                   let calories = preferences["calories"] as? Int,

@@ -33,11 +33,13 @@ Die App prüft jede heruntergeladene Datei per SHA-256, bevor sie in das App-Bun
 
 Änderungen am nativen Swift-Code können weiterhin eine neue Desktop-Basis erfordern. Das wird über `minimumNativeVersion` erkannt.
 
-Aktuelle native Basis: **0.12.0**
-Aktuelle Dashboard-Basis: **0.19.1**
+Aktuelle native Basis: **0.13.0**
+Aktuelle Dashboard-Basis: **0.19.2**
 
 ## KI für Ernährungspläne
 
 V12 ergänzt die native OpenAI-Anbindung. In **Einstellungen → KI für Ernährungspläne** lässt sich ein eigener OpenAI-API-Schlüssel im macOS-Schlüsselbund hinterlegen oder entfernen. Im Generator kann zwischen **Mit KI** (neue Gerichte) und **Ohne KI** (vorhandene Gerichte) gewählt werden. Die KI erhält nur Ernährungswünsche und kürzlich geplante Gerichtsnamen. Der API-Aufruf erfolgt in Swift über die Responses API mit `store: false` und strukturiertem JSON; der Schlüssel liegt weder in den Dashboard-Dateien noch im Repository. Eine API-Nutzung kann Kosten verursachen. Generierte Nährwerte sind Schätzungen.
 
-Desktop-Update: [Install-Life-Dashboard-Desktop-v12.zip](Install-Life-Dashboard-Desktop-v12.zip) herunterladen, entpacken und die `.command`-Datei ausführen. Die bestehende Dashboard-Datensicherung bleibt verfügbar.
+V13 liest den API-Schlüssel erst, wenn ein KI-Plan angefordert wird. Beim App-Start und beim Öffnen der Einstellungen findet kein Schlüsselbundzugriff statt. Der nicht geheime Status wird lokal gespeichert; bereits in V12 gespeicherte Schlüssel werden beim ersten KI-Plan erkannt.
+
+Desktop-Update: [Install-Life-Dashboard-Desktop-v13.zip](Install-Life-Dashboard-Desktop-v13.zip) herunterladen, entpacken und die `.command`-Datei ausführen. Die bestehende Dashboard-Datensicherung bleibt verfügbar.

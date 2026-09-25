@@ -405,7 +405,7 @@
               <button class="home-save-button" id="openAIKeySave">Schlüssel speichern</button>
               <button class="home-small-button" id="openAIKeyDelete">Entfernen</button>
             </div>
-            <span>Der Schlüssel liegt im macOS-Schlüsselbund. Für einen KI-Plan werden nur deine Ernährungswünsche und bisherige Gerichtsnamen an OpenAI gesendet.</span>
+            <span>Der Schlüssel liegt im macOS-Schlüsselbund. Wenn macOS beim Speichern oder Erstellen eines KI-Plans für „Life Dashboard“ nach dem Schlüsselbund „Anmeldung“ fragt, ist dein Mac-Anmeldepasswort gemeint. Für den Plan werden nur Ernährungswünsche und bisherige Gerichtsnamen an OpenAI gesendet.</span>
           </div>
 
           <div class="settings-card update-settings-card">

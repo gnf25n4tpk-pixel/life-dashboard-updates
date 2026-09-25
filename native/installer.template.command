@@ -23,9 +23,16 @@ trap finish_with_error ERR
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  Life Dashboard Desktop V12"
+echo "  Life Dashboard Desktop V13"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+
+if /usr/bin/pgrep -x LifeDashboard >/dev/null 2>&1; then
+  echo "Bitte Life Dashboard mit ⌘Q beenden. Die Installation läuft danach weiter."
+  while /usr/bin/pgrep -x LifeDashboard >/dev/null 2>&1; do
+    /bin/sleep 1
+  done
+fi
 
 command -v xcrun >/dev/null 2>&1 || { xcode-select --install || true; exit 1; }
 SWIFTC="$(xcrun --find swiftc 2>/dev/null || true)"
@@ -59,8 +66,8 @@ cat > "$BUILD_APP/Contents/Info.plist" <<'__PLIST__'
 <key>CFBundleExecutable</key><string>LifeDashboard</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleSignature</key><string>????</string>
-<key>CFBundleShortVersionString</key><string>0.12</string>
-<key>CFBundleVersion</key><string>12</string>
+<key>CFBundleShortVersionString</key><string>0.13</string>
+<key>CFBundleVersion</key><string>13</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSHighResolutionCapable</key><true/>
@@ -108,7 +115,7 @@ echo "6/6 Fertigstellen …"
 touch "$FINAL_APP"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✓ Life Dashboard Desktop V12 ist fertig"
+echo "✓ Life Dashboard Desktop V13 ist fertig"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "Deine Daten und der OpenAI-Schlüssel bleiben beim Update erhalten."
