@@ -1,7 +1,7 @@
 {
-  "dashboardVersion": "0.19.2",
-  "minimumNativeVersion": "0.14.0",
-  "sha256": "7f30fca9e6ac45a5fb3bfd2225216c2cc2d74304f354a623ab2059e2b4483522",
+  "dashboardVersion": "0.20.0",
+  "minimumNativeVersion": "0.15.0",
+  "sha256": "dbb9b9504c502b675f60ad7aa4ba60a27cb0f1701c8328bcb8900f6b2696867c",
   "resources": [
     {
       "kind": "appIconPNG",
@@ -10,8 +10,8 @@
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "Desktop V14: OpenAI-API-Fehler nennen jetzt, ob Guthaben, Ausgabenlimit, Nutzungslimit oder kurzfristiges Anfragelimit betroffen ist. Das Dashboard bleibt bei V19.2.",
-  "nativeDownloadURL": "https://raw.githubusercontent.com/gnf25n4tpk-pixel/life-dashboard-updates/main/Install-Life-Dashboard-Desktop-v14.zip",
+  "releaseNotes": "Dashboard V20 / Desktop V15: Ernährungsplan mit ChatGPT-Vorgaben kopieren und JSON-Antwort nach Prüfung importieren. API-Anbindung und Schlüssel-Eingabe entfernt; ein früher gespeicherter Schlüssel kann in den Einstellungen gelöscht werden.",
+  "nativeDownloadURL": "https://raw.githubusercontent.com/gnf25n4tpk-pixel/life-dashboard-updates/main/Install-Life-Dashboard-Desktop-v15.zip",
   "dashboardParts": [
     "dashboard.part01",
     "dashboard.part02",

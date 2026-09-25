@@ -690,7 +690,6 @@
       const modal = document.getElementById("homeSettingsModal");
       updateNotificationButton();
       requestNativeUpdateState();
-      requestNativeAIState();
       modal.querySelector(".home-modal-card").scrollTop = 0;
       document.documentElement.classList.add("settings-modal-open");
       modal.classList.add("open");

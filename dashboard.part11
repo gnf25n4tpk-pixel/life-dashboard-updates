@@ -455,54 +455,28 @@
       }
     }
 
-    function hasNativeAIBridge() {
-      return !!window.webkit?.messageHandlers?.nutritionAI;
+    function hasNutritionImportBridge() {
+      return !!window.webkit?.messageHandlers?.nutritionImport;
     }
 
-    function requestNativeAIState() {
-      if (hasNativeAIBridge()) {
-        window.webkit.messageHandlers.nutritionAI.postMessage({ action: "state" });
-      } else {
-        const status = document.getElementById("openAIKeyStatus");
-        status.dataset.state = "error";
-        status.textContent = "Für KI-Pläne wird die aktuelle Desktop-App benötigt.";
-      }
-    }
-
-    let nativeAIConfigured = false;
-    let nextAIRequest = 0;
-    const pendingAIPlans = new Map();
-
-    window.nativeAIState = function(snapshot) {
-      nativeAIConfigured = !!snapshot?.configured;
-      const status = document.getElementById("openAIKeyStatus");
-      const message = snapshot?.message || "API-Schlüsselstatus nicht verfügbar";
-      const saved = nativeAIConfigured &&
-        message === "API-Schlüssel im macOS-Schlüsselbund gespeichert";
-      const failed = message.startsWith("Bitte") ||
-        message.includes("konnte") || message.includes("benötigt");
-      status.dataset.state = failed ? "error" : saved ? "success" : "idle";
-      status.textContent = saved ? "✓ " + message : message;
-      document.getElementById("openAIKeyDelete").disabled = !hasNativeAIBridge();
+    window.nativeNutritionPromptCopyResult = function(result) {
+      document.getElementById("chatGPTCopyFeedback").textContent = result?.ok
+        ? "Vorgaben kopiert. In ChatGPT einfügen und die JSON-Antwort hierher kopieren."
+        : "Kopieren fehlgeschlagen. Bitte erneut versuchen.";
     };
 
-    window.nativeAIPlanResult = function(result) {
-      const pending = pendingAIPlans.get(result?.requestId);
-      if (!pending) return;
-      clearTimeout(pending.timeout);
-      pendingAIPlans.delete(result.requestId);
-      if (result.ok) pending.resolve(result.plan);
-      else pending.reject(new Error(result.error || "Der KI-Plan konnte nicht erstellt werden."));
+    window.nativeLegacyKeyRemovalResult = function(result) {
+      const status = document.getElementById("legacyKeyFeedback");
+      status.hidden = false;
+      status.dataset.state = result?.ok ? "success" : "error";
+      status.textContent = result?.message || "Der Schlüssel konnte nicht entfernt werden.";
     };
 
-    function collectAIPlanPreferences() {
-      if (!hasNativeAIBridge()) {
-        throw new Error("Für KI-Pläne benötigst du die aktuelle Desktop-App. Wähle sonst „Ohne KI“.");
-      }
+    function collectChatGPTPlanPreferences() {
       const required = parseRequiredFoods();
       const avoided = document.getElementById("generatorAvoidFoods").value
         .split(/\n|,/).map(value => value.trim()).filter(Boolean);
-      const avoidKeys = avoided.map(normalizeFoodKey);
+      const avoidKeys = avoided.map(normalizeFoodKey).filter(Boolean);
       const conflicts = required.filter(food => avoidKeys.some(key =>
         normalizeFoodKey(food).includes(key) || key.includes(normalizeFoodKey(food))
       ));
@@ -529,38 +503,64 @@
       return { calories, protein, required, avoided, notes, recentMeals };
     }
 
-    function requestNutritionAI(preferences) {
-      return new Promise((resolve, reject) => {
-        const requestId = "nutrition-" + Date.now() + "-" + ++nextAIRequest;
-        const timeout = setTimeout(() => {
-          pendingAIPlans.delete(requestId);
-          reject(new Error("Die KI-Anfrage hat zu lange gedauert. Bitte erneut versuchen."));
-        }, 120000);
-        pendingAIPlans.set(requestId, { resolve, reject, timeout });
-        try {
-          window.webkit.messageHandlers.nutritionAI.postMessage({
-            action: "generate", requestId, preferences
-          });
-        } catch {
-          clearTimeout(timeout);
-          pendingAIPlans.delete(requestId);
-          reject(new Error("Die Desktop-Verbindung zur KI ist nicht verfügbar."));
-        }
-      });
+    function buildChatGPTPlanPrompt(preferences, weekStart) {
+      return `Erstelle einen abwechslungsreichen Wochen-Ernährungsplan für genau eine Person für die Woche ab ${weekStart}.
+Vorgaben: ${JSON.stringify(preferences)}
+
+Planung: Genau vier Tagesblöcke in dieser Reihenfolge: Mo/Di, Mi/Do, Fr/Sa, Sonntag. An jedem der beiden Tage eines Doppelblocks gibt es dieselben vier Mahlzeiten; Sonntag ist einzeln. Jeder Block enthält genau vier Gerichte in dieser Reihenfolge: breakfast (Frühstück), lunch (Mittag), snack (Snack), dinner (Abend).
+
+Bitte kombiniere alle Pflicht-Lebensmittel als echte Zutaten in sinnvollen Gerichten, vermeide alle ausgeschlossenen Lebensmittel und ähnliche Bezeichnungen. Berücksichtige die weiteren Wünsche und wiederhole nach Möglichkeit keine der zuletzt geplanten Gerichte. Keine Mahlzeit innerhalb der Woche doppelt. Variiere Proteinquellen, Beilagen, Gemüse und Zubereitung. Jedes Gericht braucht 2 bis 8 Zutaten. Kalorien (${preferences.calories} kcal) und Protein (${preferences.protein} g) sind Tagesziele für jeden einzelnen Block. Gib zu jeder Zutat pro Person eine konkrete Menge mit Einheit und geschätzte kcal, Protein, Kohlenhydrate und Fett genau für diese Menge an. Verwende realistische Portionen und Nährwerte.
+
+Antworte ausschließlich mit vollständigem, gültigem JSON. Keine Einleitung, keine Markdown-Erklärung. Das Format muss genau so aufgebaut sein:
+{"pairs":[{"meals":[{"slot":"breakfast","name":"Beispielgericht","ingredients":[{"name":"Haferflocken","amount":80,"unit":"g","kcal":300,"protein":10,"carbs":48,"fat":6},{"name":"Banane","amount":120,"unit":"g","kcal":105,"protein":1,"carbs":27,"fat":0}]}]}]}
+Die Beispielwerte dienen nur als Formatvorlage: Gib genau vier Objekte in pairs und jeweils genau vier Objekte in meals aus. Die slot-Werte müssen pro Block genau breakfast, lunch, snack, dinner in dieser Reihenfolge sein. Jede Zutat hat genau die Felder name, amount, unit, kcal, protein, carbs, fat; Zahlen bleiben Zahlen ohne Anführungszeichen. Zulässige Einheiten sind g, ml, Stk., EL und TL. Schließe alle JSON-Klammern und alle vier Blöcke vollständig.`;
     }
 
-    function validateNutritionAIPlan(response, preferences) {
+    function parseChatGPTPlanJSON(raw) {
+      const value = String(raw || "").trim();
+      if (!value) throw new Error("Füge zuerst die JSON-Antwort aus ChatGPT ein.");
+      if (value.length > 300000) throw new Error("Die eingefügte Antwort ist zu lang.");
+      try {
+        return JSON.parse(value);
+      } catch {
+        const fenced = value.match(/```(?:json)?[ \t]*\r?\n([\s\S]*?)\r?\n```/i);
+        if (fenced) {
+          try { return JSON.parse(fenced[1]); } catch {}
+        }
+        throw new Error("Die Antwort ist kein gültiges JSON. Bitte ChatGPT um die vollständige JSON-Antwort ohne zusätzliche Erklärung.");
+      }
+    }
+
+    async function copyChatGPTPlanPrompt() {
+      const status = document.getElementById("chatGPTCopyFeedback");
+      try {
+        const preferences = collectChatGPTPlanPreferences();
+        const prompt = buildChatGPTPlanPrompt(preferences, makeIsoDate(nutritionWeekDates()[0]));
+        if (hasNutritionImportBridge()) {
+          window.webkit.messageHandlers.nutritionImport.postMessage({ action: "copyPrompt", text: prompt });
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(prompt);
+          status.textContent = "Vorgaben kopiert. In ChatGPT einfügen und die JSON-Antwort hierher kopieren.";
+        } else {
+          throw new Error("Zwischenablage nicht verfügbar. Bitte die aktuelle Desktop-App verwenden.");
+        }
+      } catch (error) {
+        status.textContent = error.message || "Kopieren fehlgeschlagen.";
+      }
+    }
+
+    function validateNutritionImportPlan(response, preferences) {
       const weekDates = nutritionWeekDates();
       const uniquePairStarts = weekDates.filter((date, index) => index % 2 === 0);
       if (!Array.isArray(response?.pairs) || response.pairs.length !== 4) {
-        throw new Error("Die KI hat keinen vollständigen Wochenplan geliefert. Bitte erneut versuchen.");
+        throw new Error("Der Plan braucht vier vollständige Blöcke: Mo/Di, Mi/Do, Fr/Sa und Sonntag.");
       }
       const names = new Set();
       const usedRequired = new Set();
-      const avoidKeys = preferences.avoided.map(normalizeFoodKey);
+      const avoidKeys = preferences.avoided.map(normalizeFoodKey).filter(Boolean);
       const planned = response.pairs.map((pair, pairIndex) => {
         if (!Array.isArray(pair?.meals) || pair.meals.length !== 4) {
-          throw new Error("Die KI hat Mahlzeiten ausgelassen. Bitte erneut versuchen.");
+          throw new Error("Im Block " + (pairIndex + 1) + " fehlen Mahlzeiten. ChatGPT soll dort genau vier Gerichte liefern.");
         }
         const recipes = pair.meals.map((meal, slotIndex) => {
           if (meal?.slot !== nutritionMealSlots[slotIndex].key ||
@@ -568,14 +568,14 @@
               meal.name.length > 120 ||
               !Array.isArray(meal.ingredients) ||
               meal.ingredients.length < 2 || meal.ingredients.length > 10) {
-            throw new Error("Die KI hat ein unvollständiges Gericht geliefert. Bitte erneut versuchen.");
+            throw new Error("Ein Gericht im Block " + (pairIndex + 1) + " ist unvollständig oder an der falschen Position.");
           }
           const name = meal.name.trim();
           const key = normalizeFoodKey(name);
-          if (names.has(key)) throw new Error("Die KI hat ein Gericht mehrfach eingeplant. Bitte erneut versuchen.");
+          if (names.has(key)) throw new Error("Ein Gericht kommt im eingefügten Plan mehrfach vor.");
           names.add(key);
           if (avoidKeys.some(avoid => key.includes(avoid))) {
-            throw new Error("Die KI hat ein ausgeschlossenes Lebensmittel eingeplant. Der Plan wurde nicht gespeichert.");
+            throw new Error("Der eingefügte Plan enthält ein ausgeschlossenes Lebensmittel. Es wurde nichts gespeichert.");
           }
           const foods = meal.ingredients.map(item => {
             const ingredientName = typeof item?.name === "string" ? item.name.trim() : "";
@@ -585,10 +585,10 @@
                 !["g", "ml", "Stk.", "EL", "TL"].includes(item?.unit) ||
                 !values.every(Number.isFinite) || values[0] <= 0 || values[0] > 1500 ||
                 values.slice(1).some(value => value < 0 || value > 3000)) {
-              throw new Error("Die KI hat ungültige Zutaten oder Nährwerte geliefert. Bitte erneut versuchen.");
+              throw new Error("Eine Zutat im eingefügten Plan hat ungültige Mengen oder Nährwerte.");
             }
             if (avoidKeys.some(avoid => ingredientKey.includes(avoid))) {
-              throw new Error("Die KI hat ein ausgeschlossenes Lebensmittel eingeplant. Der Plan wurde nicht gespeichert.");
+              throw new Error("Der eingefügte Plan enthält ein ausgeschlossenes Lebensmittel. Es wurde nichts gespeichert.");
             }
             preferences.required.forEach(food => {
               const requiredKey = normalizeFoodKey(food);
@@ -609,31 +609,33 @@
             totals.kcal > preferences.calories * 1.5 ||
             totals.protein < preferences.protein * .5 ||
             totals.protein > preferences.protein * 1.8) {
-          throw new Error("Der KI-Plan liegt zu weit von den Tageszielen entfernt. Bitte erneut versuchen.");
+          throw new Error("Ein Tagesblock liegt zu weit von den Kalorien- oder Proteinzielen entfernt.");
         }
         return recipes;
       });
       const missing = preferences.required.filter(food => !usedRequired.has(normalizeFoodKey(food)));
       if (missing.length) {
-        throw new Error("Diese Wunschzutaten fehlen in der KI-Antwort: " + missing.join(", ") + ". Der Plan wurde nicht gespeichert.");
+        throw new Error("Diese Wunschzutaten fehlen im eingefügten Plan: " + missing.join(", ") + ". Es wurde nichts gespeichert.");
       }
       return { weekDates, uniquePairStarts, planned, requiredCount: preferences.required.length };
     }
 
     function updateNutritionGeneratorMode() {
-      const ai = document.getElementById("generatorMode").value === "ai";
-      document.getElementById("generatorNotesField").hidden = !ai;
-      document.getElementById("generatorOpenKeySettings").hidden = !ai;
-      document.getElementById("generatorRequiredHint").textContent = ai
-        ? "Die KI baut diese Zutaten sinnvoll in Gerichte ein."
+      const importMode = document.getElementById("generatorMode").value === "chatgpt";
+      document.getElementById("generatorNotesField").hidden = !importMode;
+      document.getElementById("chatGPTImportSteps").hidden = !importMode;
+      document.getElementById("nutritionGeneratorCreate").textContent = importMode
+        ? "Plan importieren" : "Plan generieren";
+      document.getElementById("generatorRequiredHint").textContent = importMode
+        ? "ChatGPT soll diese Zutaten sinnvoll in Gerichte einbauen."
         : "Nur wenn sie in einem hinterlegten oder von dir gespeicherten Gericht vorkommen.";
-      document.getElementById("generatorTargetHint").textContent = ai
-        ? "Kalorien und Protein sind Richtwerte. KI-Nährwerte sind Schätzungen; prüfe Produkte und Portionsgrößen."
+      document.getElementById("generatorTargetHint").textContent = importMode
+        ? "Kalorien und Protein sind Richtwerte. ChatGPT-Nährwerte sind Schätzungen; prüfe Produkte und Portionsgrößen."
         : "Kalorien und Protein sind Richtwerte. Die App wählt gespeicherte Gerichte ohne neue Nährwerte.";
-      document.querySelector(".generator-intro").textContent = ai
-        ? "Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Die KI erstellt neue Gerichte aus deinen Wünschen. Bestehende Mahlzeiten dieser Woche werden ersetzt."
+      document.querySelector(".generator-intro").textContent = importMode
+        ? "Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Erstelle neue Gerichte in ChatGPT und füge die Antwort hier ein."
         : "Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Die App wählt gespeicherte Gerichte. Bestehende Mahlzeiten dieser Woche werden ersetzt.";
-      localStorage.setItem("lifeDashboardNutritionGeneratorMode", ai ? "ai" : "local");
+      localStorage.setItem("lifeDashboardNutritionGeneratorMode", importMode ? "chatgpt" : "local");
     }
 
     let generatingNutritionPlan = false;
@@ -652,11 +654,19 @@
       const errorMessage = document.getElementById("nutritionGeneratorError");
       errorMessage.hidden = true;
       let plan;
-      let preferences;
-      const useAI = document.getElementById("generatorMode").value === "ai";
+      const importMode = document.getElementById("generatorMode").value === "chatgpt";
       try {
-        if (useAI) preferences = collectAIPlanPreferences();
-        else plan = buildNutritionPlanForWeek();
+        if (importMode) {
+          const preferences = collectChatGPTPlanPreferences();
+          plan = validateNutritionImportPlan(
+            parseChatGPTPlanJSON(document.getElementById("chatGPTPlanInput").value), preferences
+          );
+          if (!window.confirm("Die bestehenden Mahlzeiten dieser Woche durch den eingefügten Plan ersetzen?")) {
+            return;
+          }
+        } else {
+          plan = buildNutritionPlanForWeek();
+        }
       } catch (error) {
         errorMessage.textContent = error.message || "Der Plan konnte nicht erstellt werden.";
         errorMessage.hidden = false;
@@ -668,21 +678,19 @@
       const createButton = document.getElementById("nutritionGeneratorCreate");
       createButton.disabled = true;
       closeNutritionGenerator();
-      setPlanProgress("Essensplan wird erstellt", useAI
-        ? "Die KI stellt neue Gerichte zusammen …"
+      setPlanProgress("Essensplan wird erstellt", importMode
+        ? "Die geprüften Gerichte werden übernommen …"
         : "Gespeicherte Gerichte werden ausgewählt …");
       progress.classList.add("open");
       progress.setAttribute("aria-hidden", "false");
 
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       try {
-        if (useAI) {
-          const answer = await requestNutritionAI(preferences);
-          plan = validateNutritionAIPlan(answer, preferences);
-        } else {
+        if (!importMode) {
           await new Promise(resolve => setTimeout(resolve, 420));
         }
         applyNutritionPlanForWeek(plan);
+        if (importMode) document.getElementById("chatGPTPlanInput").value = "";
         const detail = plan.requiredCount
           ? `${plan.requiredCount} Wunsch-Lebensmittel in passenden Gerichten eingeplant`
           : "Mahlzeiten und Einkaufsliste sind bereit";
@@ -903,40 +911,31 @@
     document.getElementById("nutritionGeneratorCreate").addEventListener("click", generateNutritionPlanWithFeedback);
     const generatorMode = document.getElementById("generatorMode");
     generatorMode.value = localStorage.getItem("lifeDashboardNutritionGeneratorMode") === "local"
-      ? "local" : "ai";
+      ? "local" : "chatgpt";
     updateNutritionGeneratorMode();
     generatorMode.addEventListener("change", updateNutritionGeneratorMode);
-    document.getElementById("generatorOpenKeySettings").addEventListener("click", () => {
-      closeNutritionGenerator();
-      openHomeSettings();
-      document.getElementById("openAIKeyInput").focus();
+    document.getElementById("copyChatGPTPrompt").addEventListener("click", copyChatGPTPlanPrompt);
+    ["generatorRequiredFoods", "generatorAvoidFoods", "generatorNotes",
+      "generatorCalories", "generatorProtein"].forEach(id => {
+      document.getElementById(id).addEventListener("input", () => {
+        const feedback = document.getElementById("chatGPTCopyFeedback");
+        if (feedback.textContent.startsWith("Vorgaben kopiert")) {
+          feedback.textContent = "Vorgaben geändert. Bitte vor dem Import erneut kopieren.";
+        }
+      });
     });
-
-    document.getElementById("openAIKeySave").addEventListener("click", () => {
-      const input = document.getElementById("openAIKeyInput");
-      const key = input.value.trim();
-      const status = document.getElementById("openAIKeyStatus");
-      if (!hasNativeAIBridge()) {
-        status.dataset.state = "error";
-        status.textContent = "Die aktuelle Desktop-App wird benötigt.";
-        return;
-      }
-      if (!key.startsWith("sk-")) {
-        status.dataset.state = "error";
-        status.textContent = "Bitte einen gültigen OpenAI-API-Schlüssel eingeben.";
-        return;
-      }
-      input.value = "";
-      status.dataset.state = "idle";
-      status.textContent = "Schlüssel wird gespeichert …";
-      window.webkit.messageHandlers.nutritionAI.postMessage({ action: "saveKey", key });
-    });
-    document.getElementById("openAIKeyDelete").addEventListener("click", () => {
-      if (hasNativeAIBridge()) {
-        window.webkit.messageHandlers.nutritionAI.postMessage({ action: "deleteKey" });
+    document.getElementById("openChatGPTWebsite").addEventListener("click", () => {
+      if (hasNutritionImportBridge()) {
+        window.webkit.messageHandlers.nutritionImport.postMessage({ action: "openChatGPT" });
+      } else {
+        window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
       }
     });
-    document.getElementById("openAIKeyDelete").disabled = !hasNativeAIBridge();
+    document.getElementById("removeLegacyAPIKey").disabled = !hasNutritionImportBridge();
+    document.getElementById("removeLegacyAPIKey").addEventListener("click", () => {
+      if (!hasNutritionImportBridge()) return;
+      window.webkit.messageHandlers.nutritionImport.postMessage({ action: "deleteLegacyKey" });
+    });
 
     nutritionGeneratorModal.addEventListener("click", event => {
       if (event.target === nutritionGeneratorModal) closeNutritionGenerator();

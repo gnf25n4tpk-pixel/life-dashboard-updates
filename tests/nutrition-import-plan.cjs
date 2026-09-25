@@ -21,10 +21,11 @@ const context = {
 vm.createContext(context);
 vm.runInContext(
   section("function normalizeFoodKey(", "function parseAvoidFoods(") +
-  section("function validateNutritionAIPlan(", "function updateNutritionGeneratorMode("),
+  section("function buildChatGPTPlanPrompt(", "function updateNutritionGeneratorMode("),
   context
 );
-const validate = context.validateNutritionAIPlan;
+const validate = context.validateNutritionImportPlan;
+const parse = context.parseChatGPTPlanJSON;
 const preferences = { calories: 3000, protein: 180, required: ["Reis"], avoided: ["Pilze"] };
 
 function plan() {
@@ -53,6 +54,19 @@ test("accepts four complete, varied blocks and keeps ingredient amounts for the 
   assert.equal(result.uniquePairStarts.length, 4);
 });
 
+test("copies concrete preferences into a prompt and accepts JSON inside a code block", () => {
+  const prompt = context.buildChatGPTPlanPrompt({
+    ...preferences, notes: "laktosefrei, keine Pilze", recentMeals: ["Puten-Reis-Bowl"]
+  }, "2026-09-21");
+  assert.match(prompt, /2026-09-21/);
+  assert.match(prompt, /laktosefrei, keine Pilze/);
+  assert.match(prompt, /Puten-Reis-Bowl/);
+  assert.match(prompt, /genau vier Objekte in pairs/);
+  const answer = parse("Hier ist dein Plan:\n```json\n" + JSON.stringify(plan()) + "\n```");
+  assert.equal(validate(answer, preferences).planned.length, 4);
+  assert.throws(() => parse("{ unvollständig"), /kein gültiges JSON/);
+});
+
 test("rejects excluded foods before replacing any meals", () => {
   const answer = plan();
   answer.pairs[2].meals[3].ingredients[1].name = "Champignonpilze";
@@ -67,7 +81,7 @@ test("rejects missing required foods, repeated meals and incomplete responses", 
   const duplicate = plan();
   duplicate.pairs[3].meals[2].name = duplicate.pairs[0].meals[0].name;
   assert.throws(() => validate(duplicate, preferences), /mehrfach/);
-  assert.throws(() => validate({ pairs: [] }, preferences), /vollständigen Wochenplan/);
+  assert.throws(() => validate({ pairs: [] }, preferences), /vier vollständige Blöcke/);
 });
 
 test("rejects implausible daily nutrition instead of persisting the response", () => {
@@ -76,5 +90,5 @@ test("rejects implausible daily nutrition instead of persisting the response", (
     food.kcal = 1;
     food.protein = 1;
   }));
-  assert.throws(() => validate(answer, preferences), /Tageszielen/);
+  assert.throws(() => validate(answer, preferences), /Tagesblock/);
 });

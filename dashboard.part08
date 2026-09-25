@@ -391,21 +391,16 @@
             </div>
           </div>
 
-          <div class="settings-card ai-settings-card">
+          <div class="settings-card import-settings-card">
             <div>
-              <strong>KI für Ernährungspläne</strong>
-              <span>Neue Gerichte mit OpenAI erstellen. Es wird dein eigener API-Schlüssel verwendet; die Nutzung kann Kosten verursachen.</span>
+              <strong>ChatGPT-Import</strong>
+              <span>Im Ernährungsbereich kannst du deine Vorgaben kopieren, einen Plan in ChatGPT erstellen und dessen Antwort hier einfügen. Die App ruft keine KI-API auf.</span>
             </div>
-            <label class="update-feed-field">
-              <span>OpenAI-API-Schlüssel</span>
-              <input id="openAIKeyInput" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false" />
-            </label>
-            <span class="ai-key-feedback" id="openAIKeyStatus" role="status" aria-live="polite" data-state="idle">Schlüsselstatus wird geladen …</span>
             <div class="settings-inline-actions">
-              <button class="home-save-button" id="openAIKeySave">Schlüssel speichern</button>
-              <button class="home-small-button" id="openAIKeyDelete">Entfernen</button>
+              <button class="home-small-button" id="removeLegacyAPIKey">Früheren API-Schlüssel entfernen</button>
             </div>
-            <span>Der Schlüssel liegt im macOS-Schlüsselbund. Wenn macOS beim Speichern oder Erstellen eines KI-Plans für „Life Dashboard“ nach dem Schlüsselbund „Anmeldung“ fragt, ist dein Mac-Anmeldepasswort gemeint. Für den Plan werden nur Ernährungswünsche und bisherige Gerichtsnamen an OpenAI gesendet.</span>
+            <span class="legacy-key-feedback" id="legacyKeyFeedback" role="status" aria-live="polite" hidden></span>
+            <span>Nur falls du zuvor einen Schlüssel gespeichert hast: Beim Entfernen kann macOS nach deinem Mac-Anmeldepasswort fragen.</span>
           </div>
 
           <div class="settings-card update-settings-card">
@@ -508,23 +503,22 @@
         </div>
 
         <div class="generator-intro">
-          Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Die KI erstellt neue, passende Gerichte aus deinen Wünschen. Bestehende Mahlzeiten dieser Woche werden ersetzt.
+          Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Erstelle neue Gerichte in ChatGPT und füge die Antwort hier ein.
         </div>
 
         <label class="generator-field generator-mode-field">
           <span>Planungsart</span>
           <select id="generatorMode">
-            <option value="ai">Mit KI · neue Gerichte</option>
+            <option value="chatgpt">Mit ChatGPT · Plan importieren</option>
             <option value="local">Ohne KI · gespeicherte Gerichte</option>
           </select>
         </label>
-        <button type="button" class="home-small-button generator-key-button" id="generatorOpenKeySettings">API-Schlüssel einrichten</button>
 
         <div class="generator-food-grid">
           <label class="generator-field">
             <span>Pflicht-Lebensmittel</span>
             <textarea id="generatorRequiredFoods" rows="5" placeholder="z. B.&#10;Hähnchen&#10;Reis&#10;Brokkoli&#10;Skyr"></textarea>
-            <small id="generatorRequiredHint">Die KI baut diese Zutaten sinnvoll in Gerichte ein.</small>
+            <small id="generatorRequiredHint">ChatGPT soll diese Zutaten sinnvoll in Gerichte einbauen.</small>
           </label>
 
           <label class="generator-field">
@@ -552,11 +546,27 @@
         </div>
 
         <p class="generator-target-hint" id="generatorTargetHint">Kalorien und Protein sind Richtwerte. KI-Nährwerte sind Schätzungen; prüfe Produkte und Portionsgrößen.</p>
+
+        <div class="chatgpt-import-card" id="chatGPTImportSteps">
+          <strong>1 · Vorgaben an ChatGPT senden</strong>
+          <p>Kopiere den Text, öffne ChatGPT im Browser und füge ihn dort ein. Die App überträgt deine Angaben nicht selbst.</p>
+          <div class="chatgpt-import-actions">
+            <button type="button" class="home-save-button" id="copyChatGPTPrompt">Vorgaben kopieren</button>
+            <button type="button" class="home-small-button" id="openChatGPTWebsite">ChatGPT öffnen ↗</button>
+          </div>
+          <span class="chatgpt-copy-feedback" id="chatGPTCopyFeedback" role="status" aria-live="polite"></span>
+          <label class="generator-field chatgpt-answer-field">
+            <span>2 · Antwort von ChatGPT einfügen</span>
+            <textarea id="chatGPTPlanInput" rows="5" maxlength="300000" spellcheck="false" placeholder="JSON-Antwort hier einfügen (⌘V)"></textarea>
+            <small>Ein JSON-Codeblock wird ebenfalls erkannt. Erst nach Prüfung und Bestätigung ersetzt der Import die Mahlzeiten dieser Woche.</small>
+          </label>
+        </div>
+
         <p class="generator-error" id="nutritionGeneratorError" role="alert" hidden></p>
 
         <div class="generator-actions">
           <button class="nutrition-secondary-button" id="nutritionGeneratorCancel">Abbrechen</button>
-          <button class="nutrition-primary-button" id="nutritionGeneratorCreate">Plan generieren</button>
+          <button class="nutrition-primary-button" id="nutritionGeneratorCreate">Plan importieren</button>
         </div>
       </div>
     </div>

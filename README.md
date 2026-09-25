@@ -33,15 +33,13 @@ Die App prüft jede heruntergeladene Datei per SHA-256, bevor sie in das App-Bun
 
 Änderungen am nativen Swift-Code können weiterhin eine neue Desktop-Basis erfordern. Das wird über `minimumNativeVersion` erkannt.
 
-Aktuelle native Basis: **0.14.0**
-Aktuelle Dashboard-Basis: **0.19.2**
+Aktuelle native Basis: **0.15.0**
+Aktuelle Dashboard-Basis: **0.20.0**
 
-## KI für Ernährungspläne
+## Ernährungspläne mit ChatGPT
 
-V12 ergänzt die native OpenAI-Anbindung. In **Einstellungen → KI für Ernährungspläne** lässt sich ein eigener OpenAI-API-Schlüssel im macOS-Schlüsselbund hinterlegen oder entfernen. Im Generator kann zwischen **Mit KI** (neue Gerichte) und **Ohne KI** (vorhandene Gerichte) gewählt werden. Die KI erhält nur Ernährungswünsche und kürzlich geplante Gerichtsnamen. Der API-Aufruf erfolgt in Swift über die Responses API mit `store: false` und strukturiertem JSON; der Schlüssel liegt weder in den Dashboard-Dateien noch im Repository. Eine API-Nutzung kann Kosten verursachen. Generierte Nährwerte sind Schätzungen.
+Im Generator können die Ernährungswünsche als ChatGPT-Vorgaben kopiert werden. Die fertige JSON-Antwort wird in der App eingefügt, vor dem Speichern auf Vollständigkeit, Zutaten, Ausschlüsse und Tagesziele geprüft und erst nach Bestätigung übernommen. Alternativ wählt **Ohne KI** Gerichte aus der lokalen Bibliothek. Die App selbst ruft keine KI-API auf; du entscheidest, ob du Angaben an ChatGPT weitergibst. Nährwerte aus ChatGPT sind Schätzungen.
 
-V13 liest den API-Schlüssel erst, wenn ein KI-Plan angefordert wird. Beim App-Start und beim Öffnen der Einstellungen findet kein Schlüsselbundzugriff statt. Der nicht geheime Status wird lokal gespeichert; bereits in V12 gespeicherte Schlüssel werden beim ersten KI-Plan erkannt.
+Die API-Anbindung und Schlüssel-Eingabe aus älteren Versionen wurden entfernt. Ein früher im macOS-Schlüsselbund gespeicherter API-Schlüssel bleibt zunächst unangetastet und kann unter **Einstellungen → ChatGPT-Import → Früheren API-Schlüssel entfernen** auf Wunsch gelöscht werden. Der Schlüssel wird beim Start nicht gelesen.
 
-V14 wertet den Fehlercode der OpenAI-API aus und nennt bei HTTP 429 den konkreten Grund, sofern OpenAI ihn angibt: fehlendes Guthaben, Organisations- oder Projektausgabenlimit, Organisationsnutzungslimit oder kurzfristiges Anfragelimit. Fehlende oder unbekannte Codes werden nicht als Guthabenfehler ausgegeben.
-
-Desktop-Update: [Install-Life-Dashboard-Desktop-v14.zip](Install-Life-Dashboard-Desktop-v14.zip) herunterladen, entpacken und die `.command`-Datei ausführen. Die bestehende Dashboard-Datensicherung bleibt verfügbar.
+Desktop-Update: [Install-Life-Dashboard-Desktop-v15.zip](Install-Life-Dashboard-Desktop-v15.zip) herunterladen, entpacken und die `.command`-Datei ausführen. Die bestehende Dashboard-Datensicherung bleibt verfügbar.

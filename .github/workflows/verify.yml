@@ -12,9 +12,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/nutrition-ai-plan.cjs
-      - run: python3 native/build_installer.py && bash -n Install-Life-Dashboard-Desktop-v14.command
-      - run: unzip -t Install-Life-Dashboard-Desktop-v14.zip
+      - run: node --test tests/nutrition-import-plan.cjs
+      - run: python3 native/build_installer.py && bash -n Install-Life-Dashboard-Desktop-v15.command
+      - run: unzip -t Install-Life-Dashboard-Desktop-v15.zip
 
   macos:
     runs-on: macos-15

@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parent.parent
 manifest = json.loads((ROOT / "update.json").read_text())
 dashboard = b"".join((ROOT / name).read_bytes() for name in manifest["dashboardParts"])
 assert hashlib.sha256(dashboard).hexdigest() == manifest["sha256"]
-assert manifest["dashboardVersion"] == "0.19.2"
-assert manifest["minimumNativeVersion"] == "0.14.0"
+assert manifest["dashboardVersion"] == "0.20.0"
+assert manifest["minimumNativeVersion"] == "0.15.0"
 
 icon_b64 = (ROOT / "AppIcon.png.b64").read_text().strip()
 icon = base64.b64decode(icon_b64)
@@ -27,12 +27,12 @@ for name, data in (
     content = content.replace("{{" + name + "_B64}}", base64.b64encode(data).decode())
 assert "{{" not in content
 
-command_name = "Install-Life-Dashboard-Desktop-v14.command"
+command_name = "Install-Life-Dashboard-Desktop-v15.command"
 command_path = ROOT / command_name
 command_path.write_text(content)
 command_path.chmod(0o755)
 
-zip_path = ROOT / "Install-Life-Dashboard-Desktop-v14.zip"
+zip_path = ROOT / "Install-Life-Dashboard-Desktop-v15.zip"
 info = ZipInfo(command_name, date_time=(2026, 9, 25, 0, 0, 0))
 info.compress_type = ZIP_DEFLATED
 info.external_attr = 0o100755 << 16
