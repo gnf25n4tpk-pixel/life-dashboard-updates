@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parent.parent
 manifest = json.loads((ROOT / "update.json").read_text())
 dashboard = b"".join((ROOT / name).read_bytes() for name in manifest["dashboardParts"])
 assert hashlib.sha256(dashboard).hexdigest() == manifest["sha256"]
-assert manifest["dashboardVersion"] == "0.19.0"
+assert manifest["dashboardVersion"] == "0.19.1"
 assert manifest["minimumNativeVersion"] == "0.12.0"
 
 icon_b64 = (ROOT / "AppIcon.png.b64").read_text().strip()

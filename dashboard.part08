@@ -400,11 +400,11 @@
               <span>OpenAI-API-Schlüssel</span>
               <input id="openAIKeyInput" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false" />
             </label>
+            <span class="ai-key-feedback" id="openAIKeyStatus" role="status" aria-live="polite" data-state="idle">Schlüsselstatus wird geladen …</span>
             <div class="settings-inline-actions">
               <button class="home-save-button" id="openAIKeySave">Schlüssel speichern</button>
               <button class="home-small-button" id="openAIKeyDelete">Entfernen</button>
             </div>
-            <span id="openAIKeyStatus" role="status">Schlüsselstatus wird geladen …</span>
             <span>Der Schlüssel liegt im macOS-Schlüsselbund. Für einen KI-Plan werden nur deine Ernährungswünsche und bisherige Gerichtsnamen an OpenAI gesendet.</span>
           </div>
 

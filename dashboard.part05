@@ -921,6 +921,37 @@
       flex-wrap: wrap;
     }
 
+    .ai-settings-card .ai-key-feedback {
+      display: block;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(75,88,80,.07);
+      color: #626e65;
+      font-size: .72rem;
+      font-weight: 700;
+    }
+
+    .ai-settings-card .ai-key-feedback[data-state="success"] {
+      background: #e8f2e9;
+      color: #326b43;
+    }
+
+    .ai-settings-card .ai-key-feedback[data-state="error"] {
+      background: #f8eae7;
+      color: #924c44;
+    }
+
+    body.dark-mode .ai-settings-card .ai-key-feedback[data-state="success"] {
+      background: #283a2e !important;
+      color: #a5d5ae !important;
+    }
+
+    body.dark-mode .ai-settings-card .ai-key-feedback[data-state="error"] {
+      background: #422f30 !important;
+      color: #f0b2ad !important;
+    }
+
     .theme-toggle {
       display: grid;
       grid-template-columns: 1fr 1fr;

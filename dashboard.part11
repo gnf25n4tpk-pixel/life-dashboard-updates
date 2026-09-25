@@ -463,8 +463,9 @@
       if (hasNativeAIBridge()) {
         window.webkit.messageHandlers.nutritionAI.postMessage({ action: "state" });
       } else {
-        document.getElementById("openAIKeyStatus").textContent =
-          "Für KI-Pläne wird die aktuelle Desktop-App benötigt.";
+        const status = document.getElementById("openAIKeyStatus");
+        status.dataset.state = "error";
+        status.textContent = "Für KI-Pläne wird die aktuelle Desktop-App benötigt.";
       }
     }
 
@@ -475,7 +476,13 @@
     window.nativeAIState = function(snapshot) {
       nativeAIConfigured = !!snapshot?.configured;
       const status = document.getElementById("openAIKeyStatus");
-      status.textContent = snapshot?.message || "API-Schlüsselstatus nicht verfügbar";
+      const message = snapshot?.message || "API-Schlüsselstatus nicht verfügbar";
+      const saved = nativeAIConfigured &&
+        message === "API-Schlüssel im macOS-Schlüsselbund gespeichert";
+      const failed = message.startsWith("Bitte") ||
+        message.includes("konnte") || message.includes("benötigt");
+      status.dataset.state = failed ? "error" : saved ? "success" : "idle";
+      status.textContent = saved ? "✓ " + message : message;
       document.getElementById("openAIKeyDelete").disabled = !nativeAIConfigured;
     };
 
@@ -911,12 +918,20 @@
     document.getElementById("openAIKeySave").addEventListener("click", () => {
       const input = document.getElementById("openAIKeyInput");
       const key = input.value.trim();
-      input.value = "";
+      const status = document.getElementById("openAIKeyStatus");
       if (!hasNativeAIBridge()) {
-        document.getElementById("openAIKeyStatus").textContent = "Die aktuelle Desktop-App wird benötigt.";
+        status.dataset.state = "error";
+        status.textContent = "Die aktuelle Desktop-App wird benötigt.";
         return;
       }
-      document.getElementById("openAIKeyStatus").textContent = "Schlüssel wird gespeichert …";
+      if (!key.startsWith("sk-")) {
+        status.dataset.state = "error";
+        status.textContent = "Bitte einen gültigen OpenAI-API-Schlüssel eingeben.";
+        return;
+      }
+      input.value = "";
+      status.dataset.state = "idle";
+      status.textContent = "Schlüssel wird gespeichert …";
       window.webkit.messageHandlers.nutritionAI.postMessage({ action: "saveKey", key });
     });
     document.getElementById("openAIKeyDelete").addEventListener("click", () => {

@@ -23,7 +23,7 @@ final class LifeDashboardDelegate: NSObject,
     private var aiRequestInFlight = false
 
     private let nativeVersion = "0.12.0"
-    private let bundledDashboardVersion = "0.19.0"
+    private let bundledDashboardVersion = "0.19.1"
     private let aiKeychainService = "com.lifedashboard.desktop.openai"
     private let aiKeychainAccount = "nutrition-plan"
 

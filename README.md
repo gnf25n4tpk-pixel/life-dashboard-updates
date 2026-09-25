@@ -34,7 +34,7 @@ Die App prüft jede heruntergeladene Datei per SHA-256, bevor sie in das App-Bun
 Änderungen am nativen Swift-Code können weiterhin eine neue Desktop-Basis erfordern. Das wird über `minimumNativeVersion` erkannt.
 
 Aktuelle native Basis: **0.12.0**
-Aktuelle Dashboard-Basis: **0.19.0**
+Aktuelle Dashboard-Basis: **0.19.1**
 
 ## KI für Ernährungspläne
 
