@@ -1,7 +1,7 @@
 {
-  "dashboardVersion": "0.20.0",
+  "dashboardVersion": "0.21.0",
   "minimumNativeVersion": "0.15.0",
-  "sha256": "dbb9b9504c502b675f60ad7aa4ba60a27cb0f1701c8328bcb8900f6b2696867c",
+  "sha256": "8b0449bd991aeeeb247f5033b78a6112356df5870a8c3fb95c28d44a41f43dae",
   "resources": [
     {
       "kind": "appIconPNG",
@@ -10,7 +10,7 @@
       "encoding": "base64"
     }
   ],
-  "releaseNotes": "Dashboard V20 / Desktop V15: Ernährungsplan mit ChatGPT-Vorgaben kopieren und JSON-Antwort nach Prüfung importieren. API-Anbindung und Schlüssel-Eingabe entfernt; ein früher gespeicherter Schlüssel kann in den Einstellungen gelöscht werden.",
+  "releaseNotes": "Dashboard V21: Ernährungswochen vor- und zurückblättern, Pläne für ausgewählte Wochen erstellen, Tage aussetzen und Mahlzeiten mit 0 Personen aus Nährwerten und Einkaufsliste entfernen.",
   "nativeDownloadURL": "https://raw.githubusercontent.com/gnf25n4tpk-pixel/life-dashboard-updates/main/Install-Life-Dashboard-Desktop-v15.zip",
   "dashboardParts": [
     "dashboard.part01",

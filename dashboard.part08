@@ -178,7 +178,12 @@
               <span class="nutrition-kicker">Wochenübersicht</span>
               <h2 id="nutritionWeekTitle">Diese Woche</h2>
             </div>
-            <span class="two-day-note">Mo/Di · Mi/Do · Fr/Sa · So</span>
+            <div class="nutrition-week-controls">
+              <span class="two-day-note">Mo/Di · Mi/Do · Fr/Sa · So</span>
+              <button type="button" id="nutritionWeekPrevious" aria-label="Vorherige Woche">‹</button>
+              <button type="button" id="nutritionWeekCurrent">Heute</button>
+              <button type="button" id="nutritionWeekNext" aria-label="Nächste Woche">›</button>
+            </div>
           </div>
 
           <div class="nutrition-week-grid" id="nutritionWeekGrid"></div>
@@ -188,7 +193,10 @@
           <main class="nutrition-main">
             <div class="nutrition-meals-toolbar">
               <span id="nutritionSelectedDayMini">Ausgewählter Tag</span>
-              <button id="individualDayToggle">Nur diesen Tag bearbeiten</button>
+              <div class="nutrition-day-actions">
+                <button id="nutritionDayToggle" type="button" aria-pressed="false">Tag aus Plan nehmen</button>
+                <button id="individualDayToggle" type="button">Nur diesen Tag bearbeiten</button>
+              </div>
             </div>
             <section class="nutrition-meals" id="nutritionMeals"></section>
 
@@ -197,7 +205,7 @@
           <aside class="shopping-panel">
             <div class="shopping-head">
               <div>
-                <span class="nutrition-kicker">Diese Woche</span>
+                <span class="nutrition-kicker">Ausgewählte Woche</span>
                 <h2>Einkaufsliste</h2>
               </div>
               <button class="shopping-clear" id="shoppingClearChecks" title="Haken zurücksetzen">↺</button>
@@ -505,6 +513,7 @@
         <div class="generator-intro">
           Mo/Di, Mi/Do und Fr/Sa teilen sich jeweils einen Plan. Sonntag steht für sich. Erstelle neue Gerichte in ChatGPT und füge die Antwort hier ein.
         </div>
+        <p class="generator-week-range" id="nutritionGeneratorWeekRange"></p>
 
         <label class="generator-field generator-mode-field">
           <span>Planungsart</span>
@@ -602,7 +611,7 @@
               <strong id="mealPersonsValue">1</strong>
               <button type="button" id="mealPersonsPlus">＋</button>
             </div>
-            <small>Nährwerte bleiben pro Person</small>
+            <small>0 Personen setzt diese Mahlzeit für den Tag aus: keine Nährwerte und keine Zutaten auf der Einkaufsliste.</small>
           </label>
         </div>
 

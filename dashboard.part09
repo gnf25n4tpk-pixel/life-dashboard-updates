@@ -1027,6 +1027,7 @@
           if (!savedV2.cycleStart) savedV2.cycleStart = defaultNutritionCycleStart();
           if (!savedV2.completedMeals) savedV2.completedMeals = {};
           if (!savedV2.individualDays) savedV2.individualDays = {};
+          if (!savedV2.disabledDays) savedV2.disabledDays = {};
           if (!savedV2.foodLibrary) savedV2.foodLibrary = {};
           if (!savedV2.shoppingMode) savedV2.shoppingMode = "category";
           return savedV2;

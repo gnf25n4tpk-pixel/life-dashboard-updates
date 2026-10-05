@@ -717,6 +717,9 @@ Die Beispielwerte dienen nur als Formatvorlage: Gib genau vier Objekte in pairs 
 
     function openNutritionGenerator() {
       document.getElementById("nutritionGeneratorError").hidden = true;
+      const dates = nutritionWeekDates();
+      document.getElementById("nutritionGeneratorWeekRange").textContent =
+        `Plan für ${dates[0].toLocaleDateString("de-DE", {day:"2-digit", month:"2-digit", year:"numeric"})} – ${dates[6].toLocaleDateString("de-DE", {day:"2-digit", month:"2-digit", year:"numeric"})}`;
       nutritionGeneratorModal.classList.add("open");
       nutritionGeneratorModal.setAttribute("aria-hidden", "false");
     }
@@ -728,12 +731,12 @@ Die Beispielwerte dienen nur als Formatvorlage: Gib genau vier Objekte in pairs 
 
 
     function mealPrintSignature(date) {
-      return nutritionMealSlots.map(slot => {
+      return { disabled: isNutritionDayDisabled(date), meals: nutritionMealSlots.map(slot => {
         const meal = canonicalMealForPair(date, slot.key);
         return {
           slot: slot.key,
           name: meal.name || "",
-          persons: Math.max(1, Number(meal.persons || 1)),
+          persons: nutritionPersons(meal),
           ingredients: (meal.ingredients || []).map(item => ({
             name: item.name || "",
             amount: Number(item.amount || 0),
@@ -744,7 +747,7 @@ Die Beispielwerte dienen nur als Formatvorlage: Gib genau vier Objekte in pairs 
             fat: Number(item.fat || 0)
           }))
         };
-      });
+      }) };
     }
 
     function nutritionDaysMatchForPrint(a, b) {
@@ -805,15 +808,17 @@ Die Beispielwerte dienen nur als Formatvorlage: Gib genau vier Objekte in pairs 
           ? `${block.dates[0].toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})} / ${block.dates[1].toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}`
           : block.dates[0].toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"});
 
-        const meals = nutritionMealSlots.map(slot => {
+        const meals = isNutritionDayDisabled(block.date)
+          ? `<div class="nutrition-print-empty">Tag ausgesetzt</div>`
+          : nutritionMealSlots.map(slot => {
           const meal = canonicalMealForPair(block.date, slot.key);
-          const persons = Math.max(1, Number(meal.persons || 1));
+          const persons = nutritionPersons(meal);
 
           return `
             <div class="nutrition-print-meal">
               <div class="nutrition-print-meal-label">${slot.label}</div>
               ${
-                meal.name
+                meal.name && persons > 0
                   ? `
                     <div class="nutrition-print-meal-name">
                       <span>${escapeHtml(meal.name)}</span>
@@ -828,7 +833,7 @@ Die Beispielwerte dienen nur als Formatvorlage: Gib genau vier Objekte in pairs 
                       `).join("")}
                     </ul>
                   `
-                  : `<div class="nutrition-print-empty">Nicht geplant</div>`
+                  : `<div class="nutrition-print-empty">${meal.name && persons === 0 ? "Ausgesetzt (0 Personen)" : "Nicht geplant"}</div>`
               }
             </div>
           `;
@@ -1084,12 +1089,13 @@ Die Beispielwerte dienen nur als Formatvorlage: Gib genau vier Objekte in pairs 
     );
 
     function calendarNutritionSummary(date) {
+      if (isNutritionDayDisabled(date)) return [];
       const meals = nutritionMealSlots
         .map(slot => ({
           label: slot.label,
           meal: canonicalMealForPair(date, slot.key)
         }))
-        .filter(item => item.meal?.name);
+        .filter(item => item.meal?.name && nutritionPersons(item.meal) > 0);
 
       return meals;
     }

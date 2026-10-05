@@ -34,7 +34,7 @@ Die App prüft jede heruntergeladene Datei per SHA-256, bevor sie in das App-Bun
 Änderungen am nativen Swift-Code können weiterhin eine neue Desktop-Basis erfordern. Das wird über `minimumNativeVersion` erkannt.
 
 Aktuelle native Basis: **0.15.0**
-Aktuelle Dashboard-Basis: **0.20.0**
+Aktuelle Dashboard-Basis: **0.21.0**
 
 ## Ernährungspläne mit ChatGPT
 
@@ -43,3 +43,5 @@ Im Generator können die Ernährungswünsche als ChatGPT-Vorgaben kopiert werden
 Die API-Anbindung und Schlüssel-Eingabe aus älteren Versionen wurden entfernt. Ein früher im macOS-Schlüsselbund gespeicherter API-Schlüssel bleibt zunächst unangetastet und kann unter **Einstellungen → ChatGPT-Import → Früheren API-Schlüssel entfernen** auf Wunsch gelöscht werden. Der Schlüssel wird beim Start nicht gelesen.
 
 Desktop-Update: [Install-Life-Dashboard-Desktop-v15.zip](Install-Life-Dashboard-Desktop-v15.zip) herunterladen, entpacken und die `.command`-Datei ausführen. Die bestehende Dashboard-Datensicherung bleibt verfügbar.
+
+Im Ernährungsplan wählst du mit ‹/› eine andere Woche und erstellst den Plan für genau diese Woche. Tage lassen sich einzeln aussetzen. Bei 0 Personen entfällt nur die ausgewählte Mahlzeit dieses Tages aus Nährwerten und Einkaufsliste; der zweite Meal-Prep-Tag bleibt erhalten.

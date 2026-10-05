@@ -573,6 +573,38 @@
       font-size: 1.28rem;
     }
 
+    .nutrition-section-head, .nutrition-week-controls, .nutrition-day-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nutrition-week-controls button {
+      border: 1px solid rgba(48,79,58,.16);
+      border-radius: 10px;
+      background: #edf5ef;
+      color: #304f3a;
+      min-width: 31px;
+      padding: 6px 9px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .nutrition-week-controls button:hover { background: #dceade; }
+
+    .week-food-day.inactive { background: #f1f1f1; opacity: .7; }
+    .week-food-meal.inactive strong { text-decoration: line-through; }
+    .nutrition-meal-card.inactive, .today-meal.inactive { opacity: .62; }
+
+    .generator-week-range {
+      margin: 0 0 12px;
+      font-size: .82rem;
+      font-weight: 800;
+      color: #304f3a;
+    }
+
     .two-day-note {
       padding: 7px 10px;
       border-radius: 11px;

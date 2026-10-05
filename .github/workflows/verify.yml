@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/nutrition-import-plan.cjs
+      - run: node --test tests/*.cjs
       - run: python3 native/build_installer.py && bash -n Install-Life-Dashboard-Desktop-v15.command
       - run: unzip -t Install-Life-Dashboard-Desktop-v15.zip
 

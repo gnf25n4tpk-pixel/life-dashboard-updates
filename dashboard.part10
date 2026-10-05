@@ -7,6 +7,7 @@
             cycleStart: defaultNutritionCycleStart(),
             completedMeals: {},
             individualDays: {},
+            disabledDays: {},
             foodLibrary: {},
             shoppingMode: "category"
           };
@@ -19,11 +20,21 @@
         cycleStart: defaultNutritionCycleStart(),
         completedMeals: {},
         individualDays: {},
+        disabledDays: {},
         foodLibrary: {},
         shoppingMode: "category"
       };
     }
 
+
+    function nutritionPersons(meal) {
+      const value = meal?.persons == null ? 1 : Number(meal.persons);
+      return Number.isFinite(value) ? Math.max(0, Math.min(20, Math.trunc(value))) : 1;
+    }
+
+    function isNutritionDayDisabled(date) {
+      return !!nutritionData.disabledDays?.[makeIsoDate(date)];
+    }
 
     function normalizeNutritionMeals(data) {
       if (!data) return data;
@@ -31,7 +42,7 @@
       Object.values(data.days || {}).forEach(day => {
         nutritionMealSlots.forEach(slot => {
           if (day?.[slot.key]) {
-            day[slot.key].persons = Math.max(1, Number(day[slot.key].persons || 1));
+            day[slot.key].persons = nutritionPersons(day[slot.key]);
           }
         });
       });
@@ -39,7 +50,7 @@
       Object.values(data.individualDays || {}).forEach(day => {
         nutritionMealSlots.forEach(slot => {
           if (day?.[slot.key]) {
-            day[slot.key].persons = Math.max(1, Number(day[slot.key].persons || 1));
+            day[slot.key].persons = nutritionPersons(day[slot.key]);
           }
         });
       });
@@ -139,6 +150,10 @@
     function saveMealForSelectedContext(date, slotKey, meal) {
       const iso = makeIsoDate(date);
 
+      if (nutritionPersons(meal) === 0 && !hasIndividualNutritionDay(date)) {
+        ensureIndividualDay(date);
+      }
+
       if (hasIndividualNutritionDay(date)) {
         if (!nutritionData.individualDays[iso]) nutritionData.individualDays[iso] = {};
         nutritionData.individualDays[iso][slotKey] = nutritionClone(meal);
@@ -177,8 +192,11 @@
     }
 
     function dayTotals(date) {
+      if (isNutritionDayDisabled(date)) return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
       return nutritionMealSlots.reduce((sum, slot) => {
-        const totals = mealTotals(canonicalMealForPair(date, slot.key));
+        const meal = canonicalMealForPair(date, slot.key);
+        if (nutritionPersons(meal) === 0) return sum;
+        const totals = mealTotals(meal);
         sum.kcal += totals.kcal;
         sum.protein += totals.protein;
         sum.carbs += totals.carbs;
@@ -234,19 +252,21 @@
 
       nutritionMealSlots.forEach(slot => {
         const meal = canonicalMealForPair(nutritionToday, slot.key);
+        const inactive = isNutritionDayDisabled(nutritionToday) || nutritionPersons(meal) === 0;
         const completionKey = `${makeIsoDate(nutritionToday)}|||${slot.key}`;
         const done = !!nutritionData.completedMeals?.[completionKey];
 
         const item = document.createElement("button");
         item.type = "button";
-        item.className = `today-meal${done ? " done" : ""}`;
+        item.className = `today-meal${done && !inactive ? " done" : ""}${inactive ? " inactive" : ""}`;
+        item.disabled = inactive;
         item.dataset.todayMealSlot = slot.key;
 
         item.innerHTML = `
           <span>${slot.label}</span>
           <strong>${escapeHtml(meal.name || "Noch offen")}</strong>
-          <small class="today-meal-persons">${Math.max(1, Number(meal.persons || 1))} ${Number(meal.persons || 1) === 1 ? "Person" : "Personen"}</small>
-          <div class="today-meal-check">${done ? "✓ Erledigt" : "Antippen zum Abhaken"}</div>
+          <small class="today-meal-persons">${inactive ? "Ausgesetzt" : `${nutritionPersons(meal)} ${nutritionPersons(meal) === 1 ? "Person" : "Personen"}`}</small>
+          <div class="today-meal-check">${inactive ? "Nicht eingeplant" : done ? "✓ Erledigt" : "Antippen zum Abhaken"}</div>
         `;
 
         host.appendChild(item);
@@ -262,7 +282,7 @@
       const sunday = weekDates[6];
 
       document.getElementById("nutritionWeekTitle").textContent =
-        `${monday.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})} – ${sunday.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}`;
+        `${monday.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"})} – ${sunday.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"})}`;
 
       weekDates.forEach(date => {
         const pair = nutritionPairForDate(date);
@@ -272,17 +292,19 @@
         card.dataset.nutritionDate = makeIsoDate(date);
 
         if (sameDate(date, nutritionToday)) card.classList.add("today");
+        if (isNutritionDayDisabled(date)) card.classList.add("inactive");
 
         const selectedPair = nutritionPairForDate(selectedNutritionDate);
         if (sameDate(pair.start, selectedPair.start)) card.classList.add("selected");
 
         const meals = nutritionMealSlots.map(slot => {
           const meal = canonicalMealForPair(date, slot.key);
+          const inactive = isNutritionDayDisabled(date) || nutritionPersons(meal) === 0;
           return `
-            <div class="week-food-meal">
+            <div class="week-food-meal${inactive ? " inactive" : ""}">
               <span>${slot.label}</span>
               <strong>${escapeHtml(meal.name || "–")}</strong>
-              ${meal.name ? `<small class="today-meal-persons">${Math.max(1, Number(meal.persons || 1))} Pers.</small>` : ""}
+              ${meal.name ? `<small class="today-meal-persons">${inactive ? "Ausgesetzt" : `${nutritionPersons(meal)} Pers.`}</small>` : ""}
             </div>
           `;
         }).join("");
@@ -292,6 +314,7 @@
             <span class="week-food-weekday">${date.toLocaleDateString("de-DE",{weekday:"short"})}</span>
             <span class="week-food-date">${date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}</span>
             ${hasIndividualNutritionDay(date) ? `<span class="individual-badge">Individuell</span>` : ""}
+            ${isNutritionDayDisabled(date) ? `<span class="individual-badge">Ausgesetzt</span>` : ""}
           </div>
           <div class="week-food-meals">${meals}</div>
         `;
@@ -308,6 +331,7 @@
       host.innerHTML = "";
 
       const individual = hasIndividualNutritionDay(selectedNutritionDate);
+      const dayDisabled = isNutritionDayDisabled(selectedNutritionDate);
       document.getElementById("nutritionSelectedDayMini").textContent =
         selectedNutritionDate.toLocaleDateString("de-DE", {
           weekday: "long", day: "2-digit", month: "long"
@@ -317,14 +341,19 @@
       individualToggle.textContent =
         individual ? "Zurück zum Meal-Prep-Block" : "Nur diesen Tag bearbeiten";
       individualToggle.classList.toggle("active", individual);
+      const dayToggle = document.getElementById("nutritionDayToggle");
+      dayToggle.textContent = dayDisabled ? "Tag wieder einplanen" : "Tag aus Plan nehmen";
+      dayToggle.setAttribute("aria-pressed", String(dayDisabled));
+      dayToggle.classList.toggle("active", dayDisabled);
 
       nutritionMealSlots.forEach(slot => {
         const meal = canonicalMealForPair(selectedNutritionDate, slot.key);
-        const totals = mealTotals(meal);
+        const inactive = dayDisabled || nutritionPersons(meal) === 0;
+        const totals = inactive ? {kcal:0, protein:0, carbs:0, fat:0} : mealTotals(meal);
 
         const button = document.createElement("button");
         button.type = "button";
-        button.className = "nutrition-meal-card";
+        button.className = `nutrition-meal-card${inactive ? " inactive" : ""}`;
         button.dataset.mealSlot = slot.key;
 
         const preview = meal.ingredients.slice(0, 3).map(item => `
@@ -339,7 +368,7 @@
             <div>
               <span class="meal-slot">${slot.label}</span>
               <span class="meal-name">${escapeHtml(meal.name || "Noch nicht geplant")}</span>
-              ${meal.name ? `<span class="meal-person-badge">${Math.max(1, Number(meal.persons || 1))} ${Number(meal.persons || 1) === 1 ? "Person" : "Personen"}</span>` : ""}
+              ${meal.name ? `<span class="meal-person-badge">${inactive ? "Ausgesetzt" : `${nutritionPersons(meal)} ${nutritionPersons(meal) === 1 ? "Person" : "Personen"}`}</span>` : ""}
             </div>
             <span class="meal-kcal">${formatNutritionNumber(totals.kcal)} kcal</span>
           </div>
@@ -368,8 +397,11 @@
       const grouped = new Map();
 
       nutritionWeekDates().forEach(date => {
+        if (isNutritionDayDisabled(date)) return;
         nutritionMealSlots.forEach(slot => {
           const meal = canonicalMealForPair(date, slot.key);
+          const persons = nutritionPersons(meal);
+          if (!persons) return;
 
           (meal?.ingredients || []).forEach(item => {
             const name = String(item.name || "").trim();
@@ -382,7 +414,7 @@
               grouped.set(key, { name, unit, amount: 0 });
             }
 
-            grouped.get(key).amount += Number(item.amount || 0) * Math.max(1, Number(meal.persons || 1));
+            grouped.get(key).amount += Number(item.amount || 0) * persons;
           });
         });
       });
@@ -407,8 +439,10 @@
       return nutritionWeekDates().map(date => {
         const grouped = new Map();
 
-        nutritionMealSlots.forEach(slot => {
+        if (!isNutritionDayDisabled(date)) nutritionMealSlots.forEach(slot => {
           const meal = canonicalMealForPair(date, slot.key);
+          const persons = nutritionPersons(meal);
+          if (!persons) return;
 
           (meal?.ingredients || []).forEach(item => {
             const name = String(item.name || "").trim();
@@ -419,7 +453,7 @@
             if (!grouped.has(key)) grouped.set(key, { name, unit, amount: 0 });
 
             grouped.get(key).amount +=
-              Number(item.amount || 0) * Math.max(1, Number(meal.persons || 1));
+              Number(item.amount || 0) * persons;
           });
         });
 
@@ -508,7 +542,7 @@
         host.insertAdjacentHTML("beforeend", `<div class="shopping-group-title">${category}</div>`);
 
         categoryItems.forEach(item => {
-          const checkKey = `cat|||${shoppingKey(item.name, item.unit)}`;
+          const checkKey = `cat|||${makeIsoDate(nutritionWeekDates()[0])}|||${shoppingKey(item.name, item.unit)}`;
           host.insertAdjacentHTML("beforeend", shoppingItemHtml(item, checkKey));
         });
       });
@@ -523,10 +557,11 @@
       let plannedMeals = 0;
 
       dates.forEach(date => {
+        if (isNutritionDayDisabled(date)) return;
         const totals = dayTotals(date);
         const meals = nutritionMealSlots
           .map(slot => canonicalMealForPair(date, slot.key))
-          .filter(meal => meal?.name);
+          .filter(meal => meal?.name && nutritionPersons(meal) > 0);
 
         if (meals.length) {
           daysWithPlan++;
@@ -727,7 +762,7 @@
             <button class="ingredient-delete" data-ing-delete="${index}" title="Lebensmittel löschen">×</button>
           </div>
 
-          ${Number(mealEditorDraft.persons || 1) > 1
+          ${nutritionPersons(mealEditorDraft) > 1
             ? `<div class="ingredient-total-line">Pro Person: ${formatNutritionNumber(item.amount,1)} ${escapeHtml(item.unit || "g")} · Gesamt für ${mealEditorDraft.persons} Pers.: ${formatNutritionNumber(Number(item.amount || 0) * mealEditorDraft.persons,1)} ${escapeHtml(item.unit || "g")}</div>`
             : ""}
 
@@ -788,9 +823,9 @@
         canonicalMealForPair(selectedNutritionDate, slotKey)
       );
 
-      mealEditorSlot.textContent = `${slot?.label || "Mahlzeit"} · 2 Tage`;
+      mealEditorSlot.textContent = `${slot?.label || "Mahlzeit"} · ${hasIndividualNutritionDay(selectedNutritionDate) || nutritionPairForDate(selectedNutritionDate).single ? "1 Tag" : "2 Tage"}`;
       mealEditorName.value = mealEditorDraft.name;
-      mealEditorDraft.persons = Math.max(1, Number(mealEditorDraft.persons || 1));
+      mealEditorDraft.persons = nutritionPersons(mealEditorDraft);
       mealPersonsValue.textContent = mealEditorDraft.persons;
       renderFoodLibraryOptions();
       renderIngredientEditor();
@@ -811,7 +846,7 @@
       if (!mealEditorDraft || !mealEditorSlotKey) return;
 
       mealEditorDraft.name = mealEditorName.value.trim();
-      mealEditorDraft.persons = Math.max(1, Number(mealEditorDraft.persons || 1));
+      mealEditorDraft.persons = nutritionPersons(mealEditorDraft);
       mealEditorDraft.ingredients.forEach(rememberFood);
 
       saveMealForSelectedContext(
@@ -833,6 +868,18 @@
       renderNutrition();
     });
 
+    function shiftNutritionWeek(weeks) {
+      selectedNutritionDate.setDate(selectedNutritionDate.getDate() + weeks * 7);
+      renderNutrition();
+    }
+
+    document.getElementById("nutritionWeekPrevious").addEventListener("click", () => shiftNutritionWeek(-1));
+    document.getElementById("nutritionWeekNext").addEventListener("click", () => shiftNutritionWeek(1));
+    document.getElementById("nutritionWeekCurrent").addEventListener("click", () => {
+      selectedNutritionDate = new Date(nutritionToday);
+      renderNutrition();
+    });
+
 
     document.getElementById("nutritionMeals").addEventListener("click", event => {
       const card = event.target.closest("[data-meal-slot]");
@@ -843,14 +890,14 @@
 
     document.getElementById("mealPersonsMinus").addEventListener("click", () => {
       if (!mealEditorDraft) return;
-      mealEditorDraft.persons = Math.max(1, Number(mealEditorDraft.persons || 1) - 1);
+      mealEditorDraft.persons = Math.max(0, nutritionPersons(mealEditorDraft) - 1);
       mealPersonsValue.textContent = mealEditorDraft.persons;
       renderIngredientEditor();
     });
 
     document.getElementById("mealPersonsPlus").addEventListener("click", () => {
       if (!mealEditorDraft) return;
-      mealEditorDraft.persons = Math.min(20, Number(mealEditorDraft.persons || 1) + 1);
+      mealEditorDraft.persons = Math.min(20, nutritionPersons(mealEditorDraft) + 1);
       mealPersonsValue.textContent = mealEditorDraft.persons;
       renderIngredientEditor();
     });
@@ -962,6 +1009,13 @@
       renderNutrition();
     });
 
+    document.getElementById("nutritionDayToggle").addEventListener("click", () => {
+      const iso = makeIsoDate(selectedNutritionDate);
+      nutritionData.disabledDays[iso] = !nutritionData.disabledDays[iso];
+      saveNutritionData();
+      renderNutrition();
+    });
+
     document.getElementById("nutritionTodayMeals").addEventListener("click", event => {
       const meal = event.target.closest("[data-today-meal-slot]");
       if (!meal) return;
@@ -994,7 +1048,12 @@
     });
 
     document.getElementById("shoppingClearChecks").addEventListener("click", () => {
-      nutritionData.checkedShopping = {};
+      const week = nutritionWeekDates().map(makeIsoDate);
+      Object.keys(nutritionData.checkedShopping).forEach(key => {
+        if (key.startsWith(`cat|||${week[0]}|||`) || week.some(day => key.startsWith(`day|||${day}|||`))) {
+          delete nutritionData.checkedShopping[key];
+        }
+      });
       saveNutritionData();
       renderShoppingList();
     });
